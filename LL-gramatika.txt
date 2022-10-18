@@ -1,0 +1,72 @@
+1. <start> -> <prolog> <body>
+
+2. <prolog> -> <prolog1> <prolog2>
+
+3. <prolog1> -> <?php
+4. <prolog2> -> declare(strict_types=1);
+
+5. <body> -> function fid ( <fparams> ):<rettype> { <nodefbody> } <body>
+6. <body> -> if (<ifstat> <body>
+7. <body> -> while (<whilestat> <body>
+8. <body> -> id = <assigned>; <body>
+9. <body> -> <const>; <body>
+10. <body> -> <expr>; <body>
+11. <body> -> <fcall>; <body>
+12. <body> -> return <retval>; <body>
+13. <body> -> ?>
+14. <body> -> eps
+
+15. <fparams> -> <type> id <nparam>
+16. <fparams> -> eps
+
+17. <nparam> -> , <type> id <nparam>
+18. <nparam> -> eps
+
+19. <rettype> -> <type>
+20. <rettype> -> void
+
+21. <type> -> ?int
+22. <type> -> ?string
+23. <type> -> ?float
+24. <type> -> int
+25. <type> -> string
+26. <type> -> float
+
+27. <nodefbody> -> if (<ifstat> <nodefbody>
+28. <nodefbody> -> while (<whilestat> <nodefbody>
+29. <nodefbody> -> id = <assigned>; <nodefbody>
+30. <nodefbody> -> <const>; <nodefbody>
+31. <nodefbody> -> <expr>; <nodefbody>
+32. <nodefbody> -> <fcall>; <nodefbody>
+33. <nodefbody> -> return <retval>; <nodefbody>
+34. <nodefbody> -> eps
+
+35. <ifstat> -> <expr>) {<nodefbody>} else {<nodefbody>}
+36. <ifstat> -> <fcall>) {<nodefbody>} else {<nodefbody>}
+
+37. <whilestat> -> <expr>) {<nodefbody>}
+38. <whilestat> -> <fcall>) {<nodefbody>}
+
+39. <assigned> -> <expr>
+40. <assigned> -> <fcall>
+41. <assigned> -> <const>
+
+42. <const> -> str_lit
+43. <const> -> int_lit
+44. <const> -> float_lit
+
+45. <fcall> -> fid(<callargs>)
+
+46. <callargs> -> <vals> <ncallargs>
+47. <callargs> -> eps
+
+48. <ncallargs> -> , <vals> <ncallargs>
+49. <ncallargs> -> eps
+
+50. <retval> -> <vals>
+51. <retval> -> <expr>
+52. <retval> -> eps
+
+53. <vals> -> id
+54. <vals> -> <const>
+55. <vals> -> <fcall>

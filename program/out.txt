@@ -1,0 +1,151 @@
+
+.IFJcode22
+CREATEFRAME
+PUSHFRAME
+CREATEFRAME
+DEFVAR LF@%retreads
+DEFVAR LF@%retreadi
+DEFVAR LF@%retreadf
+DEFVAR LF@%retfloatval
+DEFVAR LF@%retchr
+DEFVAR LF@%retintval
+DEFVAR LF@%rethlavni_program
+DEFVAR LF@%retord
+DEFVAR LF@%retwrite
+DEFVAR LF@%retstrval
+DEFVAR LF@%retstrlen
+DEFVAR LF@%retsubstring
+JUMP main
+LABEL reads
+READ LF@%retreads string
+RETURN
+LABEL readi
+READ LF@%retreadi int
+RETURN
+LABEL readf
+READ LF@%retreadf float
+RETURN
+LABEL substring
+MOVE LF@%retsubstring nil@nil
+DEFVAR TF@lolec
+STRLEN TF@lolec TF@param1
+DEFVAR TF@zerocheck
+DEFVAR TF@zerocheck2
+DEFVAR TF@ltcheck
+DEFVAR TF@lencheck1
+DEFVAR TF@lencheck2
+DEFVAR TF@loopcheck
+DEFVAR TF@i
+DEFVAR TF@L1b
+LT TF@zerocheck TF@param2 int@0
+LT TF@zerocheck2 TF@param3 int@0
+LT TF@ltcheck TF@param3 TF@param2
+LT TF@lencheck1 TF@lolec TF@param2
+GT TF@lencheck2 TF@param3 TF@lolec
+JUMPIFEQ %substrfail bool@true TF@zerocheck
+JUMPIFEQ %substrfail bool@true TF@zerocheck2
+JUMPIFEQ %substrfail bool@true TF@ltcheck
+JUMPIFEQ %substrfail bool@true TF@lencheck1
+JUMPIFEQ %substrfail bool@true TF@lencheck2
+JUMPIFEQ %substrdone TF@param2 TF@param3
+GETCHAR LF@%retsubstring TF@param1 TF@param2
+ADD TF@param2 TF@param2 int@1
+JUMPIFEQ %substrdone TF@param2 TF@param3
+LABEL %substrL1
+GETCHAR TF@i TF@param1 TF@param2
+CONCAT LF@%retsubstring LF@%retsubstring TF@i
+ADD TF@param2 TF@param2 int@1
+LT TF@loopcheck TF@param2 TF@param3
+JUMPIFNEQ %substrL1 TF@loopcheck bool@false
+LABEL %substrdone
+CREATEFRAME
+RETURN
+LABEL %substrfail
+CREATEFRAME
+RETURN
+LABEL %strlen
+DEFVAR TF@retval
+STRLEN TF@retval TF@param1
+MOVE LF@%retstrlen TF@retval
+CREATEFRAME
+RETURN
+
+LABEL floatval
+DEFVAR TF@TYPESTR
+TYPE TF@TYPESTR TF@param1
+JUMPIFEQ %fvalfail TF@TYPESTR string@string
+JUMPIFEQ %fvalbool TF@TYPESTR string@bool
+JUMPIFEQ %fvalnil TF@TYPESTR string@nil
+JUMPIFEQ %fvalfloat TF@TYPESTR string@float
+INT2FLOAT TF@param1 TF@param1
+LABEL %fvalfloat
+MOVE LF@%retfloatval TF@param1
+CREATEFRAME
+RETURN
+LABEL %fvalfail
+EXIT int@7
+LABEL %fvalbool
+MOVE LF@%retfloatval float@0x0p+0
+JUMPIFEQ %fvalfalse TF@param1 bool@false
+MOVE LF@%retfloatval float@0x1p+0
+LABEL %fvalfalse
+CREATEFRAME
+RETURN
+LABEL %fvalnil
+MOVE LF@%retfloatval float@0x0p+0
+CREATEFRAME
+RETURN
+
+LABEL intval
+DEFVAR TF@TYPESTR
+TYPE TF@TYPESTR TF@param1
+JUMPIFEQ %ivalfail TF@TYPESTR string@string
+JUMPIFEQ %ivalbool TF@TYPESTR string@bool
+JUMPIFEQ %ivalnil TF@TYPESTR string@nil
+JUMPIFEQ %ivalint TF@TYPESTR string@int
+FLOAT2INT TF@param1 TF@param1
+LABEL %ivalint
+MOVE LF@%retintval TF@param1
+CREATEFRAME
+RETURN
+LABEL %ivalfail
+DPRINT string@LOLEC
+EXIT int@7
+LABEL %ivalbool
+MOVE LF@%retintval int@0
+JUMPIFEQ %ivalfalse TF@param1 bool@false 
+MOVE LF@%retintval int@1
+LABEL %ivalfalse
+CREATEFRAME
+RETURN
+LABEL %ivalnil
+MOVE LF@%retintval int@0
+CREATEFRAME
+RETURN
+LABEL main
+JUMP %skipdec1
+LABEL hlavni_program
+DEFVAR LF@$yearMOVE LF@$year TF@param0
+DEFVAR TF@%param0type
+TYPE TF@%param0type TF@param0
+JUMPIFNEQ %hlavni_programEXIT4 TF@%param0type string@int
+WRITE string@Hello from IFJ
+WRITE LF@$year
+WRITE string@
+
+DEFVAR TF@%rettype
+TYPE TF@%rettype LF@%rethlavni_program
+JUMPIFNEQ %hlavni_programEXIT4 TF@%rettype string@void
+RETURN
+LABEL %hlavni_programEXIT4
+EXIT int@4
+LABEL %skipdec1
+CREATEFRAME
+DEFVAR TF@param0
+MOVE TF@param0 int@22
+CALL hlavni_program
+CREATEFRAME
+DEFVAR TF@param0
+MOVE TF@param0 int@23
+CALL hlavni_program
+EXIT int@0

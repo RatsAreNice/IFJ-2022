@@ -1,0 +1,128 @@
+.IFJcode22
+CREATEFRAME
+PUSHFRAME
+CREATEFRAME
+JUMP main
+LABEL reads
+DEFVAR TF@%STRING
+READ TF@%STRING string
+RETURN
+LABEL readi
+DEFVAR TF@%INT
+READ TF@%INT int
+RETURN
+LABEL readf
+DEFVAR TF@%FLOAT
+READ TF@%FLOAT float
+RETURN
+LABEL substring
+MOVE LF@%STR1 nil@nil
+DEFVAR TF@lolec
+STRLEN TF@lolec TF@param1
+DEFVAR TF@zerocheck
+DEFVAR TF@zerocheck2
+DEFVAR TF@ltcheck
+DEFVAR TF@lencheck1
+DEFVAR TF@lencheck2
+DEFVAR TF@loopcheck
+DEFVAR TF@i
+DEFVAR TF@L1b
+LT TF@zerocheck TF@param2 int@0
+LT TF@zerocheck2 TF@param3 int@0
+LT TF@ltcheck TF@param3 TF@param2
+LT TF@lencheck1 TF@lolec TF@param2
+GT TF@lencheck2 TF@param3 TF@lolec
+JUMPIFEQ %substrfail bool@true TF@zerocheck
+JUMPIFEQ %substrfail bool@true TF@zerocheck2
+JUMPIFEQ %substrfail bool@true TF@ltcheck
+JUMPIFEQ %substrfail bool@true TF@lencheck1
+JUMPIFEQ %substrfail bool@true TF@lencheck2
+JUMPIFEQ %substrdone TF@param2 TF@param3
+GETCHAR LF@%STR1 TF@param1 TF@param2
+ADD TF@param2 TF@param2 int@1
+JUMPIFEQ %substrdone TF@param2 TF@param3
+LABEL %substrL1
+GETCHAR TF@i TF@param1 TF@param2
+CONCAT LF@%STR1 LF@%STR1 TF@i
+ADD TF@param2 TF@param2 int@1
+LT TF@loopcheck TF@param2 TF@param3
+JUMPIFNEQ %substrL1 TF@loopcheck bool@false
+LABEL %substrdone
+CREATEFRAME
+RETURN
+LABEL %substrfail
+CREATEFRAME
+RETURN
+LABEL %strlen
+DEFVAR TF@retval
+STRLEN TF@retval TF@param1
+MOVE LF@%slen TF@retval
+CREATEFRAME
+RETURN
+
+LABEL floatval
+DEFVAR TF@TYPESTR
+TYPE TF@TYPESTR TF@param1
+JUMPIFEQ %fvalfail TF@TYPESTR string@string
+JUMPIFEQ %fvalbool TF@TYPESTR string@bool
+JUMPIFEQ %fvalnil TF@TYPESTR string@nil
+JUMPIFEQ %fvalfloat TF@TYPESTR string@float
+INT2FLOAT TF@param1 TF@param1
+LABEL %fvalfloat
+MOVE LF@%fval TF@param1
+CREATEFRAME
+RETURN
+LABEL %fvalfail
+EXIT int@7
+LABEL %fvalbool
+MOVE LF@%fval float@0x0p+0
+JUMPIFEQ %fvalfalse TF@param1 bool@false
+MOVE LF@%fval float@0x1p+0
+LABEL %fvalfalse
+CREATEFRAME
+RETURN
+LABEL %fvalnil
+MOVE LF@%fval float@0x0p+0
+CREATEFRAME
+RETURN
+
+LABEL intval
+DEFVAR TF@TYPESTR
+TYPE TF@TYPESTR TF@param1
+JUMPIFEQ %ivalfail TF@TYPESTR string@string
+JUMPIFEQ %ivalbool TF@TYPESTR string@bool
+JUMPIFEQ %ivalnil TF@TYPESTR string@nil
+JUMPIFEQ %ivalint TF@TYPESTR string@int
+FLOAT2INT TF@param1 TF@param1
+LABEL %ivalint
+MOVE LF@%ival TF@param1
+CREATEFRAME
+RETURN
+LABEL %ivalfail
+DPRINT string@LOLEC
+EXIT int@7
+LABEL %ivalbool
+MOVE LF@%ival int@0
+JUMPIFEQ %ivalfalse TF@param1 bool@false 
+MOVE LF@%ival int@1
+LABEL %ivalfalse
+CREATEFRAME
+RETURN
+LABEL %ivalnil
+MOVE LF@%ival int@0
+CREATEFRAME
+RETURN
+LABEL main
+DEFVAR LF@var0
+ADD LF@var0 int@5 int@7
+DEFVAR LF@var1
+SUB LF@var1 LF@var0 int@3
+DEFVAR LF@var2
+SUB LF@var2 LF@var1 int@4
+DEFVAR LF@var3
+ADD LF@var3 LF@var2 int@2
+DEFVAR LF@var4
+INT2FLOAT LF@var4 LF@var3
+DEFVAR LF@kredenc
+MOVE LF@kredenc LF@var4
+EXIT int@0
