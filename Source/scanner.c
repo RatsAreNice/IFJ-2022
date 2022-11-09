@@ -1,5 +1,4 @@
-//todo: komentare, EOF, prolog, 
-//stringy, type, identity/priradenie, values zmenit z null na hodnoty, testovat funcID na klucove slova/typy
+//todo: komentare, EOF, prolog,
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
