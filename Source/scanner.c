@@ -1,30 +1,37 @@
-//todo: komentare, string, type, priradenia/identity, EOF, testovat funcID na klucove slova/typy
-//fixnut retazec konciaci escape sekvenciou (nastavenie cflag na 1)? + fixnut hexadecimalnu escape seq '\'x1'\'077
-
+//todo: komentare, EOF, prolog, 
+//stringy, type, identity/priradenie, values zmenit z null na hodnoty, testovat funcID na klucove slova/typy
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 
 typedef enum{
-    ID_function,
-    ID_variable,
-    string,
-    type,
-    lbracket,
-    rbracket,
-    plus,
-    minus,
-    mul,
-    division,
-    lt,
-    mt,
-    semicolon,
-    integer,
-    assign,
-    identity,
-    nidentity,
-    comma,
-    eof
+    ID_function,        //abc
+    ID_variable,        //$abc
+    string,             //"abc"
+    type,               //?abc
+    lbracket,           //(
+    rbracket,           //)
+    plus,               //+
+    minus,              //-
+    mul,                //*
+    division,           ///
+    lt,                 //<
+    mt,                 //>
+    semicolon,          //;
+    integer,            //56
+    assign,             //=
+    identity,           //===
+    nidentity,          //!==
+    comma,              //,
+    //klucove slova
+    funreturn,          //return
+    funelse,            //else
+    function,           //function
+    funif,              //if
+    funnull,            //null
+    funvoid,            //void
+    funwhile,           //while
+    eof         
 } token_type;             //typ lexemu
 typedef enum{       //stavy automatu
     start,
@@ -35,7 +42,7 @@ typedef enum{       //stavy automatu
     string2,
     type1,
     INT,
-    priradenie,
+    identity2,
     nidentity1,
     identity1,
     identity0,
@@ -108,40 +115,40 @@ token_t get_token(){
                     state = type1;
                 }
                 else if(a == '('){
-                    return make_token(lbracket, NULL);          //preslo by sa do stavu "(" kde by sa iba vytvoril token lbracket. pre zjednodusenie sa do stavu neprechadza a token sa vytvori priamo
+                    return make_token(lbracket, "(");          //preslo by sa do stavu "(" kde by sa iba vytvoril token lbracket. pre zjednodusenie sa do stavu neprechadza a token sa vytvori priamo
                 }
                 else if(a == ')'){
-                    return make_token(rbracket, NULL);
+                    return make_token(rbracket, ")");
                 }
                 else if(a == '+'){
-                    return make_token(plus, NULL);
+                    return make_token(plus, "+");
                 }
                 else if(a == '-'){
-                    return make_token(minus, NULL);
+                    return make_token(minus, "-");
                 }
                 else if(a == '*'){
-                    return make_token(mul, NULL);
+                    return make_token(mul, "*");
                 }
                 else if(a == '/'){
-                    return make_token(division, NULL);
+                    return make_token(division, "/");
                 }
                 else if(a == '<'){
-                    return make_token(lt, NULL);
+                    return make_token(lt, "<");
                 }
                 else if(a == '>'){
-                    return make_token(mt, NULL);
+                    return make_token(mt, ">");
                 }
                 else if(a == ';'){
-                    return make_token(semicolon, NULL);
+                    return make_token(semicolon, ";");
                 }
                 else if(a == ','){
-                    return make_token(comma, NULL);
+                    return make_token(comma, ",");
                 }
                 else if(a >= 48 && a<= 57){
                     state = INT;
                 }
                 else if(a == '='){
-                    state = priradenie;
+                    state = identity1;
                 }
                 else if(a == '!'){
                     state = nidentity1;
@@ -174,7 +181,35 @@ token_t get_token(){
                 if(i>0){
                     ungetc(a, stdin);
                 }
-                return make_token(ID_function, str);
+
+                //testy na klucove slova
+                if(strcmp(str,"string") == 0 || strcmp(str,"float") == 0 || strcmp(str,"int") == 0){
+                    return make_token(type, str);
+                }
+                if(strcmp(str,"return") == 0){
+                    return make_token(funreturn, str);
+                }
+                if(strcmp(str,"else") == 0){
+                    return make_token(funelse, str);
+                }
+                if(strcmp(str,"function") == 0){
+                    return make_token(function, str);
+                }
+                if(strcmp(str,"if") == 0){
+                    return make_token(funif, str);
+                }
+                if(strcmp(str,"null") == 0){
+                    return make_token(funnull, str);
+                }
+                if(strcmp(str,"void") == 0){
+                    return make_token(funvoid, str);
+                }
+                if(strcmp(str,"while") == 0){
+                    return make_token(funwhile, str);
+                }
+
+
+                return make_token(ID_function, str);                    //ak to nieje klucove slovo, je to ID funkcie
                 break;
             
             case premenna1:
@@ -246,19 +281,19 @@ token_t get_token(){
                         if(a == 'n'){
                             a = '\n';
                         }
-                        if(a == 't'){
+                        else if(a == 't'){
                             a = '\t';
                         }
-                        if(a == '"'){
+                        else if(a == '"'){
                             a = '"';
                         }
-                        if(a == '$'){
+                        else if(a == '$'){
                             a = '$';
                         }
-                        if(a == 92){
+                        else if(a == 92){
                             a = 92;
                         }
-                        if(a == 'x'){
+                        else if(a == 'x'){
                             for(int j = 1; j >= 0; j--){
                                 a = getchar();
                                 if((a <= 57 && a >= 48) || (a >= 65 && a<= 70) || (a >= 97 && a <= 102)){       //hexadecimalna cislovka
@@ -301,6 +336,9 @@ token_t get_token(){
                             }
                             if(z!= -1){                 //ak sa jednalo o escape sekvenciu \xdd pridava sa iba jeden znak, a to vypocitane a 
                                 a = z; 
+                            }
+                            else{
+                                cflag = 1;
                             }
 
                         }else if (a >= 48 && a <= 55){                                      // \oktalove cislo
@@ -363,9 +401,25 @@ token_t get_token(){
                             if(z!= -1){                 //ak sa jednalo o escape sekvenciu \ddd pridava sa iba jeden znak, a to vypocitane a 
                                 a = z; 
                                 printf("tets");
+                            } else{
+                                cflag = 1;              //inak sa posledny nacitany znak znova spracuje (mohlo by ist o " alebo nepovoleny znak)
                             }
                         }
-                        cflag = 1;
+                        else{                           //'\'a
+                            size_t len = strlen(str);
+                            char *str2 = malloc(len + 1 + 2);
+                            strcpy(str2, str);
+                            if(i>0){
+                                free(str);
+                            }
+                            str2[len] = 92;
+                            str2[len + 1] = a;
+                            str2[len + 2] = '\0';
+                            str = str2;
+                            a = getchar();
+                            i++;
+                            cflag = 1;
+                        }
                     }
 
                     if(cflag != 1){
@@ -387,7 +441,7 @@ token_t get_token(){
                     state = string2;
                 }else{
                     fprintf(stderr, "retazec neskoncil na \", neplatny znak v retazci");
-                    exit(50);
+                    exit(51);
                 }
                 break;
 
@@ -395,6 +449,81 @@ token_t get_token(){
                 return make_token(string, str);
             break;
 
+            case type1:
+                str = "?";
+                i=0;
+                a = getchar();
+                while(a >= 97 && a <= 122){                      
+                    size_t len = strlen(str);
+                    char *str2 = malloc(len + 1 + 1);
+                    strcpy(str2, str);
+                    if(i>0){
+                        free(str);
+                    }
+                    str2[len] = a;
+                    str2[len + 1] = '\0';
+                    str = str2;
+                    a = getchar();
+                    i++;
+                    if(strcmp(str,"?int") == 0 || strcmp(str,"?float") == 0 || strcmp(str,"?string") == 0){
+                        break;
+                    }
+                }
+                ungetc(a, stdin);
+                if(strcmp(str,"?int") == 0 || strcmp(str,"?float") == 0 || strcmp(str,"?string") == 0){
+                    return make_token(type, str);
+                }
+                else{
+                    fprintf(stderr, "chybna syntax typu [?]");
+                    exit(51);
+                }
+                break;
+            case identity1:
+                a = getchar();
+                if(a != '='){
+                    ungetc(a, stdin);
+                    return make_token(assign, "=");
+                }
+                else{
+                    state = identity2;
+                }
+                break;
+            case identity2:
+                a = getchar();
+                if(a != '='){
+                    fprintf(stderr, "chybna syntax identity/priradenia [==]");
+                    exit(51);
+                }
+                else{
+                    state = identity0;
+                }
+                break;
+            case identity0:
+                return make_token(identity, "===");
+                break;
+            case nidentity1:
+                a = getchar();
+                if(a != '='){
+                    fprintf(stderr, "chybna syntax neidentity [!=]");
+                    exit(51);
+                }
+                else{
+                    state = nidentity2;
+                }
+                break;
+            case nidentity2:
+                a = getchar();
+                if(a != '='){
+                    fprintf(stderr, "chybna syntax neidentity [!=]");
+                    exit(51);
+                }
+                else{
+                    state = nidentity0;
+                }
+                break;
+            case nidentity0:
+                return make_token(nidentity, "!==");
+                break;
         }
     }
 
@@ -404,6 +533,8 @@ token_t get_token(){
 
 int main(int argc, char const *argv[]){
     token_t a;
+    a = get_token();
+    printf("typ: %d , value: %s \n", a.type,a.value);
     a = get_token();
     printf("typ: %d , value: %s \n", a.type,a.value);
 }
