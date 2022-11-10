@@ -399,7 +399,6 @@ token_t get_token(){
                             }
                             if(z!= -1){                 //ak sa jednalo o escape sekvenciu \ddd pridava sa iba jeden znak, a to vypocitane a 
                                 a = z; 
-                                printf("tets");
                             } else{
                                 cflag = 1;              //inak sa posledny nacitany znak znova spracuje (mohlo by ist o " alebo nepovoleny znak)
                             }
