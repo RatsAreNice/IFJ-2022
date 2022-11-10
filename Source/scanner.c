@@ -1,4 +1,4 @@
-//todo: komentare, EOF, prolog,
+//todo: komentare, prolog, chyby?(teraz je pri chybe exit)
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -93,7 +93,7 @@ token_t get_token(){
     char* temp;
     int i;
     int z;
-    while(state != ERROR){    
+    while(1){    
         switch(state){
             case start:
                 a = getchar();
@@ -216,7 +216,7 @@ token_t get_token(){
                 i = 0;
                 if( (a != '_') && (a < 65 || (a >= 91 && a <= 96) || a >= 123) ){
                     fprintf(stderr,"chybna synatax premmenej [$]");
-                    exit(51); 
+                    exit(1); 
                 }
                 else{
                     state = premenna2;                  //je to male pismeno/velke pismeno/_
@@ -405,16 +405,16 @@ token_t get_token(){
                         }
                         else{                           //'\'a
                             size_t len = strlen(str);
-                            char *str2 = malloc(len + 1 + 2);
+                            char *str2 = malloc(len + 1 + 1);
                             strcpy(str2, str);
                             if(i>0){
                                 free(str);
                             }
                             str2[len] = 92;
-                            str2[len + 1] = a;
-                            str2[len + 2] = '\0';
+                            //str2[len + 1] = a;
+                            str2[len + 1] = '\0';
                             str = str2;
-                            a = getchar();
+                            //a = getchar();
                             i++;
                             cflag = 1;
                         }
@@ -439,7 +439,7 @@ token_t get_token(){
                     state = string2;
                 }else{
                     fprintf(stderr, "retazec neskoncil na \", neplatny znak v retazci");
-                    exit(51);
+                    exit(1);
                 }
                 break;
 
@@ -473,7 +473,7 @@ token_t get_token(){
                 }
                 else{
                     fprintf(stderr, "chybna syntax typu [?]");
-                    exit(51);
+                    exit(1);
                 }
                 break;
             case identity1:
@@ -490,7 +490,7 @@ token_t get_token(){
                 a = getchar();
                 if(a != '='){
                     fprintf(stderr, "chybna syntax identity/priradenia [==]");
-                    exit(51);
+                    exit(1);
                 }
                 else{
                     state = identity0;
@@ -503,7 +503,7 @@ token_t get_token(){
                 a = getchar();
                 if(a != '='){
                     fprintf(stderr, "chybna syntax neidentity [!=]");
-                    exit(51);
+                    exit(1);
                 }
                 else{
                     state = nidentity2;
@@ -513,7 +513,7 @@ token_t get_token(){
                 a = getchar();
                 if(a != '='){
                     fprintf(stderr, "chybna syntax neidentity [!=]");
-                    exit(51);
+                    exit(1);
                 }
                 else{
                     state = nidentity0;
@@ -522,6 +522,10 @@ token_t get_token(){
             case nidentity0:
                 return make_token(nidentity, "!==");
                 break;
+            case ERROR:
+                fprintf(stderr, "chybna syntax");
+                exit(1);
+
         }
     }
 
@@ -531,6 +535,8 @@ token_t get_token(){
 
 int main(int argc, char const *argv[]){
     token_t a;
+    a = get_token();
+    printf("typ: %d , value: %s \n", a.type,a.value);
     a = get_token();
     printf("typ: %d , value: %s \n", a.type,a.value);
     a = get_token();
