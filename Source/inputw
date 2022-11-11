@@ -1,2 +1,2 @@
-while
-{$qq
+<?phpdeclare(strict_types=1);?int
+		l

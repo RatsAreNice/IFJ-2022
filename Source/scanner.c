@@ -1,4 +1,5 @@
-//todo: komentare, prolog, chyby?(teraz je pri chybe exit)
+//todo: komentare, epilog, chyby?(teraz je pri chybe exit)
+//parameter funkcie get_token(int skip) udava ci sa preskakuju prazdne znaky. ak skip == 0 nepreskakuje sa nic. ak skip == 1, preskakuju sa iba prazdne znaky, ak skip != 1 && skip != 0, preskakuju sa prazdne znaky a komentare
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -30,7 +31,9 @@ typedef enum{
     funnull,            //null
     funvoid,            //void
     funwhile,           //while
-    eof         
+    prolog1,            //<?php             [VRATANE PRAZDNEHO ZNAKU ZA]
+    prolog2,            //declare(strict_types=1);
+    eof,       
 } token_type;             //typ lexemu
 typedef enum{       //stavy automatu
     start,
@@ -48,6 +51,9 @@ typedef enum{       //stavy automatu
     nidentity2,
     nidentity0,
     ERROR,
+    lt1,
+    lt0,
+    declare,
 } state;
 
 typedef struct token {
@@ -84,7 +90,7 @@ token_t make_token(token_type typ, char* hodnota){
     return lexem;
 }
 
-token_t get_token(){
+token_t get_token(int skip){
     state state = start;
     char a;
     char b;
@@ -97,9 +103,14 @@ token_t get_token(){
         switch(state){
             case start:
                 a = getchar();
-                while(a == ' ' || a == '\t' || a == '\n'){          //preskocenie prazdnych znakov + komentare
-                    a = getchar();
+
+                if(skip == 1){
+                    while(a == ' ' || a == '\t' || a == '\n'){          //preskocenie iba prazdnych znakov
+                        a = getchar();
+                    }
                 }
+
+                //preskocenie prazdnych znakov a komentarov [TODO] elsif(skip != 1 && skip != 0)
 
                 if((a >= 97 && a <= 122) || a == '_' || (a >= 65 && a <= 90)){              //male pismeno / velke pismeno / _
                     state = IDfunkcie;
@@ -132,7 +143,8 @@ token_t get_token(){
                     return make_token(division, "/");
                 }
                 else if(a == '<'){
-                    return make_token(lt, "<");
+                    state = lt0;
+                    //return make_token(lt, "<");
                 }
                 else if(a == '>'){
                     return make_token(mt, ">");
@@ -205,6 +217,10 @@ token_t get_token(){
                 }
                 if(strcmp(str,"while") == 0){
                     return make_token(funwhile, str);
+                }
+                if(strcmp(str,"declare") == 0){
+                    state = declare;
+                    break;
                 }
 
 
@@ -525,7 +541,66 @@ token_t get_token(){
             case ERROR:
                 fprintf(stderr, "chybna syntax");
                 exit(1);
-
+                break;
+            case lt0:
+                a = getchar();
+                if(a != '?'){
+                    return make_token(lt, "<");
+                    ungetc(a, stdin);
+                }
+                else{
+                    state = lt1;
+                }
+                break;
+            case lt1:
+                a = getchar();
+                if(a != 'p'){
+                    ungetc(a, stdin);
+                    ungetc('?', stdin);
+                    return make_token(lt, "<");
+                }
+                a = getchar();
+                if(a != 'h'){
+                    fprintf(stderr, "chybna znacka <?php");
+                    exit(1);
+                }
+                a = getchar();
+                if(a != 'p'){
+                    fprintf(stderr, "chybna znacka <?php");
+                    exit(1);
+                }
+                a = getchar();
+                if(a != ' ' && a != '\n' && a != '\t'){
+                    fprintf(stderr, "chybna znacka <?php");
+                    exit(1);
+                }
+                return make_token(prolog1,"<?php ");
+                break;
+            case declare:
+                str = "";
+                i=0;
+                a = getchar();
+                while(a != ';' && a != EOF){                      
+                    size_t len = strlen(str);
+                    char *str2 = malloc(len + 1 + 1);
+                    strcpy(str2, str);
+                    if(i>0){
+                        free(str);
+                    }
+                    str2[len] = a;
+                    str2[len + 1] = '\0';
+                    str = str2;
+                    a = getchar();
+                    i++;
+                }
+                if(strcmp(str,"(strict_types=1)") == 0){
+                    return make_token(prolog2, "declare(strict_types=1);");
+                }
+                else{
+                    fprintf(stderr, "chybna znacka declare(strict_types=1);");
+                    exit(1);
+                }
+                break;
         }
     }
 
@@ -535,10 +610,10 @@ token_t get_token(){
 
 int main(int argc, char const *argv[]){
     token_t a;
-    a = get_token();
+    a = get_token(1);
     printf("typ: %d , value: %s \n", a.type,a.value);
-    a = get_token();
+    a = get_token(1);
     printf("typ: %d , value: %s \n", a.type,a.value);
-    a = get_token();
+    a = get_token(1);
     printf("typ: %d , value: %s \n", a.type,a.value);
 }
