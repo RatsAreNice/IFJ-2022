@@ -1,2 +1,8 @@
-<?phpdeclare(strict_types=1);?int
-		l
+function/*test1*/?int bar //lelec 
+string /{
+return foo($param);
+}
+function foo(string $param):string {
+return bar($param);
+}
+bar("ahoj");

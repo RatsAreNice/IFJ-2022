@@ -1,4 +1,4 @@
-//todo: komentare, epilog, chyby?(teraz je pri chybe exit)
+//Autor : Oliver Nemcek <xnemce08>
 //parameter funkcie get_token(int skip) udava ci sa preskakuju prazdne znaky. ak skip == 0 nepreskakuje sa nic. ak skip == 1, preskakuju sa iba prazdne znaky, ak skip != 1 && skip != 0, preskakuju sa prazdne znaky a komentare
 #include <stdio.h>
 #include <string.h>
@@ -11,6 +11,8 @@ typedef enum{
     type,               //?abc
     lbracket,           //(
     rbracket,           //)
+    lsetbracket,        //{
+    rsetbracket,        //}
     plus,               //+
     minus,              //-
     mul,                //*
@@ -33,6 +35,7 @@ typedef enum{
     funwhile,           //while
     prolog1,            //<?php             [VRATANE PRAZDNEHO ZNAKU ZA]
     prolog2,            //declare(strict_types=1);
+    epilog,             //?>                 [ak je za znackou \n, zozerie ho to. (aby sa dalo potom testovat na EOF)]
     eof,       
 } token_type;             //typ lexemu
 typedef enum{       //stavy automatu
@@ -108,9 +111,38 @@ token_t get_token(int skip){
                     while(a == ' ' || a == '\t' || a == '\n'){          //preskocenie iba prazdnych znakov
                         a = getchar();
                     }
+                }else if(skip != 1 && skip != 0){
+                    while(a == ' ' || a == '\t' || a == '\n' || a == '/'){          //preskocenie prazdnych znakov a komentarov
+                        if(a == '/'){
+                            a = getchar();
+                            if(a == '/'){
+                                while(a != '\n' && a != EOF){          //riadkove komentare
+                                    a = getchar();
+                                }
+                                if(a == EOF){
+                                    ungetc(a,stdin);
+                                }
+                            }else if(a == '*'){
+                                b = a;
+                                a = getchar();
+                                while((a != '/' || b != '*') && a != EOF){
+                                    b = a;
+                                    a = getchar();
+                                }
+                                if(a == EOF){
+                                    fprintf(stderr, "neukonceny blokovy komentar");
+                                    exit(1);
+                                }
+                            }
+                            else{
+                                ungetc(a, stdin);
+                                a = '/';
+                                break;
+                            }
+                        }
+                        a = getchar();
+                    }
                 }
-
-                //preskocenie prazdnych znakov a komentarov [TODO] elsif(skip != 1 && skip != 0)
 
                 if((a >= 97 && a <= 122) || a == '_' || (a >= 65 && a <= 90)){              //male pismeno / velke pismeno / _
                     state = IDfunkcie;
@@ -166,6 +198,12 @@ token_t get_token(int skip){
                 }
                 else if(a == EOF){
                     return make_token(eof, NULL);
+                }
+                else if(a == '{'){
+                    return make_token(lsetbracket, "{");
+                }
+                else if(a == '}'){
+                    return make_token(rsetbracket, "}");
                 }
                 else{
                     state = ERROR;
@@ -467,6 +505,15 @@ token_t get_token(int skip){
                 str = "?";
                 i=0;
                 a = getchar();
+                if(a == '>'){
+                    a = getchar();
+                    if(a != '\n'){
+                        ungetc(a, stdin);
+                    }
+                    return make_token(epilog,"?>");
+                    break;
+                }
+
                 while(a >= 97 && a <= 122){                      
                     size_t len = strlen(str);
                     char *str2 = malloc(len + 1 + 1);
@@ -545,8 +592,8 @@ token_t get_token(int skip){
             case lt0:
                 a = getchar();
                 if(a != '?'){
-                    return make_token(lt, "<");
                     ungetc(a, stdin);
+                    return make_token(lt, "<");
                 }
                 else{
                     state = lt1;
@@ -606,14 +653,4 @@ token_t get_token(int skip){
 
     
     
-}
-
-int main(int argc, char const *argv[]){
-    token_t a;
-    a = get_token(1);
-    printf("typ: %d , value: %s \n", a.type,a.value);
-    a = get_token(1);
-    printf("typ: %d , value: %s \n", a.type,a.value);
-    a = get_token(1);
-    printf("typ: %d , value: %s \n", a.type,a.value);
 }
