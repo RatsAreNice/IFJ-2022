@@ -1,3 +1,9 @@
+#.vscode folder
+.vscode
+
+# Binaries
+Source/scanner
+
 # Prerequisites
 *.d
 
