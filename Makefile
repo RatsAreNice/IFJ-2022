@@ -6,7 +6,7 @@ FILE=ifj.c
 all: compile run 
 
 compile:
-	$(CC) $(CFLAGS) ifj $(FILE)
+	$(CC) $(CFLAGS) $(FILE) -o ifj 
 
 run:
 	./ifj
