@@ -26,6 +26,7 @@ typedef enum{
     identity,           //===
     nidentity,          //!==
     comma,              //,
+    ffloat,              //13.56
     //klucove slova
     funreturn,          //return
     funelse,            //else
@@ -344,7 +345,11 @@ token_t get_token(int *skip){
             case INT:
                 str = "";
                 i = 0;
-                while(a >= 48 && a <=  57){                      
+                z = 0;
+                while((a >= 48 && a <=  57) || (a == '.' && z == 0)){
+                    if(a == '.'){
+                        z++;                            //z znaci ci uz bola v cisle desatina ciarka
+                    }                      
                     size_t len = strlen(str);
                     char *str2 = malloc(len + 1 + 1);
                     strcpy(str2, str);
@@ -360,7 +365,12 @@ token_t get_token(int *skip){
                 if(i>0){
                     ungetc(a, stdin);
                 }
-                return make_token(integer, str);
+                if(z == 0){
+                    return make_token(integer, str);
+                }
+                else{
+                    return make_token(ffloat, str);
+                }
                 break;
 
             case string1:

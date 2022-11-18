@@ -1,4 +1,4 @@
-function/*test1*/?int bar //lelec 
+<?php declare(strict_types=1); 453,12.56 3.8 function ./*test1*/?int bar //lelec 
 string /{
 return foo($param);
 }
