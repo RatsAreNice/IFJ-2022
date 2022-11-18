@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <ctype.h>
 
 typedef enum{
     ID_function,        //abc
@@ -93,7 +94,7 @@ token_t make_token(token_type typ, char* hodnota){
     return lexem;
 }
 
-token_t get_token(int skip){
+token_t get_token(int *skip){
     state state = start;
     char a;
     char b;
@@ -107,12 +108,49 @@ token_t get_token(int skip){
             case start:
                 a = getchar();
 
-                if(skip == 1){
-                    while(a == ' ' || a == '\t' || a == '\n'){          //preskocenie iba prazdnych znakov
+                if(*skip == 1){ // mod na zaciatku -> nic nepreskakuje, ocakava prolog.
+                    if(a == '<')
+                    {
                         a = getchar();
+                        if(a == '?'){
+                            a = getchar();
+                            if(a != 'p'){
+                                fprintf(stderr, "program nezacina prologom");
+                                exit(1);
+                            }
+                            a = getchar();
+                            if(a != 'h'){
+                                fprintf(stderr, "program nezacina prologom");
+                                exit(1);
+                            }
+                            a = getchar();
+                            if(a != 'p'){
+                                fprintf(stderr, "program nezacina prologom");
+                                exit(1);
+                            }
+                            a = getchar();
+                            if(!isspace(a) && a != '/'){
+                                fprintf(stderr, "program nezacina prologom");
+                                exit(1);
+                            }
+                            ungetc(a, stdin);
+                            *skip = 0;
+                            return make_token(prolog1,"<?php ");
+                        }
+                        else
+                        {
+                            fprintf(stderr, "program nezacina prologom");
+                            exit(1);
+                        }
                     }
-                }else if(skip != 1 && skip != 0){
-                    while(a == ' ' || a == '\t' || a == '\n' || a == '/'){          //preskocenie prazdnych znakov a komentarov
+                    else
+                    {
+                        fprintf(stderr, "program nezacina prologom");
+                        exit(1);
+                    }
+                }
+                else if(*skip == 0){ // mod po prologu -> preskakuje whitespaces a komentare.
+                    while(isspace(a) || a == '/'){          //preskocenie prazdnych znakov a komentarov
                         if(a == '/'){
                             a = getchar();
                             if(a == '/'){
@@ -141,6 +179,13 @@ token_t get_token(int skip){
                             }
                         }
                         a = getchar();
+                    }
+                }
+                else{ // mod po epilogu -> nic nepreskakuje, ocakava nic.
+                    if(a != EOF)
+                    {
+                        fprintf(stderr, "program nekonci epilogem");
+                        exit(1);
                     }
                 }
 
@@ -176,7 +221,6 @@ token_t get_token(int skip){
                 }
                 else if(a == '<'){
                     state = lt0;
-                    //return make_token(lt, "<");
                 }
                 else if(a == '>'){
                     return make_token(mt, ">");
@@ -510,6 +554,7 @@ token_t get_token(int skip){
                     if(a != '\n'){
                         ungetc(a, stdin);
                     }
+                    *skip=2; // scanner sa prepne do post-epilog modu.
                     return make_token(epilog,"?>");
                     break;
                 }
@@ -621,7 +666,7 @@ token_t get_token(int skip){
                     fprintf(stderr, "chybna znacka <?php");
                     exit(1);
                 }
-                return make_token(prolog1,"<?php ");
+                return make_token(prolog1,"<?php "); // ak sa nahodou vyskytne druhy prolog v kode ten uz vyriesi syntakticka analyza :D
                 break;
             case declare:
                 str = "";
