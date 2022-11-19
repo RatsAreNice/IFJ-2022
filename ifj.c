@@ -3,6 +3,7 @@
 #include <stdlib.h>
 
 #include "Source/scanner.c"
+#include "Source/parser.c"
 #include "Source/symtable.c"
 
 int main(int argc, char const *argv[])
