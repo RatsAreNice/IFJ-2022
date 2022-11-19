@@ -20,6 +20,8 @@ typedef enum{
     division,           ///
     lt,                 //<
     mt,                 //>
+    lte,                //<=
+    mte,                //>=
     semicolon,          //;
     integer,            //56
     assign,             //=
@@ -58,6 +60,7 @@ typedef enum{       //stavy automatu
     ERROR,
     lt1,
     lt0,
+    mt0,
     declare,
 } state;
 
@@ -224,7 +227,7 @@ token_t get_token(int *skip){
                     state = lt0;
                 }
                 else if(a == '>'){
-                    return make_token(mt, ">");
+                    state = mt0;
                 }
                 else if(a == ';'){
                     return make_token(semicolon, ";");
@@ -644,14 +647,27 @@ token_t get_token(int *skip){
                 fprintf(stderr, "chybna syntax");
                 exit(1);
                 break;
+            case mt0:
+                a = getchar();
+                if(a != '='){
+                    ungetc(a, stdin);
+                    return make_token(mt, ">");
+                }
+                else{
+                    return make_token(mte, ">=");
+                }
+                break;
             case lt0:
                 a = getchar();
-                if(a != '?'){
+                if(a != '?' && a != '='){
                     ungetc(a, stdin);
                     return make_token(lt, "<");
                 }
-                else{
+                else if(a == '?'){
                     state = lt1;
+                }
+                else if(a == '='){
+                    return make_token(lte, "<=");
                 }
                 break;
             case lt1:
