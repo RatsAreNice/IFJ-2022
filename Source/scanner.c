@@ -29,6 +29,7 @@ typedef enum{
     nidentity,          //!==
     comma,              //,
     ffloat,              //13.56
+    dot,                //. (retazcovy operator)
     //klucove slova
     funreturn,          //return
     funelse,            //else
@@ -213,6 +214,9 @@ token_t get_token(int *skip){
                 }
                 else if(a == '+'){
                     return make_token(plus, "+");
+                }
+                else if(a == '.'){
+                    return make_token(dot, ".");
                 }
                 else if(a == '-'){
                     return make_token(minus, "-");
