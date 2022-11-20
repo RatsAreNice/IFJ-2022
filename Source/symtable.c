@@ -11,6 +11,15 @@ JADRO PREBRANE Z VYPRACOVANIA 2. DOMACEJ ULOHY PREDMETU IAL MATUSA DOBIASA
 #include <stdlib.h>
 #include <string.h>
 
+
+typedef struct funData
+{
+  int ParamCount;
+  int* paramTypes;
+  int returnType;
+  bool defined;
+
+} funData_t;
 // Uzol stromu
 typedef struct bst_node {
   char* key;               
@@ -23,14 +32,12 @@ typedef struct bst_node {
 
 // data
 
-typedef struct funData
-{
-  int ParamCount;
-  int* paramtypes;
-  int returnType;
-  bool defined;
-
-} funData_t;
+typedef enum{
+  INT,
+  STRING,
+ // BOOL,
+  VOID,
+}type_t;
 
 
 
@@ -91,7 +98,7 @@ int bst_insert(bst_node_t **tree, char* key, int type, funData_t* funData) {
   int diff = 0;
   if (*tree!=NULL)
   {
-    diff = strcmp(tree->key,key);
+    diff = strcmp((*tree)->key,key);
   }
   // naplast solution, nechcelo sa mi refaktorizovat
   if (*tree==NULL)
@@ -112,15 +119,16 @@ int bst_insert(bst_node_t **tree, char* key, int type, funData_t* funData) {
   }
   else if (diff>0)
   {
-    return bst_insert(&(*tree)->left,key,type,&funData);
+    return bst_insert(&(*tree)->left,key,type,funData);
   }
   else if (diff<0)
   {
-    return bst_insert(&(*tree)->right,key,type,&funData);
+    return bst_insert(&(*tree)->right,key,type,funData);
   }
   else
   {
-    (*tree)->value=value;
+    (*tree)->type=type;
+    (*tree)->funData=funData;
     return 2;
   }
 
@@ -147,7 +155,7 @@ void bst_replace_by_rightmost(bst_node_t *target, bst_node_t **tree) {
 
 
 void bst_delete(bst_node_t **tree, char* key) {
-  int diff = 0
+  int diff = 0;
   if ((*tree)!=NULL)
   {
     diff = strcmp((*tree)->key,key);
