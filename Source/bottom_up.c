@@ -65,19 +65,25 @@ int cmp_to_rule(int rs[]){                  //funkcia dostane pravu stranu pravi
     if(rs[0] == 3){                         // <exp> -> i
         return -3;
     }
+    if(rs[0] == 0){                         //<null> -> null
+        return -2;
+    }
+    if(rs[0] == 10 && rs[1] == -2 && rs[2] == 11){                  //(<nnull>)  -> null
+        return -2;
+    }
     if(rs[0] == 10 && rs[1] == -3 && rs[2] == 11){                    // <exp> -> (<exp>)
         return -3;
     }
-    if(rs[0] == -3 && rs[1] == 4 && rs[2] == -3){                    // <exp> -> <exp> + <exp>
+    if((rs[0] == -3|| rs[0] == -2) && rs[1] == 4 && (rs[2] == -3 || rs[2] == -2)){                    // <exp> -> <exp>||<nnull> + <exp>||<nnull>
         return -3;
     }
-    if(rs[0] == -3 && rs[1] == 5 && rs[2] == -3){                    // <exp> -> <exp> - <exp>
+    if((rs[0] == -3|| rs[0] == -2) && rs[1] == 5 && (rs[2] == -3 || rs[2] == -2)){                    // <exp> -> <exp>||<nnull> - <exp>||<nnull>
         return -3;
     }
-    if(rs[0] == -3 && rs[1] == 6 && rs[2] == -3){                    // <exp> -> <exp> * <exp>
+    if((rs[0] == -3|| rs[0] == -2) && rs[1] == 6 && (rs[2] == -3 || rs[2] == -2)){                    // <exp> -> <exp>||<nnull> * <exp>||<nnull>
         return -3;
     }
-    if(rs[0] == -3 && rs[1] == 7 && rs[2] == -3){                    // <exp> -> <exp> / <exp>
+    if((rs[0] == -3|| rs[0] == -2) && rs[1] == 7 && (rs[2] == -3 || rs[2] == -2)){                    // <exp> -> <exp>||<nnull> / <exp>||<nnull>
         return -3;
     }
     if(rs[0] == 10 && rs[1] == -4 && rs[2] == 11){                    // <strexp> -> (<strexp>)
@@ -86,46 +92,16 @@ int cmp_to_rule(int rs[]){                  //funkcia dostane pravu stranu pravi
     if(rs[0] == 2 && rs[1] == -1 && rs[2] == -1){                    // <strexp> -> string
         return -4;
     }
-    if(rs[0] == -4 && rs[1] == 1 && rs[2] == 0){                    // <strexp> -> <strexp> dot funnull
-        return -4;
-    }
-    if(rs[0] == 0 && rs[1] == 1 && rs[2] == -4){                    // <strexp> -> funnull dot <strexp>
-        return -4;
-    }
-    if(rs[0] == -4 && rs[1] == 1 && rs[2] == -4){                    // <strexp> -> <strexp> dot <strexp>
+    if((rs[0] == -4 || rs[0] == -2) && rs[1] == 1 && (rs[2] == -4 || rs[2] == -2)){                    // <strexp> -> <strexp>||<nnull> dot <strexp>|<nnull>
         return -4;
     }
     if(rs[0] == 10 && rs[1] == -5 && rs[2] == 11){                    // S -> (S)
         return -5;
     }
-    if(rs[0] == -4 && rs[1] == 8 && rs[2] == 0){                    // S -> <strexp> relid funnull
+    if((rs[0] == -3 || rs[0] == -2) && rs[1] == 8 && (rs[2] == -3 || rs[2] == -2)){                    // S -> <exp>|<nnull> relid <exp>|<nnull>
         return -5;
     }
-    if(rs[0] == 0 && rs[1] == 8 && rs[2] == -4){                    // S -> funnull relid <strexp>
-        return -5;
-    }
-    if(rs[0] == -4 && rs[1] == 8 && rs[2] == -4){                    // S -> <strexp> relid <strexp>
-        return -5;
-    }
-    if(rs[0] == -3 && rs[1] == 8 && rs[2] == -3){                    // S -> <exp> relid <exp>
-        return -5;
-    }
-    if(rs[0] == -3 && rs[1] == -1 && rs[2] == -1){                    // S -> <exp>
-        return -5;
-    }
-    if(rs[0] == -4 && rs[1] == -1 && rs[2] == -1){                    // S -> <strexp>
-        return -5;
-    }
-    if(rs[0] == -4 && rs[1] == 9 && rs[2] == 0){                    // S -> <strexp> relid funnull
-        return -5;
-    }
-    if(rs[0] == 0 && rs[1] == 9 && rs[2] == -4){                    // S -> funnull relid <strexp>
-        return -5;
-    }
-    if(rs[0] == -4 && rs[1] == 9 && rs[2] == -4){                    // S -> <strexp> relid <strexp>
-        return -5;
-    }
-    if(rs[0] == -3 && rs[1] == 9 && rs[2] == -3){                    // S -> <exp> relid <exp>
+    if((rs[0] == -4 || rs[0] == -2) && rs[1] == 9 && (rs[2] == -4 || rs[2] == -2)){                    // S -> <strexp>|<nnull> relid <strexp>|<nnull>
         return -5;
     }else{
         fprintf(stderr,"redukcia retazca ktory nieje na pravej strane ziadneho pravidla - nespravna syntax");
@@ -303,10 +279,6 @@ int expr(token_t end, int skip){
                 i++;
             }
 
-            //test
-            printf("redukujem %d , %d , %d \n",rs[0],rs[1],rs[2]);
-            //test
-
             neterminal = cmp_to_rule(rs);       //v premmenej neterminal je neterminal ktory musime vlozit na zasobnik po tom co odstranime symboly medzi <>, vratane '<' '>' samotnych
 
             DLL_Last(&a);                       
@@ -341,22 +313,5 @@ int expr(token_t end, int skip){
             DLL_GetValue(&a,&q);
         }                                                           //najpravsi terminal je aktivny
     }
-
-    return 0;
-}
-
-int main(int argc, char const *argv[])
-{
-    int x = 1;
-    token_t a;
-    a = get_token(&x);
-    printf("%d : %s\n", a.type,a.value);
-    a = get_token(&x);
-    printf("%d : %s\n", a.type,a.value);
-    a = get_token(&x);
-    printf("%d : %s\n", a.type,a.value);
-    a.type = lsetbracket;
-    a.value = "tets0";
-    expr(a,x);
     return 0;
 }
