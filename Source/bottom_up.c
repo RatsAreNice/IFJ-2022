@@ -44,7 +44,7 @@ int convert(token_t a){       //konvertuje token na cislo
         case rbracket:
             return 11;
     }
-    fprintf(stderr,"neocakavany znak vo vyraze");
+    fprintf(stderr,"neocakavany znak vo vyraze : %d" ,a.type);
     exit(2);
 }    
 
@@ -62,28 +62,25 @@ int get_input(token_t end,int *skip){           //ziska token zo vstupu a konver
 }
 
 int cmp_to_rule(int rs[]){                  //funkcia dostane pravu stranu pravidla. vrati lavu stranu tohto pravidla. (vracia neterminal reprezentovany INTom)
-    if(rs[0] == 7){                         // <operator> -> /
-        return -2;
-    }
-    if(rs[0] == 6){                         // <operator> -> *
-        return -2;
-    }
-    if(rs[0] == 5){                         // <operator> -> -
-        return -2;
-    }
-    if(rs[0] == 4){                         // <operator> -> +
-        return -2;
-    }
     if(rs[0] == 3){                         // <exp> -> i
         return -3;
     }
     if(rs[0] == 10 && rs[1] == -3 && rs[2] == 11){                    // <exp> -> (<exp>)
         return -3;
     }
-    if(rs[0] == -3 && rs[1] == -2 && rs[2] == -3){                    // <exp> -> <exp> <operator> <exp>
+    if(rs[0] == -3 && rs[1] == 4 && rs[2] == -3){                    // <exp> -> <exp> + <exp>
         return -3;
     }
-    if(rs[0] == 10 && rs[1] == -4 && rs[2] == 10){                    // <strexp> -> (<strexp>)
+    if(rs[0] == -3 && rs[1] == 5 && rs[2] == -3){                    // <exp> -> <exp> - <exp>
+        return -3;
+    }
+    if(rs[0] == -3 && rs[1] == 6 && rs[2] == -3){                    // <exp> -> <exp> * <exp>
+        return -3;
+    }
+    if(rs[0] == -3 && rs[1] == 7 && rs[2] == -3){                    // <exp> -> <exp> / <exp>
+        return -3;
+    }
+    if(rs[0] == 10 && rs[1] == -4 && rs[2] == 11){                    // <strexp> -> (<strexp>)
         return -4;
     }
     if(rs[0] == 2 && rs[1] == -1 && rs[2] == -1){                    // <strexp> -> string
@@ -305,7 +302,13 @@ int expr(token_t end, int skip){
                 DLL_GetValue(&a,&q);
                 i++;
             }
+
+            //test
+            printf("redukujem %d , %d , %d \n",rs[0],rs[1],rs[2]);
+            //test
+
             neterminal = cmp_to_rule(rs);       //v premmenej neterminal je neterminal ktory musime vlozit na zasobnik po tom co odstranime symboly medzi <>, vratane '<' '>' samotnych
+
             DLL_Last(&a);                       
             while(q != '<'){
                 DLL_Previous(&a);
@@ -314,20 +317,29 @@ int expr(token_t end, int skip){
             }
             DLL_DeleteLast(&a);                 //cely retazec <...> je vymazany
             DLL_InsertLast(&a,neterminal);      //vlozenie neterminalu namiesto <...>
-            DLL_Last(&a);
-            DLL_GetValue(&a,&q);
-            while(q<0 || q == '<' || q == '>' || q == '='){             //od posledneho chod cez vsetky prvky na zasobniku, pokial nenarazis na terminal
-                DLL_Previous(&a);
-                DLL_GetValue(&a,&q);
-            }                                                           //najpravsi terminal je aktivny
-            // printf("%d : %d : %d\n",q,b,neterminal);
-            // return 0;
         }
         else if(akcia == 'e'){
+            printf("zasobnik = %d,input = %d",q,b);
             fprintf(stderr, "pre kombinaciu zasobnik / vstup nieje v precedencnej tabulke symbol - chybna syntax");
             exit(2);
         }
-        //ak zasobnik obsahuje iba $S, nastav endflag na 1
+
+        DLL_Last(&a);           //kontrola ci zasobnik obsahuje iba $S
+        DLL_GetValue(&a, &q);   
+        if(q == -5 || q == -3 || q == -4){
+            DLL_Previous(&a);
+            DLL_GetValue(&a, &q);
+            if(q == 12){
+                endflag = 1;                //ak ano, nastavi sa endflag na 1
+            }
+        }
+
+        DLL_Last(&a);
+        DLL_GetValue(&a,&q);
+        while(q<0 || q == '<' || q == '>' || q == '='){             //od posledneho chod cez vsetky prvky na zasobniku, pokial nenarazis na terminal
+            DLL_Previous(&a);
+            DLL_GetValue(&a,&q);
+        }                                                           //najpravsi terminal je aktivny
     }
 
     return 0;
@@ -343,7 +355,7 @@ int main(int argc, char const *argv[])
     printf("%d : %s\n", a.type,a.value);
     a = get_token(&x);
     printf("%d : %s\n", a.type,a.value);
-    a.type = funnull;
+    a.type = lsetbracket;
     a.value = "tets0";
     expr(a,x);
     return 0;
