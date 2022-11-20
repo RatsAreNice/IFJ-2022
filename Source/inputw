@@ -1,4 +1,6 @@
-<?php declare(strict_types=1); = => >=1.00003<=< ===> function ./*test1*/?int bar //lelec 
+<?php declare(strict_types=1); if(5*$abc < 3.4){
+    print(a);
+}
 string /{
 return foo($param);
 }

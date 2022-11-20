@@ -61,6 +61,81 @@ int get_input(token_t end,int *skip){           //ziska token zo vstupu a konver
     return b;
 }
 
+int cmp_to_rule(int rs[]){                  //funkcia dostane pravu stranu pravidla. vrati lavu stranu tohto pravidla. (vracia neterminal reprezentovany INTom)
+    if(rs[0] == 7){                         // <operator> -> /
+        return -2;
+    }
+    if(rs[0] == 6){                         // <operator> -> *
+        return -2;
+    }
+    if(rs[0] == 5){                         // <operator> -> -
+        return -2;
+    }
+    if(rs[0] == 4){                         // <operator> -> +
+        return -2;
+    }
+    if(rs[0] == 3){                         // <exp> -> i
+        return -3;
+    }
+    if(rs[0] == 10 && rs[1] == -3 && rs[2] == 11){                    // <exp> -> (<exp>)
+        return -3;
+    }
+    if(rs[0] == -3 && rs[1] == -2 && rs[2] == -3){                    // <exp> -> <exp> <operator> <exp>
+        return -3;
+    }
+    if(rs[0] == 10 && rs[1] == -4 && rs[2] == 10){                    // <strexp> -> (<strexp>)
+        return -4;
+    }
+    if(rs[0] == 2 && rs[1] == -1 && rs[2] == -1){                    // <strexp> -> string
+        return -4;
+    }
+    if(rs[0] == -4 && rs[1] == 1 && rs[2] == 0){                    // <strexp> -> <strexp> dot funnull
+        return -4;
+    }
+    if(rs[0] == 0 && rs[1] == 1 && rs[2] == -4){                    // <strexp> -> funnull dot <strexp>
+        return -4;
+    }
+    if(rs[0] == -4 && rs[1] == 1 && rs[2] == -4){                    // <strexp> -> <strexp> dot <strexp>
+        return -4;
+    }
+    if(rs[0] == 10 && rs[1] == -5 && rs[2] == 11){                    // S -> (S)
+        return -5;
+    }
+    if(rs[0] == -4 && rs[1] == 8 && rs[2] == 0){                    // S -> <strexp> relid funnull
+        return -5;
+    }
+    if(rs[0] == 0 && rs[1] == 8 && rs[2] == -4){                    // S -> funnull relid <strexp>
+        return -5;
+    }
+    if(rs[0] == -4 && rs[1] == 8 && rs[2] == -4){                    // S -> <strexp> relid <strexp>
+        return -5;
+    }
+    if(rs[0] == -3 && rs[1] == 8 && rs[2] == -3){                    // S -> <exp> relid <exp>
+        return -5;
+    }
+    if(rs[0] == -3 && rs[1] == -1 && rs[2] == -1){                    // S -> <exp>
+        return -5;
+    }
+    if(rs[0] == -4 && rs[1] == -1 && rs[2] == -1){                    // S -> <strexp>
+        return -5;
+    }
+    if(rs[0] == -4 && rs[1] == 9 && rs[2] == 0){                    // S -> <strexp> relid funnull
+        return -5;
+    }
+    if(rs[0] == 0 && rs[1] == 9 && rs[2] == -4){                    // S -> funnull relid <strexp>
+        return -5;
+    }
+    if(rs[0] == -4 && rs[1] == 9 && rs[2] == -4){                    // S -> <strexp> relid <strexp>
+        return -5;
+    }
+    if(rs[0] == -3 && rs[1] == 9 && rs[2] == -3){                    // S -> <exp> relid <exp>
+        return -5;
+    }else{
+        fprintf(stderr,"redukcia retazca ktory nieje na pravej strane ziadneho pravidla - nespravna syntax");
+        exit(2);
+    }
+}
+
 int expr(token_t end, int skip){
 
     //tabulka
@@ -181,6 +256,7 @@ int expr(token_t end, int skip){
     prec_t[12][11] = 'e';
 
     //tabulka
+    int neterminal;
     int endflag = 0;
     char akcia;
     int b;
@@ -193,6 +269,7 @@ int expr(token_t end, int skip){
     b = get_input(end,&skip);
 
     while((b != 12) || (endflag != 1)){
+        endflag = 0;
         for(int i=0;i<3;i++){
             rs[i] = -1;
         } 
@@ -228,8 +305,29 @@ int expr(token_t end, int skip){
                 DLL_GetValue(&a,&q);
                 i++;
             }
-            //cmp_to_rule(rs)
+            neterminal = cmp_to_rule(rs);       //v premmenej neterminal je neterminal ktory musime vlozit na zasobnik po tom co odstranime symboly medzi <>, vratane '<' '>' samotnych
+            DLL_Last(&a);                       
+            while(q != '<'){
+                DLL_Previous(&a);
+                DLL_DeleteAfter(&a);
+                DLL_GetValue(&a,&q);
+            }
+            DLL_DeleteLast(&a);                 //cely retazec <...> je vymazany
+            DLL_InsertLast(&a,neterminal);      //vlozenie neterminalu namiesto <...>
+            DLL_Last(&a);
+            DLL_GetValue(&a,&q);
+            while(q<0 || q == '<' || q == '>' || q == '='){             //od posledneho chod cez vsetky prvky na zasobniku, pokial nenarazis na terminal
+                DLL_Previous(&a);
+                DLL_GetValue(&a,&q);
+            }                                                           //najpravsi terminal je aktivny
+            // printf("%d : %d : %d\n",q,b,neterminal);
+            // return 0;
         }
+        else if(akcia == 'e'){
+            fprintf(stderr, "pre kombinaciu zasobnik / vstup nieje v precedencnej tabulke symbol - chybna syntax");
+            exit(2);
+        }
+        //ak zasobnik obsahuje iba $S, nastav endflag na 1
     }
 
     return 0;
