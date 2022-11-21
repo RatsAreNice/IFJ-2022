@@ -1,12 +1,12 @@
 CC=gcc
 CFLAGS=-Wall -std=c11 -pedantic
-FILE=ifj.c
+FILES= Source/bottom_up.c Source/Parser.c Source/scanner.c Source/symtable.c ifj.c
 
 
 all: compile run 
 
 compile:
-	$(CC) $(CFLAGS) $(FILE) -o ifj 
+	$(CC) $(CFLAGS) $(FILES) -o ifj 
 
 run:
 	./ifj
