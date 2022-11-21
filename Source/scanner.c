@@ -121,22 +121,22 @@ token_t get_token(int *skip){
                             a = getchar();
                             if(a != 'p'){
                                 fprintf(stderr, "program nezacina prologom");
-                                exit(1);
+                                exit(2);
                             }
                             a = getchar();
                             if(a != 'h'){
                                 fprintf(stderr, "program nezacina prologom");
-                                exit(1);
+                                exit(2);
                             }
                             a = getchar();
                             if(a != 'p'){
                                 fprintf(stderr, "program nezacina prologom");
-                                exit(1);
+                                exit(2);
                             }
                             a = getchar();
                             if(!isspace(a) && a != '/'){
                                 fprintf(stderr, "program nezacina prologom");
-                                exit(1);
+                                exit(2);
                             }
                             ungetc(a, stdin);
                             *skip = 0;
@@ -145,13 +145,13 @@ token_t get_token(int *skip){
                         else
                         {
                             fprintf(stderr, "program nezacina prologom");
-                            exit(1);
+                            exit(2);
                         }
                     }
                     else
                     {
                         fprintf(stderr, "program nezacina prologom");
-                        exit(1);
+                        exit(2);
                     }
                 }
                 else if(*skip == 0){ // mod po prologu -> preskakuje whitespaces a komentare.
@@ -190,7 +190,7 @@ token_t get_token(int *skip){
                     if(a != EOF)
                     {
                         fprintf(stderr, "program nekonci epilogem");
-                        exit(1);
+                        exit(2);
                     }
                 }
 
