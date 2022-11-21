@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include "c206.c"
-#include "scanner.c"
+#include "bottom_up.h"
 
 int convert(token_t a){       //konvertuje token na cislo
     switch(a.type){
@@ -43,9 +43,10 @@ int convert(token_t a){       //konvertuje token na cislo
             return 10;
         case rbracket:
             return 11;
+        default:
+            fprintf(stderr,"neocakavany znak vo vyraze : %d" ,a.type);
+            exit(2);
     }
-    fprintf(stderr,"neocakavany znak vo vyraze : %d" ,a.type);
-    exit(2);
 }    
 
 int get_input(token_t end,int *skip){           //ziska token zo vstupu a konvertuje ho

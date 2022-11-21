@@ -4,71 +4,72 @@
 #include <string.h>
 #include <stdlib.h>
 #include <ctype.h>
+#include "scanner.h"
 
-typedef enum{
-    ID_function,        //abc
-    ID_variable,        //$abc
-    string,             //"abc"
-    type,               //?abc
-    lbracket,           //(
-    rbracket,           //)
-    lsetbracket,        //{
-    rsetbracket,        //}
-    plus,               //+
-    minus,              //-
-    mul,                //*
-    division,           ///
-    lt,                 //<
-    mt,                 //>
-    lte,                //<=
-    mte,                //>=
-    semicolon,          //;
-    integer,            //56
-    assign,             //=
-    identity,           //===
-    nidentity,          //!==
-    comma,              //,
-    ffloat,              //13.56
-    dot,                //. (retazcovy operator)
-    //klucove slova
-    funreturn,          //return
-    funelse,            //else
-    function,           //function
-    funif,              //if
-    funnull,            //null
-    funvoid,            //void
-    funwhile,           //while
-    prolog1,            //<?php             [VRATANE PRAZDNEHO ZNAKU ZA]
-    prolog2,            //declare(strict_types=1);
-    epilog,             //?>                 [ak je za znackou \n, zozerie ho to. (aby sa dalo potom testovat na EOF)]
-    eof,       
-} token_type;             //typ lexemu
-typedef enum{       //stavy automatu
-    start,
-    IDfunkcie,
-    premenna1,
-    premenna2,
-    string1,
-    string2,
-    type1,
-    INT,
-    identity2,
-    nidentity1,
-    identity1,
-    identity0,
-    nidentity2,
-    nidentity0,
-    ERROR,
-    lt1,
-    lt0,
-    mt0,
-    declare,
-} state;
+//typedef enum{
+//    ID_function,        //abc
+//    ID_variable,        //$abc
+//    string,             //"abc"
+//    type,               //?abc
+//    lbracket,           //(
+//    rbracket,           //)
+//    lsetbracket,        //{
+//    rsetbracket,        //}
+//    plus,               //+
+//    minus,              //-
+//    mul,                //*
+//    division,           ///
+//    lt,                 //<
+//    mt,                 //>
+//    lte,                //<=
+//    mte,                //>=
+//    semicolon,          //;
+//    integer,            //56
+//    assign,             //=
+//    identity,           //===
+//    nidentity,          //!==
+//    comma,              //,
+//    ffloat,              //13.56
+//    dot,                //. (retazcovy operator)
+//    //klucove slova
+//    funreturn,          //return
+//    funelse,            //else
+//    function,           //function
+//    funif,              //if
+//    funnull,            //null
+//    funvoid,            //void
+//    funwhile,           //while
+//    prolog1,            //<?php             [VRATANE PRAZDNEHO ZNAKU ZA]
+//    prolog2,            //declare(strict_types=1);
+//    epilog,             //?>                 [ak je za znackou \n, zozerie ho to. (aby sa dalo potom testovat na EOF)]
+//    eof,       
+//} token_type;             //typ lexemu
+//typedef enum{       //stavy automatu
+//    start,
+//    IDfunkcie,
+//    premenna1,
+//    premenna2,
+//    string1,
+//    string2,
+//    type1,
+//    INT,
+//    identity2,
+//    nidentity1,
+//    identity1,
+//    identity0,
+//    nidentity2,
+//    nidentity0,
+//    ERROR,
+//    lt1,
+//    lt0,
+//    mt0,
+//    declare,
+//} state;
 
-typedef struct token {
-  token_type type;
-  char* value;
-} token_t;
+//typedef struct token {
+//  token_type type;
+//  char* value;
+//} token_t;
 
 int hextoint(char k){
     int a = k;
@@ -105,7 +106,6 @@ token_t get_token(int *skip){
     char b;
     char c;
     char* str;
-    char* temp;
     int i;
     int z;
     while(1){    
@@ -113,7 +113,7 @@ token_t get_token(int *skip){
             case start:
                 a = getchar();
 
-                if(*skip == 1){ // mod na zaciatku -> nic nepreskakuje, ocakava prolog.
+                if(*skip == 1){ // mod na zaciatku -> nic nepreskakuje, ocakava prolog1.
                     if(a == '<')
                     {
                         a = getchar();

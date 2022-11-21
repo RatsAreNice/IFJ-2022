@@ -10,7 +10,7 @@ JADRO PREBRANE Z VYPRACOVANIA 2. DOMACEJ ULOHY PREDMETU IAL MATUSA DOBIASA
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
+#include "symtable.h"
 
 typedef struct funData
 {
@@ -32,34 +32,10 @@ typedef struct bst_node {
 
 // data
 
-typedef enum{
-  INT,
-  STRING,
- // BOOL,
-  VOID,
-}type_t;
-
-
-
 /*typedef struct labelData
 {
   bool declared;
 } labelData_t;*/
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 // functions
 
