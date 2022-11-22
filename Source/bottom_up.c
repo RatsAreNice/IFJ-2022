@@ -44,12 +44,12 @@ int convert(token_t a){       //konvertuje token na cislo
         case rbracket:
             return 11;
         default:
-            fprintf(stderr,"neocakavany znak vo vyraze : %d" ,a.type);
+            fprintf(stderr,"neocakavany znak vo vyraze: %s\n" ,a.value);
             exit(2);
     }
 }    
 
-int get_input(token_t** first, token_t** second,token_t end,int skip){           //ziska token zo vstupu a konvertuje ho
+int get_input(token_t** first, token_t** second,token_type end,int skip){           //ziska token zo vstupu a konvertuje ho
     token_t input;
     int b;
     if(*first != NULL){
@@ -63,7 +63,7 @@ int get_input(token_t** first, token_t** second,token_t end,int skip){          
         input = get_token(skip);
     }
 
-    if(input.type == end.type){
+    if(input.type == end){
         b = 12;
     }
     else{
@@ -121,7 +121,7 @@ int cmp_to_rule(int rs[]){                  //funkcia dostane pravu stranu pravi
     }
 }
 
-int expr(token_t* first,token_t* second,token_t end, int skip){
+int expr(token_t* first,token_t* second, token_type end, int skip){
 
     //tabulka
     char prec_t[13][13];
