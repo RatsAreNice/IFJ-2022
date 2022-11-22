@@ -69,5 +69,5 @@ int hextoint(char k);
 int pwr(int a, int b);
 
 token_t make_token(token_type typ, char* hodnota);
-token_t get_token(int *skip);
+token_t get_token(int skip);
 #endif

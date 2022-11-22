@@ -2,13 +2,11 @@
 #include <string.h>
 #include <stdlib.h>
 
-#include "Source/scanner.c"
-#include "Source/parser.c"
-#include "Source/symtable.c"
+#include "Source/Parser.h"
 
 int main(int argc, char const *argv[])
 {
-
+    parse();
     return 0;
 }
 
