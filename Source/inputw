@@ -1,4 +1,4 @@
-<?php declare(strict_types=1); if(null*4+(17/17/17/17.5-(4+5))){
+<?php declare(strict_types=1); if($a*$b<9){
     print(a);
 }
 string /{
