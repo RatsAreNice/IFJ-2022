@@ -37,13 +37,22 @@ parser 'states'?
 #include <string.h>
 #include <stdlib.h>
 
+bool parse();
+
 bool p_start(token_t * token);
+
 bool p_prolog(token_t * token);
 bool p_prolog_sub1(token_t * token);
 bool p_prolog_sub2(token_t * token);
+
 bool p_body(token_t * token);
+
+bool p_fundec(token_t * token);
 bool p_fparams(token_t * token);
 bool p_nparam(token_t * token);
+
+//bool p_expr(token_t * token);
+
 bool p_rettype(token_t * token);
 bool p_type(token_t * token);
 bool p_nodefbody(token_t * token);
@@ -79,7 +88,6 @@ bool parse()
 bool p_start(token_t * token)
 {
     return p_prolog(token) && p_body(token);
-    return false;
 }
 
 bool p_prolog(token_t * token)
@@ -88,7 +96,7 @@ bool p_prolog(token_t * token)
         return true;
     else
     {
-        fprintf(stderr, "Syntax chyba: Unexpected error, last token: %s\n", token->value);
+        fprintf(stderr, "Syntax error: Unexpected error, last token: %s\n", token->value);
         exit(2);
     }
     return false;
@@ -104,7 +112,7 @@ bool p_prolog_sub1(token_t * token)
     }
     else
     {
-        fprintf(stderr, "Syntax chyba: Expected prolog at beginning of file, got: %s\n", token->value);
+        fprintf(stderr, "Syntax error: Expected prolog at beginning of file, got: %s\n", token->value);
         exit(2);
     }
     return false;
@@ -120,7 +128,7 @@ bool p_prolog_sub2(token_t * token)
     }
     else
     {
-        fprintf(stderr, "Syntax chyba: Malformed prolog at beginning of file, got: %s\n", token->value);
+        fprintf(stderr, "Syntax error: Malformed prolog at beginning of file, got: %s\n", token->value);
         exit(2);
     }
     return false;
@@ -128,49 +136,196 @@ bool p_prolog_sub2(token_t * token)
 
 bool p_body(token_t * token)
 {
+    token_t oldtoken;
     DPRINT(("Got to body with token %s\n", token->value));
     switch(token->type)
     {
         case ffloat:
         case integer:
         case string:
-            return p_const(token) && p_body(token);
-        case function:
+            if(p_const(token))
+            {
+                *token = get_token(0);
+                return true && p_body(token);
+            }
+            else
+                
+        case ID_variable:
+            oldtoken = *token;
             *token = get_token(0);
+            if(token->type != assign)
+            {
+                if (expr(&oldtoken, token, semicolon, 0) == 0)
+                {   
+                    *token = get_token(0);
+                    return true && p_body(token);
+                }
+                else
+                {
+                    fprintf(stderr, "Syntax error: Unknown token.\n");
+                    exit(2);
+                }
+            }
+            else
+            {
+                *token = get_token(0);
+                if(p_assigned(token))
+                {
+                    *token = get_token(0);
+                    return true && p_body(token);
+                }
+                else
+                {
+                    fprintf(stderr, "Syntax error: Unknown token after assignment.\n");
+                    exit(2);
+                }
+            }
+        //case function:
+        //    *token = get_token(0);
+        case funif:
+            return p_ifstat(token);
         default:
             fprintf(stderr, "Syntax error: Didn't get what expected :(");
     }
     exit(0);
 }
 
+//bool p_expr(token_t * oldtoken, token_t * token)
+//{
+//
+//}
+
 bool p_const(token_t * token)
 {
-    //token_t oldtoken = token;
-    token_t dummy;
-    dummy.type = semicolon;
+    token_t oldtoken = *token;
     *token = get_token(0);
-    if(strcmp(token->value,";") != 0)
+    if(token->type != semicolon)
     {
-        if(expr(dummy,0) == 0)
+
+        if(expr(&oldtoken, token, semicolon,0) == 0)
         {
-            DPRINT(("Got here after expr.\n"));
-            *token = get_token(0);
+            DPRINT(("%s was an expression.\n", oldtoken.value));
             return true;
         }
         else
         {
-            fprintf(stderr, "Syntax error: Expected ';' after literal, got %s.\n", token->value);
+            fprintf(stderr, "Syntax error: Failed to handle expression.\n");
             exit(2);
         }
     }
     else
     {
-        DPRINT(("Got here.\n"));
-        *token = get_token(0);
+        DPRINT(("%s was a constant literal.\n", oldtoken.value));
         return true;
     }
 }
 
+bool p_assigned(token_t *token)
+{
+    if(token->type == ID_variable)
+    {
+        token_t oldtoken = *token;
+        *token = get_token(0);
+        if(token->type != semicolon)
+        {
+            if(expr(&oldtoken, token, semicolon,0) == 0)
+            {
+                DPRINT(("%s was an expression.\n", oldtoken.value));
+                *token = get_token(0);
+                return true;
+            }
+            else
+            {
+                fprintf(stderr, "Syntax error: Failed to handle expression.\n");
+                exit(2);
+            }
+        }
+        else
+            return true;
+    }
+    else if(token->type == ffloat || token->type == integer || token->type == string)
+        return p_const(token);
+    else if(token->type == ID_function)
+    {
+        *token = get_token(0);
+        return p_fcall(token);
+    }
+    else
+    {
+        fprintf(stderr, "Syntax error: Expected a value, a function or variable, got %s\n", token->value);
+        exit(2);
+    }
+}
 
+bool p_fcall(token_t *token)
+{
+    if(token->type == lbracket)
+    {
+        *token = get_token(0);
+        if(p_callargs(token))
+            return true;
+        else
+        {
+            fprintf(stderr, "Syntax error: Failed to parse function call arguments\n");
+            exit(2);
+        }
+    }
+    else
+    {
+        fprintf(stderr, "Syntax error: Expected '(', got %s\n", token->value);
+        exit(2);
+    }
+}
 
+bool p_callargs(token_t *token)
+{
+    if(token->type == rbracket)
+    {
+        *token = get_token(0);
+        return true;
+    }
+    else
+    {
+        fprintf(stderr, "Not implemented yet.\n");
+        exit(2);
+    }
+}
 
+bool p_vals(token_t *token)
+{
+    return true;
+}
+
+bool p_ifstat(token_t *token)
+{
+    *token = get_token(0);
+    if(token->type == lbracket)
+    {
+        token_t oldtoken = *token;
+        *token = get_token(0);
+        if(token->type == ID_function)
+        {
+            fprintf(stderr, "Not implemented yet.\n");
+            exit(2);
+        }
+        else
+        {
+            if(expr(&oldtoken, token, lsetbracket,0) == 0)
+            {
+                DPRINT(("%s was an expression in if statement\n", token->value));
+                return true;
+                //check { -> <nodefbody> until }
+            }
+            else
+            {
+                fprintf(stderr, "Syntax error: Failed to handle expression.\n");
+                exit(2);
+            }
+        }
+    }
+    else
+    {
+        fprintf(stderr, "Syntax error: Expected '(' after 'if', got '%s'\n", token->value);
+        exit(2);
+    }
+}

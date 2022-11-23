@@ -69,7 +69,7 @@ int get_input(token_t** first, token_t** second,token_type end,int skip){       
     else{
         b = convert(input);             //z tokenu spravi jemu priradene cislo
     }
-    printf("get_input called. Returning %d. \n", b);
+    //printf("get_input called. Returning %d. \n", b);
     return b;
 }
 

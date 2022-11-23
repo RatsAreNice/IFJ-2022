@@ -3,13 +3,21 @@
 #include <stdbool.h>
 #include "scanner.h"
 bool parse();
+
 bool p_start(token_t * token);
+
 bool p_prolog(token_t * token);
 bool p_prolog_sub1(token_t * token);
 bool p_prolog_sub2(token_t * token);
+
 bool p_body(token_t * token);
+
+bool p_fundec(token_t * token);
 bool p_fparams(token_t * token);
 bool p_nparam(token_t * token);
+
+//bool p_expr(token_t * token);
+
 bool p_rettype(token_t * token);
 bool p_type(token_t * token);
 bool p_nodefbody(token_t * token);
