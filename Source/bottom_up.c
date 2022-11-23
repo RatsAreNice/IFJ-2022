@@ -49,7 +49,7 @@ int convert(token_t a){       //konvertuje token na cislo
     }
 }    
 
-int get_input(token_t** first, token_t** second,token_type end,int skip){           //ziska token zo vstupu a konvertuje ho
+int get_input(token_t** first, token_t** second,token_type end,token_type end2,int skip){           //ziska token zo vstupu a konvertuje ho
     token_t input;
     int b;
     if(*first != NULL){
@@ -63,7 +63,7 @@ int get_input(token_t** first, token_t** second,token_type end,int skip){       
         input = get_token(skip);
     }
 
-    if(input.type == end){
+    if(input.type == end || input.type == end2){
         b = 12;
     }
     else{
@@ -121,7 +121,7 @@ int cmp_to_rule(int rs[]){                  //funkcia dostane pravu stranu pravi
     }
 }
 
-int expr(token_t* first,token_t* second, token_type end, int skip){
+int expr(token_t* first,token_t* second, token_type end, token_type end2, int skip){
 
     //tabulka
     char prec_t[13][13];
@@ -251,7 +251,7 @@ int expr(token_t* first,token_t* second, token_type end, int skip){
     DLL_InsertFirst( &a , 12 );     //vlozenie $ do zasobniku
     DLL_First(&a);
     int rs[3];
-    b = get_input(&first,&second,end,skip);
+    b = get_input(&first,&second,end,end2,skip);
     
     while((b != 12) || (endflag != 1)){
         
@@ -266,13 +266,13 @@ int expr(token_t* first,token_t* second, token_type end, int skip){
         if(akcia == '='){
             DLL_InsertLast(&a,b);
             DLL_Last(&a);               //vlozi sa do zoznamu, stane sa aktivnym (kedze to automaticky musi byt najvrchnejsi terminal)
-            b = get_input(&first,&second,end,skip);
+            b = get_input(&first,&second,end,end2,skip);
         }
         else if(akcia == '<'){
             DLL_InsertAfter(&a,'<');        //za aktivny prvok (najvyssi terminal) sa vlozi <
             DLL_InsertLast(&a,b);           //push b
             DLL_Last(&a);                   //make b active (novy najvrchnejsi terminal)
-            b = get_input(&first,&second,end,skip);       //precitaj dalsi symbol b zo vstupu
+            b = get_input(&first,&second,end,end2,skip);       //precitaj dalsi symbol b zo vstupu
         }
         else if(akcia == '>'){
             DLL_Last(&a);
