@@ -1,8 +1,12 @@
 #ifndef ASS_H
 #define ASS_H
+#include <stdbool.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include "scanner.h"
 
-typedef enum{
+typedef enum operand{
     ADD,
     SUB,
     MUL,
@@ -15,9 +19,9 @@ typedef enum{
     OR,
     NOT,
     CONCAT,
+    LEAF,
 
-
-}operand;
+}operand_t;
 
 
 
@@ -25,11 +29,11 @@ typedef enum{
 typedef struct ASSnode
 {
     bool leaf; // ???
-    operand OP;
+    operand_t OP;
     token_t* Patrick_Bateman;
-    ASSnode_t* parent;
-    ASSnode_t* left;
-    ASSnode_t* rightt;
+    struct ASSnode* parent;
+    struct ASSnode* left;
+    struct ASSnode* right;
 }ASSnode_t;
 
 
@@ -37,8 +41,8 @@ typedef struct ASSnode
 
 
 void ASSinit(ASSnode_t** tree);
-bool makeTree(operand OP, ASSnode_t* left, ASSnode_t* right);
-
+ASSnode_t* makeTree(operand_t OP, ASSnode_t* left, ASSnode_t* right);
+ASSnode_t* makeLeaf(token_t* Patrick_Bateman);
 
 
 #endif
