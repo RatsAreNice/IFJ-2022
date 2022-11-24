@@ -202,6 +202,9 @@ token_t get_token(int skip){
                 else if(a == '('){
                     return make_token(lbracket, "(");          //preslo by sa do stavu "(" kde by sa iba vytvoril token lbracket. pre zjednodusenie sa do stavu neprechadza a token sa vytvori priamo
                 }
+                else if(a == ':'){
+                    return make_token(colon, ":");          //preslo by sa do stavu "(" kde by sa iba vytvoril token lbracket. pre zjednodusenie sa do stavu neprechadza a token sa vytvori priamo
+                }
                 else if(a == ')'){
                     return make_token(rbracket, ")");
                 }

@@ -49,7 +49,7 @@ int convert(token_t a){       //konvertuje token na cislo
     }
 }    
 
-int get_input(token_t** first, token_t** second,token_type end,token_type end2,int skip){           //ziska token zo vstupu a konvertuje ho
+int get_input(token_t** first, token_t** second,token_type end,token_type end2,int skip,int* bracketcount){           //ziska token zo vstupu a konvertuje ho
     token_t input;
     int b;
     if(*first != NULL){
@@ -64,12 +64,30 @@ int get_input(token_t** first, token_t** second,token_type end,token_type end2,i
     }
 
     if(input.type == end || input.type == end2){
-        b = 12;
+        if(input.type == rbracket){                              //sme na zatvorke a jeden z konecnych symbolov je zatvorka
+            if(*bracketcount == 0){
+                b = 12;
+            }
+            else{
+                b = convert(input);
+            }
+        }
+        else{
+            b = 12;
+        }
+
     }
     else{
         b = convert(input);             //z tokenu spravi jemu priradene cislo
     }
-    //printf("get_input called. Returning %d. \n", b);
+
+    if(b == 10){
+        *bracketcount = *bracketcount + 1;
+    }
+    if(b == 11){
+        *bracketcount=*bracketcount-1;
+    }
+    //printf("get_input called. Returning %d. bracketcount = %d\n", b,*bracketcount);
     return b;
 }
 
@@ -241,6 +259,8 @@ int expr(token_t* first,token_t* second, token_type end, token_type end2, int sk
     prec_t[12][11] = 'e';
 
     //tabulka
+    int bracketcount;
+    bracketcount = 0;
     int neterminal;
     int endflag = 0;
     char akcia;
@@ -251,7 +271,7 @@ int expr(token_t* first,token_t* second, token_type end, token_type end2, int sk
     DLL_InsertFirst( &a , 12 );     //vlozenie $ do zasobniku
     DLL_First(&a);
     int rs[3];
-    b = get_input(&first,&second,end,end2,skip);
+    b = get_input(&first,&second,end,end2,skip,&bracketcount);
     
     while((b != 12) || (endflag != 1)){
         
@@ -266,13 +286,13 @@ int expr(token_t* first,token_t* second, token_type end, token_type end2, int sk
         if(akcia == '='){
             DLL_InsertLast(&a,b);
             DLL_Last(&a);               //vlozi sa do zoznamu, stane sa aktivnym (kedze to automaticky musi byt najvrchnejsi terminal)
-            b = get_input(&first,&second,end,end2,skip);
+            b = get_input(&first,&second,end,end2,skip,&bracketcount);
         }
         else if(akcia == '<'){
             DLL_InsertAfter(&a,'<');        //za aktivny prvok (najvyssi terminal) sa vlozi <
             DLL_InsertLast(&a,b);           //push b
             DLL_Last(&a);                   //make b active (novy najvrchnejsi terminal)
-            b = get_input(&first,&second,end,end2,skip);       //precitaj dalsi symbol b zo vstupu
+            b = get_input(&first,&second,end,end2,skip,&bracketcount);       //precitaj dalsi symbol b zo vstupu
         }
         else if(akcia == '>'){
             DLL_Last(&a);

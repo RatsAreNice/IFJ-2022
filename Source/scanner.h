@@ -25,6 +25,7 @@ typedef enum{
     comma,              //,
     ffloat,              //13.56
     dot,                //. (retazcovy operator)
+    colon,              //:
     //klucove slova
     funreturn,          //return
     funelse,            //else
