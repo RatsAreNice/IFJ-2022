@@ -76,6 +76,7 @@ int get_input(token_type ** first, token_type ** second, token_t ** token, token
             }
         }
         else{
+            (*token)->type = input.type;
             b = 12;
         }
 
@@ -90,7 +91,6 @@ int get_input(token_type ** first, token_type ** second, token_t ** token, token
     if(b == 11){
         *bracketcount=*bracketcount-1;
     }
-    //printf("get_input called. Returning %d. bracketcount = %d\n", b,*bracketcount);
     return b;
 }
 
@@ -134,10 +134,16 @@ int cmp_to_rule(int rs[]){                  //funkcia dostane pravu stranu pravi
     if((rs[0] == -3 || rs[0] == -2) && rs[1] == 8 && (rs[2] == -3 || rs[2] == -2)){                    // S -> <exp>|<nnull> relid <exp>|<nnull>
         return -5;
     }
+    if((rs[0] == -3 || rs[0] == -2) && rs[1] == 9 && (rs[2] == -3 || rs[2] == -2)){                    // S -> <exp>|<nnull> relid <exp>|<nnull>
+        return -5;
+    }
+    if((rs[0] == -4 || rs[0] == -2) && rs[1] == 8 && (rs[2] == -4 || rs[2] == -2)){                    // S -> <exp>|<nnull> relid <exp>|<nnull>
+        return -5;
+    }
     if((rs[0] == -4 || rs[0] == -2) && rs[1] == 9 && (rs[2] == -4 || rs[2] == -2)){                    // S -> <strexp>|<nnull> relid <strexp>|<nnull>
         return -5;
     }else{
-        fprintf(stderr,"redukcia retazca ktory nieje na pravej strane ziadneho pravidla - nespravna syntax");
+        fprintf(stderr,"redukcia retazca ktory nieje na pravej strane ziadneho pravidla - nespravna syntax retazec = %d : %d : %d",rs[0],rs[1],rs[2]);
         exit(2);
     }
 }
@@ -268,8 +274,15 @@ int expr(token_t* first,token_t* second, token_type end, token_type end2, int sk
     int endflag = 0;
     char akcia;
     int b;
-    token_type* one = &(first->type);
-    token_type* two = &(second->type);
+    token_type *one, *two;
+    if (first == NULL)
+        one = NULL;
+    else
+        one = &(first->type);
+    if (second == NULL)
+        two = NULL;
+    else
+        two = &(second->type);
     DLList a;
     int q;
     DLL_Init( &a );
