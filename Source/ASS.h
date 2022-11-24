@@ -43,6 +43,14 @@ typedef struct ASSnode
 void ASSinit(ASSnode_t** tree);
 ASSnode_t* makeTree(operand_t OP, ASSnode_t* left, ASSnode_t* right);
 ASSnode_t* makeLeaf(token_t* Patrick_Bateman);
+void delete_node(ASSnode_t* node);
+
+void print_code(ASSnode_t** tree);
+char* createVar();
+void ADDInt_Int(ASSnode_t* node);
+
+
+
 
 
 #endif
