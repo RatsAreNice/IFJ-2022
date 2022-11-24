@@ -348,7 +348,7 @@ int expr(token_t* first,token_t* second, token_type end, token_type end2, int sk
 
         DLL_Last(&a);           //kontrola ci zasobnik obsahuje iba $S
         DLL_GetValue(&a, &q);   
-        if(q == -5 || q == -3 || q == -4){
+        if(q == -5 || q == -3 || q == -4 ||q == - 2){
             DLL_Previous(&a);
             DLL_GetValue(&a, &q);
             if(q == 12){

@@ -86,7 +86,7 @@ bool parse()
 
     if ( p_start(&token) == false )
     {
-        fprintf(stderr, "Unknown syntax error.");
+        fprintf(stderr, "Unknown syntax error.\n");
         exit(2);
     }
     return false;
@@ -147,6 +147,44 @@ bool p_body(token_t * token, bool defallowed)
     DPRINT(("Got to body with token %s of type %d\n", token->value, token->type));
     switch(token->type)
     {
+        case funreturn:
+            *token = get_token(0);
+            if(token->type == semicolon)
+            {
+                *token = get_token(0);
+                return p_body(token, defallowed);
+            }
+            else if(token->type == ID_function)
+            {
+                *token = get_token(0);
+                if(p_fcall(token))
+                {
+                    *token = get_token(0);
+                    return p_body(token,defallowed);
+                }
+                else
+                {
+                    fprintf(stderr, "Syntax error: Function call failed in body.");
+                    exit(2);
+                }
+            }
+            else
+            {
+                if(expr(NULL, token, semicolon, semicolon, 0) == 0)
+                {
+                    //DPRINT(("SECOND: %s was an expression in if statement\n", token.value));
+                    *token = get_token(0);
+                    DPRINT(("%s\n", token->value));
+                    return p_body(token, defallowed);
+                }
+                else
+                {
+                    fprintf(stderr, "Syntax error: Failed to handle expression.\n");
+                    exit(2);
+                }
+            }
+            return false;
+
         case ID_function:
             DPRINT(("ID FUNCTION %s of type %d\n", token->value, token->type));
             *token = get_token(0);
@@ -160,6 +198,7 @@ bool p_body(token_t * token, bool defallowed)
                 fprintf(stderr, "Syntax error: Function call failed in body.");
                 exit(2);
             }
+        case lbracket:
         case ffloat:
         case integer:
         case string:
@@ -387,7 +426,7 @@ bool p_vals(token_t *token)
     {
         token_t oldtoken = *token;
         *token = get_token(0);
-        if(token->type == comma || token->type == rbracket)
+        if(token->type == comma || token->type == rbracket || token->type == semicolon)
             {
                 if(oldtoken.type == ID_variable || oldtoken.type == ffloat || oldtoken.type == integer || oldtoken.type == string)
                     return true;
@@ -411,21 +450,21 @@ bool p_vals(token_t *token)
             }
         else
         {
-            fprintf(stderr, "Syntax error: Unexpected symbol in fcall: %s.\n", token->value);
-            exit(2);
+            //fprintf(stderr, "Syntax error: Unexpected symbol in fcall: %s.\n", token->value);
+            //exit(2);
             // TOTO JE FUNEXP WTF
-            //if(expr(&oldtoken, token, comma, rbracket, 0) == 0)
-            //    {
-            //        DPRINT(("SECOND: %s was an expression in if statement\n", token->value));
-            //        //*token = get_token(0);
-            //        DPRINT(("%s\n", token->value));
-            //        return true;
-            //    }
-            //    else
-            //    {
-            //        fprintf(stderr, "Syntax error: Failed to handle expression.\n");
-            //        exit(2);
-            //    }
+            if(expr(&oldtoken, token, comma, rbracket, 0) == 0)
+            {
+                DPRINT(("SECOND: %s was an expression in if statement\n", oldtoken.value));
+                //*token = get_token(0);
+                DPRINT(("%s\n", token->value));
+                return true;
+            }
+            else
+            {
+                fprintf(stderr, "Syntax error: Failed to handle expression.\n");
+                exit(2);
+            }
         }
     }
 }
@@ -592,12 +631,7 @@ bool p_funargs(token_t * token)
     if(token->type == lbracket)
     {
         *token = get_token(0);
-        if(p_fparams(token))
-        {
-            *token = get_token(0);
-            return true;
-        }
-        return true;
+        return p_fparams(token);
     }
     else
     {
@@ -608,11 +642,80 @@ bool p_funargs(token_t * token)
 
 bool p_funbody(token_t * token)
 {
-    //if(token->type == colon)
+    if(token->type == colon)
+    {
+        *token = get_token(0);
+        if(token->type == funvoid || token->type == type)
+            *token = get_token(0);
+        else
+        {
+            fprintf(stderr, "Syntax error: Expected return type of function, got '%s'\n", token->value);
+            exit(2);
+        }
+    }
+    else
+    {
+        fprintf(stderr, "Syntax error: Expected ':' after function declaration arguments, got '%s'\n", token->value);
+        exit(2);
+    }
+    if(token->type == lsetbracket)
+    {
+        *token = get_token(0);
+        return p_body(token, false);
+    }
+    else
+    {
+        fprintf(stderr, "Syntax error: Expected '{' after function declaration, got '%s'\n", token->value);
+        exit(2);
+    }
     return true;
 }
 
 bool p_fparams(token_t * token)
 {
-    return true;
+    if(token->type == rbracket)
+    {
+        *token = get_token(0);
+        return true;
+    }
+    else if(token->type == type)
+    {
+        DPRINT(("%s TYPE IS TYPE \n", token->value));
+        *token = get_token(0);
+        DPRINT(("%s TYPE IS VAR \n", token->value));
+        if(token->type == ID_variable)
+        {
+            *token = get_token(0);
+            return p_nparam(token);
+        }
+        else
+        {
+            fprintf(stderr, "Syntax error: Expected vID after type in function declaration parameters, got '%s'\n", token->value);
+            exit(2);
+        }
+    }
+    else
+    {
+    fprintf(stderr, "Syntax error: Expected '(' after function id in function declaration, got '%s'\n", token->value);
+    exit(2);
+    }
+}
+
+bool p_nparam(token_t *token)
+{
+    if(token->type == rbracket)
+    {
+        *token = get_token(0);
+        return true;
+    }
+    else if(token->type == comma)
+    {
+        *token = get_token(0);
+        return p_fparams(token);
+    }
+    else
+    {
+        fprintf(stderr, "Syntax error: NCALLARGS Error in handling function call arguments.\n");
+        exit(2);
+    }
 }
