@@ -259,7 +259,7 @@ token_t get_token(int skip){
             case IDfunkcie:
                 str = "";
                 i=0;
-                while((a >= 97 && a <= 122) || a == '_' || (a >= 65 && a <= 90) || a >= 48 && a<= 57){                      
+                while((a >= 97 && a <= 122) || a == '_' || (a >= 65 && a <= 90) || (a >= 48 && a<= 57)){                      
                     size_t len = strlen(str);
                     char *str2 = malloc(len + 1 + 1);
                     strcpy(str2, str);
@@ -323,7 +323,7 @@ token_t get_token(int skip){
                 break;
             case premenna2:
                 str = "$";
-                while((a >= 97 && a <= 122) || a == '_' || (a >= 65 && a <= 90) || a >= 48 && a<= 57){                      
+                while((a >= 97 && a <= 122) || a == '_' || (a >= 65 && a <= 90) || (a >= 48 && a<= 57)){                      
                     size_t len = strlen(str);
                     char *str2 = malloc(len + 1 + 1);
                     strcpy(str2, str);
