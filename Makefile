@@ -1,6 +1,6 @@
 CC=gcc
 CFLAGS=-Wall -std=c11 -pedantic
-FILES= Source/bottom_up.c Source/Parser.c Source/scanner.c Source/symtable.c ifj.c
+FILES= Source/bottom_up.c Source/Parser.c Source/scanner.c Source/symtable.c Source/ASS.c ifj.c
 
 
 all: compile run 
