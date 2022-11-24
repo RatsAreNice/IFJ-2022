@@ -148,9 +148,13 @@ token_t get_token(int skip){
                             exit(2);
                         }
                     }
+                    else if (a == EOF)
+                    {
+                        return make_token(eof, "EOF");
+                    }
                     else
                     {
-                        fprintf(stderr, "program nezacina prologom");
+                        fprintf(stderr, "Token mimo rozmedzia prologu a epilogu.");
                         exit(2);
                     }
                 }
