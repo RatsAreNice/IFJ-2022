@@ -40,24 +40,21 @@ void delete_node(ASSnode_t* node){
     free(node);
 }
 
-
-
-
-
 void print_code(ASSnode_t** tree){
-    switch ((*tree)->OP)
-    {
-    case ADD:
-        /* code */
-        break;
-    
-    default:
-        break;
-    }
+    // ASS -> ??? -> kod
 }
 
 void ADDInt_Int(ASSnode_t* node){
     // code for elementary int + int
+    if (node->left->leaf==false)
+    {
+        helpsolve(node->left);
+    }
+    if (node->right->leaf==false)
+    {
+        helpsolve(node->right);
+    }
+    
     char* var = createVar();
     //printf("DEFVAR %s\n",var);
     //printf("ADD %s %s %s\n",var,node->left->Patrick_Bateman->value,node->right->Patrick_Bateman->value);
@@ -78,16 +75,101 @@ void ADDInt_Int(ASSnode_t* node){
 //    node->leaf=true;
 //}
 
-void ADDFloat_Int(ASSnode_t* node){
-    // code for elementary int + int
+void ADDFloat_Float(ASSnode_t* node){
+    // code for elementary float + float
     char* var = createVar();
     //printf("DEFVAR %s\n",var);
 
     //printf("ADD %s float@%s float@%s\n",var,node->left->Patrick_Bateman->value,node->right->Patrick_Bateman->value);
     node->Patrick_Bateman=node->left->Patrick_Bateman;
+    node->Patrick_Bateman->type=ffloat;
+    node->Patrick_Bateman->value=var;
+    node->leaf=true;
+}
+
+void SUBInt_Int(ASSnode_t* node){
+    // code for elementary int - int
+    char* var = createVar();
+    printf("DEFVAR %s\n",var);
+    printf("SUB %s int@%s int@%s\n",var,node->left->Patrick_Bateman->value,node->right->Patrick_Bateman->value);
+    node->Patrick_Bateman=node->left->Patrick_Bateman;
     node->Patrick_Bateman->type=integer;
     node->Patrick_Bateman->value=var;
     node->leaf=true;
+}
+
+void SUBFloat_Int(ASSnode_t* node){
+    // code for elementary int - float
+    char* var = createVar();
+    printf("DEFVAR %s\n",var);
+    if (node->left->Patrick_Bateman->type==integer)
+    {
+        char* tempvar = createVar();
+        printf("DEFVAR %s\n",tempvar);
+        printf("INT2FLOAT %s int@%s",tempvar,node->left->Patrick_Bateman->value);
+        node->left->Patrick_Bateman->value=tempvar;
+        node->left->Patrick_Bateman->type=ffloat;
+    }else{ // 
+        char* tempvar = createVar();
+        printf("DEFVAR %s\n",tempvar);
+        printf("INT2FLOAT %s int@%s",tempvar,node->right->Patrick_Bateman->value);
+        node->right->Patrick_Bateman->value=tempvar;
+        node->right->Patrick_Bateman->type=ffloat;
+    }
+    
+    printf("SUB %s float@%s float@%s\n",var,node->left->Patrick_Bateman->value,node->right->Patrick_Bateman->value);
+    node->Patrick_Bateman=node->left->Patrick_Bateman;
+    node->Patrick_Bateman->type=ffloat;
+    node->Patrick_Bateman->value=var;
+    node->leaf=true;
+}
+
+void SUBFloat_Float(ASSnode_t* node){
+    // code for elementary float - float
+    char* var = createVar();
+    printf("DEFVAR %s\n",var);
+    printf("SUB %s float@%s float@%s\n",var,node->left->Patrick_Bateman->value,node->right->Patrick_Bateman->value);
+    node->Patrick_Bateman=node->left->Patrick_Bateman;
+    node->Patrick_Bateman->type=ffloat;
+    node->Patrick_Bateman->value=var;
+    node->leaf=true;
+}
+
+void helpsolve(ASSnode_t* node){
+
+    switch (node->OP)
+    {
+    case ADD:
+        if (node->left->Patrick_Bateman->type==ffloat && node->right->Patrick_Bateman->type==ffloat )
+        {
+            ADDFloat_Float(node);
+        } else if (node->left->Patrick_Bateman->type==integer && node->right->Patrick_Bateman->type==integer)
+        {
+            ADDInt_Int(node);
+        }
+        else
+        {
+            ADDFloat_Int(node);
+        }
+        break;
+    case SUB:
+        if (node->left->Patrick_Bateman->type==ffloat && node->right->Patrick_Bateman->type==ffloat )
+        {
+            SUBFloat_Float(node);
+        } else if (node->left->Patrick_Bateman->type==integer && node->right->Patrick_Bateman->type==integer)
+        {
+            SUBInt_Int(node);
+        }
+        else
+        {
+            SUBFloat_Int(node);
+        }
+        break;
+    default:
+        fprintf(stderr,"UNEXPECTED OPERAND HOW DID THAT HAPPEN\n");
+        break;
+    }
+
 }
 
 char* createVar(){

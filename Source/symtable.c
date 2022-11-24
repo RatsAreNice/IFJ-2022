@@ -69,7 +69,7 @@ bst_node_t* bst_search(bst_node_t *tree, char* key) {
 
 // RETRUNS 1 -> SUCCESSFUL INSERT
 // RETURNS 2 -> SUCCESFUL REPLACE
-// RETURNS 99 -> MALLOC SEX
+
 int bst_insert(bst_node_t **tree, char* key, int type, funData_t* funData) {
   int diff = 0;
   if (*tree!=NULL)

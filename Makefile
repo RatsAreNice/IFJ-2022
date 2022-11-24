@@ -5,6 +5,8 @@ FILES= Source/bottom_up.c Source/Parser.c Source/scanner.c Source/symtable.c Sou
 
 all: compile run 
 
+cleanpile: compile clean
+
 compile:
 	$(CC) $(CFLAGS) $(FILES) -o ifj 
 
