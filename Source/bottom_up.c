@@ -19,7 +19,7 @@ int convert(token_t a){       //konvertuje token na cislo
         case ffloat:
             return 3;
         case ID_variable:
-            return 3;
+            return 0;
         case plus:
             return 4;
         case minus:
