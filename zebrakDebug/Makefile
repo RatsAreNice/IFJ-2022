@@ -1,11 +1,27 @@
 CC=gcc
-CFLAGS=-Wall -std=c11 -pedantic -Wall
+CFLAGS=-Wall -std=c11 -pedantic
 FILE=testtable.c
 
 
-all: compile run clean
+testtable: compile run clean
 
+#testASS: compileASS runASS cleanASS
 
+valgrind: compile memtest clean
+
+#valgrindASS: compileASS memtestASS cleanASS
+
+#compileASS:
+#	gcc -Wall -std=c11 -pedantic testASS.c ../Source/ASS.c -o testASSo
+
+#runASS:
+#	./testASSo
+
+#cleanASS:
+#	rm -f testASSo
+
+#memtestASS:
+#	valgrind ./testASSo
 
 compile:
 	$(CC) $(CFLAGS) $(FILE) -o testtable 
@@ -16,6 +32,6 @@ run:
 clean:
 	rm -f testtable
 
-valgrind: compile memtest clean
+
 memtest:
 	valgrind ./testtable
