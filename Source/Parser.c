@@ -21,7 +21,7 @@ parser 'states'?
 <retval>
 <vals>
 */
-#define DEBUG
+//#define DEBUG
 #ifdef DEBUG
 # define DPRINT(x) printf x
 #else
@@ -33,9 +33,11 @@ parser 'states'?
 #include "bottom_up.h"
 #include "symtable.h"
 #include "Parser.h"
+#include "symdll.h"
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+//#include "symtable.c"
 
 bool parse();
 
@@ -79,17 +81,151 @@ typedef enum
     SKIP
 } scannermode;
 
+void* safeMalloc(size_t size)
+{
+    void* new = malloc(size);
+    if(new == NULL)
+    {
+        fprintf(stderr, "Malloc failure.\n");
+        exit(99);
+    }
+    else
+        return new;
+}
+
+void addDefaults(bst_node_t **symtable)
+{
+    //reads
+
+    funData_t* new = safeMalloc(sizeof(struct funData));
+    new->defined = true;
+    new->returnType = symQString;
+    new->ParamCount = 0;
+    new->paramTypes = NULL;
+    bst_insert(symtable, "reads", ID_function, new);
+    
+    //readi
+
+    new = safeMalloc(sizeof(struct funData));
+    new->defined = true;
+    new->returnType = symQInt;
+    new->ParamCount = 0;
+    new->paramTypes = NULL;
+    bst_insert(symtable, "readi", ID_function, new);
+
+    //readf
+
+    new = safeMalloc(sizeof(struct funData));
+    new->defined = true;
+    new->returnType = symQFloat;
+    new->ParamCount = 0;
+    new->paramTypes = NULL;
+    bst_insert(symtable, "readf", ID_function, new);
+
+    //write
+
+    new = safeMalloc(sizeof(struct funData));
+    new->defined = true;
+    new->returnType = symVoid;
+    new->ParamCount = -1;
+    new->paramTypes = NULL;
+    bst_insert(symtable, "write", ID_function, new);
+
+    //floatval
+
+    new = safeMalloc(sizeof(struct funData));
+    new->defined = true;
+    new->returnType = symFloat;
+    new->ParamCount = 1;
+    new->paramTypes = NULL;
+    bst_insert(symtable, "floatval", ID_function, new);
+
+    //intval
+
+    new = safeMalloc(sizeof(struct funData));
+    new->defined = true;
+    new->returnType = symInt;
+    new->ParamCount = 1;
+    new->paramTypes = NULL;
+    bst_insert(symtable, "intval", ID_function, new);
+
+    //strval
+
+    new = safeMalloc(sizeof(struct funData));
+    new->defined = true;
+    new->returnType = symString;
+    new->ParamCount = 1;
+    new->paramTypes = NULL;
+    bst_insert(symtable, "strval", ID_function, new);
+
+    //strlen
+
+    new = safeMalloc(sizeof(struct funData));
+    new->defined = true;
+    new->returnType = symInt;
+    new->ParamCount = 1;
+    int* newparamtable = safeMalloc(sizeof(int)*new->ParamCount);
+    newparamtable[0] = symString;
+    new->paramTypes = newparamtable;
+    bst_insert(symtable, "strlen", ID_function, new);
+
+    //substring
+
+    new = safeMalloc(sizeof(struct funData));
+    new->defined = true;
+    new->returnType = symQString;
+    new->ParamCount = 3;
+    newparamtable = safeMalloc(sizeof(int)*new->ParamCount);
+    newparamtable[0] = symString;
+    newparamtable[1] = symInt;
+    newparamtable[2] = symInt;
+    new->paramTypes = newparamtable;
+    bst_insert(symtable, "substring", ID_function, new);
+
+    //ord
+
+    new = safeMalloc(sizeof(struct funData));
+    new->defined = true;
+    new->returnType = symInt;
+    new->ParamCount = 1;
+    newparamtable = safeMalloc(sizeof(int)*new->ParamCount);
+    newparamtable[0] = symString;
+    new->paramTypes = newparamtable;
+    bst_insert(symtable, "ord", ID_function, new);
+
+    //chr
+
+    new = safeMalloc(sizeof(struct funData));
+    new->defined = true;
+    new->returnType = symString;
+    new->ParamCount = 1;
+    newparamtable = safeMalloc(sizeof(int)*new->ParamCount);
+    newparamtable[0] = symInt;
+    new->paramTypes = newparamtable;
+    bst_insert(symtable, "chr", ID_function, new);
+
+}
+
 bool parse()
 {
-    // Init symtable a pridat default funkcie.
-    token_t token = get_token(1);
+    // Init main symtable a pridat default funkcie.
+    bst_node_t* mainsymtable;
+
+    bst_init(&mainsymtable);
+    addDefaults(&mainsymtable);
+    symDLList_t symtablelist;
+    symDLL_Init(&symtablelist);
+    symDLL_InsertLast(&symtablelist, mainsymtable);
+    symDLL_First(&symtablelist);
+
+    token_t token = get_token(SKIP);
 
     if ( p_start(&token) == false )
     {
         fprintf(stderr, "Unknown syntax error.\n");
         exit(2);
     }
-    return false;
+    return true;
 }
 
 bool p_start(token_t * token)
@@ -114,7 +250,7 @@ bool p_prolog_sub1(token_t * token)
     if(token->type == prolog1)
     {
         DPRINT(("Token %s matches prolog_sub_1!\n", token->value));
-        *token = get_token(0);
+        *token = get_token(NOSKIP);
         return true;
     }
     else
@@ -130,7 +266,7 @@ bool p_prolog_sub2(token_t * token)
     if(token->type == prolog2)
     {
         DPRINT(("Token %s matches prolog_sub_2!\n", token->value));
-        *token = get_token(0);
+        *token = get_token(NOSKIP);
         return true;
     }
     else
@@ -148,18 +284,18 @@ bool p_body(token_t * token, bool defallowed)
     switch(token->type)
     {
         case funreturn:
-            *token = get_token(0);
+            *token = get_token(NOSKIP);
             if(token->type == semicolon)
             {
-                *token = get_token(0);
+                *token = get_token(NOSKIP);
                 return p_body(token, defallowed);
             }
             else if(token->type == ID_function)
             {
-                *token = get_token(0);
+                *token = get_token(NOSKIP);
                 if(p_fcall(token))
                 {
-                    *token = get_token(0);
+                    *token = get_token(NOSKIP);
                     return p_body(token,defallowed);
                 }
                 else
@@ -173,7 +309,7 @@ bool p_body(token_t * token, bool defallowed)
                 if(expr(NULL, token, semicolon, semicolon, 0) == 0)
                 {
                     //DPRINT(("SECOND: %s was an expression in if statement\n", token.value));
-                    *token = get_token(0);
+                    *token = get_token(NOSKIP);
                     DPRINT(("%s\n", token->value));
                     return p_body(token, defallowed);
                 }
@@ -187,10 +323,10 @@ bool p_body(token_t * token, bool defallowed)
 
         case ID_function:
             DPRINT(("ID FUNCTION %s of type %d\n", token->value, token->type));
-            *token = get_token(0);
+            *token = get_token(NOSKIP);
             if(p_fcall(token))
             {
-                *token = get_token(0);
+                *token = get_token(NOSKIP);
                 return p_body(token,defallowed);
             }
             else
@@ -204,7 +340,7 @@ bool p_body(token_t * token, bool defallowed)
         case string:
             if(p_const(token, semicolon, semicolon))
             {
-                *token = get_token(0);
+                *token = get_token(NOSKIP);
                 return true && p_body(token, defallowed);
             }
             else
@@ -214,12 +350,12 @@ bool p_body(token_t * token, bool defallowed)
             }
         case ID_variable:
             oldtoken = *token;
-            *token = get_token(0);
+            *token = get_token(NOSKIP);
             if(token->type != assign)
             {
                 if (expr(&oldtoken, token, semicolon, semicolon, 0) == 0)
                 {   
-                    *token = get_token(0);
+                    *token = get_token(NOSKIP);
                     return true && p_body(token, defallowed);
                 }
                 else
@@ -230,10 +366,10 @@ bool p_body(token_t * token, bool defallowed)
             }
             else
             {
-                *token = get_token(0);
+                *token = get_token(NOSKIP);
                 if(p_assigned(token))
                 {
-                    *token = get_token(0);
+                    *token = get_token(NOSKIP);
                     return true && p_body(token, defallowed);
                 }
                 else
@@ -250,7 +386,7 @@ bool p_body(token_t * token, bool defallowed)
             }
             else
             {
-                *token = get_token(0);
+                *token = get_token(NOSKIP);
                 return p_fundec(token) && p_body(token, defallowed);
             }
         case epilog:
@@ -261,7 +397,7 @@ bool p_body(token_t * token, bool defallowed)
             }
             else
             {
-                *token = get_token(1);
+                *token = get_token(SKIP);
                 if(token->type != eof)
                 {
                     fprintf(stderr, "Syntax error: Tokens found after epilog\n");
@@ -277,7 +413,7 @@ bool p_body(token_t * token, bool defallowed)
         case rsetbracket:
             if(!defallowed)
             {
-                *token = get_token(0);
+                *token = get_token(NOSKIP);
                 return true;
             }
             else
@@ -303,7 +439,7 @@ bool p_body(token_t * token, bool defallowed)
 bool p_const(token_t * token, token_type expect1, token_type expect2)
 {
     token_t oldtoken = *token;
-    *token = get_token(0);
+    *token = get_token(NOSKIP);
     if(token->type != expect1 && token->type != expect2)
     {
 
@@ -329,19 +465,19 @@ bool p_assigned(token_t *token)
 {
     if(token->type == ID_function)
     {
-        *token = get_token(0);
+        *token = get_token(NOSKIP);
         return p_fcall(token);
     }
     else //if(token->type == ID_variable)
     {
         token_t oldtoken = *token;
-        *token = get_token(0);
+        *token = get_token(NOSKIP);
         if(token->type != semicolon)
         {
             if(expr(&oldtoken, token, semicolon, semicolon, 0) == 0)
             {
                 DPRINT(("%s was an expression.\n", oldtoken.value));
-                //*token = get_token(0);
+                //*token = get_token(NOSKIP);
                 return true;
             }
             else
@@ -366,7 +502,7 @@ bool p_fcall(token_t *token)
 {
     if(token->type == lbracket)
     {
-        *token = get_token(0);
+        *token = get_token(NOSKIP);
         if(p_callargs(token))
             return true;
         else
@@ -386,7 +522,7 @@ bool p_callargs(token_t *token)
 {
     if(token->type == rbracket)
     {
-        *token = get_token(0);
+        *token = get_token(NOSKIP);
         return true;
     }
     else
@@ -399,12 +535,12 @@ bool p_ncallargs(token_t *token)
 {
     if(token->type == rbracket)
     {
-        *token = get_token(0);
+        *token = get_token(NOSKIP);
         return true;
     }
     else if(token->type == comma)
     {
-        *token = get_token(0);
+        *token = get_token(NOSKIP);
         return p_vals(token) && p_ncallargs(token);
     }
     else
@@ -419,13 +555,13 @@ bool p_vals(token_t *token)
     DPRINT(("Called p_vals with %s\n", token->value));
     if(token->type == ID_function)
     {
-        *token = get_token(0);
+        *token = get_token(NOSKIP);
         return p_fcall(token);
     }
     else
     {
         token_t oldtoken = *token;
-        *token = get_token(0);
+        *token = get_token(NOSKIP);
         if(token->type == comma || token->type == rbracket || token->type == semicolon)
             {
                 if(oldtoken.type == ID_variable || oldtoken.type == ffloat || oldtoken.type == integer || oldtoken.type == string)
@@ -438,7 +574,7 @@ bool p_vals(token_t *token)
                 //if(expr(&oldtoken, token, comma, rbracket, 0) == 0)
                 //{
                 //    DPRINT(("FIRST: %s was an expression in if statement\n", token->value));
-                //    //*token = get_token(0);
+                //    //*token = get_token(NOSKIP);
                 //    DPRINT(("%s\n", token->value));
                 //    return true;
                 //}
@@ -456,7 +592,7 @@ bool p_vals(token_t *token)
             if(expr(&oldtoken, token, comma, rbracket, 0) == 0)
             {
                 DPRINT(("SECOND: %s was an expression in if statement\n", oldtoken.value));
-                //*token = get_token(0);
+                //*token = get_token(NOSKIP);
                 DPRINT(("%s\n", token->value));
                 return true;
             }
@@ -471,17 +607,17 @@ bool p_vals(token_t *token)
 
 bool p_ifstat(token_t *token)
 {
-    *token = get_token(0);
+    *token = get_token(NOSKIP);
     if(token->type == lbracket)
     {
-        *token = get_token(0);
+        *token = get_token(NOSKIP);
         if(token->type == ID_function)
         {
             DPRINT(("Calling fcall on %s\n", token->value));
-            *token = get_token(0);
+            *token = get_token(NOSKIP);
             if(p_fcall(token))
             {
-                *token = get_token(0);
+                *token = get_token(NOSKIP);
                 DPRINT(("Calling ifbody with %s\n", token->value));
                 return p_ifbody(token);
             }
@@ -496,7 +632,7 @@ bool p_ifstat(token_t *token)
             if(expr(NULL, token, rbracket, rbracket, 0) == 0)
             {
                 DPRINT(("%s was an expression in if statement\n", token->value));
-                *token = get_token(0);
+                *token = get_token(NOSKIP);
                 DPRINT(("Calling ifbody with %s\n", token->value));
                 return p_ifbody(token);
             }
@@ -518,7 +654,7 @@ bool p_ifbody(token_t *token)
 {
     if(token->type == lsetbracket)
     {
-        *token = get_token(0);
+        *token = get_token(NOSKIP);
         return p_body(token, false) && p_elsebody(token);
     }
     else
@@ -532,10 +668,10 @@ bool p_elsebody(token_t *token)
 {
     if(token->type == funelse)
     {
-        *token = get_token(0);
+        *token = get_token(NOSKIP);
         if(token->type == lsetbracket)
         {
-            *token = get_token(0);
+            *token = get_token(NOSKIP);
             return p_body(token, false);
         }
         else
@@ -553,17 +689,17 @@ bool p_elsebody(token_t *token)
 
 bool p_whilestat(token_t *token)
 {
-    *token = get_token(0);
+    *token = get_token(NOSKIP);
     if(token->type == lbracket)
     {
-        *token = get_token(0);
+        *token = get_token(NOSKIP);
         if(token->type == ID_function)
         {
             DPRINT(("Calling fcall on %s\n", token->value));
-            *token = get_token(0);
+            *token = get_token(NOSKIP);
             if(p_fcall(token))
             {
-                *token = get_token(0);
+                *token = get_token(NOSKIP);
                 DPRINT(("Calling whilebody with %s\n", token->value));
                 return p_whilebody(token);
             }
@@ -579,7 +715,7 @@ bool p_whilestat(token_t *token)
             if(expr(NULL, token, rbracket, rbracket, 0) == 0)
             {
                 DPRINT(("%s was an expression in if statement\n", token->value));
-                *token = get_token(0);
+                *token = get_token(NOSKIP);
                 DPRINT(("Calling whilebody with %s\n", token->value));
                 return p_whilebody(token);
             }
@@ -601,7 +737,7 @@ bool p_whilebody(token_t * token)
 {
     if(token->type == lsetbracket)
     {
-        *token = get_token(0);
+        *token = get_token(NOSKIP);
         return p_body(token, false);
     }
     else
@@ -615,7 +751,7 @@ bool p_fundec(token_t * token)
 {
     if(token->type == ID_function)
     {
-        *token = get_token(0);
+        *token = get_token(NOSKIP);
         return p_funargs(token) && p_funbody(token);
     }
     else
@@ -630,7 +766,7 @@ bool p_funargs(token_t * token)
 {
     if(token->type == lbracket)
     {
-        *token = get_token(0);
+        *token = get_token(NOSKIP);
         return p_fparams(token);
     }
     else
@@ -644,9 +780,9 @@ bool p_funbody(token_t * token)
 {
     if(token->type == colon)
     {
-        *token = get_token(0);
+        *token = get_token(NOSKIP);
         if(token->type == funvoid || token->type == type)
-            *token = get_token(0);
+            *token = get_token(NOSKIP);
         else
         {
             fprintf(stderr, "Syntax error: Expected return type of function, got '%s'\n", token->value);
@@ -660,7 +796,7 @@ bool p_funbody(token_t * token)
     }
     if(token->type == lsetbracket)
     {
-        *token = get_token(0);
+        *token = get_token(NOSKIP);
         return p_body(token, false);
     }
     else
@@ -675,17 +811,17 @@ bool p_fparams(token_t * token)
 {
     if(token->type == rbracket)
     {
-        *token = get_token(0);
+        *token = get_token(NOSKIP);
         return true;
     }
     else if(token->type == type)
     {
         DPRINT(("%s TYPE IS TYPE \n", token->value));
-        *token = get_token(0);
+        *token = get_token(NOSKIP);
         DPRINT(("%s TYPE IS VAR \n", token->value));
         if(token->type == ID_variable)
         {
-            *token = get_token(0);
+            *token = get_token(NOSKIP);
             return p_nparam(token);
         }
         else
@@ -705,12 +841,12 @@ bool p_nparam(token_t *token)
 {
     if(token->type == rbracket)
     {
-        *token = get_token(0);
+        *token = get_token(NOSKIP);
         return true;
     }
     else if(token->type == comma)
     {
-        *token = get_token(0);
+        *token = get_token(NOSKIP);
         return p_fparams(token);
     }
     else

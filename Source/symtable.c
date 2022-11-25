@@ -12,23 +12,23 @@ JADRO PREBRANE Z VYPRACOVANIA 2. DOMACEJ ULOHY PREDMETU IAL MATUSA DOBIASA
 #include <string.h>
 #include "symtable.h"
 
-typedef struct funData
-{
-  int ParamCount;
-  int* paramTypes;
-  int returnType;
-  bool defined;
-
-} funData_t;
-// Uzol stromu
-typedef struct bst_node {
-  char* key;               
-  int type;              
-  funData_t* funData; // data funkcie
-  //labelData_t* labelData;
-  struct bst_node *left;  
-  struct bst_node *right; 
-} bst_node_t;
+//typedef struct funData
+//{
+//  int ParamCount;
+//  int* paramTypes;
+//  int returnType;
+//  bool defined;
+//
+//} funData_t;
+//// Uzol stromu
+//typedef struct bst_node {
+//  char* key;               
+//  int type;              
+//  funData_t* funData; // data funkcie
+//  //labelData_t* labelData;
+//  struct bst_node *left;  
+//  struct bst_node *right; 
+//} bst_node_t;
 
 // data
 
@@ -80,16 +80,16 @@ int bst_insert(bst_node_t **tree, char* key, int type, funData_t* funData) {
   if (*tree==NULL)
   {
     bst_node_t* temp = (bst_node_t*)malloc(sizeof(struct bst_node));
+    if (temp==NULL)
+    {
+      return 99; //MALLOC FAIL
+    }
     temp->type=type;
     temp->funData=funData;
     temp->key=key;
     temp->left=NULL;
     temp->right=NULL;
     
-    if (temp==NULL)
-    {
-      return 99; //MALLOC FAIL
-    }
     *tree=temp;
     return 1;
   }

@@ -341,14 +341,14 @@ int expr(token_t* first,token_t* second, token_type end, token_type end2, int sk
             DLL_InsertLast(&a,neterminal);      //vlozenie neterminalu namiesto <...>
         }
         else if(akcia == 'e'){
-            printf("zasobnik = %d,input = %d",q,b);
+            //printf("zasobnik = %d,input = %d",q,b);
             fprintf(stderr, "pre kombinaciu zasobnik / vstup nieje v precedencnej tabulke symbol - chybna syntax");
             exit(2);
         }
 
         DLL_Last(&a);           //kontrola ci zasobnik obsahuje iba $S
         DLL_GetValue(&a, &q);   
-        if(q == -5 || q == -3 || q == -4 ||q == - 2){
+        if(q == -5 || q == -3 || q == -4 || q == - 2){
             DLL_Previous(&a);
             DLL_GetValue(&a, &q);
             if(q == 12){
