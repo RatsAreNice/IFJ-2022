@@ -295,8 +295,17 @@ bool p_body(token_t * token, bool defallowed)
                 *token = get_token(NOSKIP);
                 if(p_fcall(token))
                 {
-                    *token = get_token(NOSKIP);
-                    return p_body(token,defallowed);
+                    if(token->type == semicolon)
+                    {
+                        *token = get_token(NOSKIP);
+                        return p_body(token,defallowed);
+                    }
+                    else
+                    {
+                        fprintf(stderr, "Syntax Error: Expected ';' after function.\n");
+                        exit(2);
+                    }
+                    
                 }
                 else
                 {
@@ -326,8 +335,16 @@ bool p_body(token_t * token, bool defallowed)
             *token = get_token(NOSKIP);
             if(p_fcall(token))
             {
-                *token = get_token(NOSKIP);
-                return p_body(token,defallowed);
+                if(token->type == semicolon)
+                {
+                    *token = get_token(NOSKIP);
+                    return p_body(token,defallowed);
+                }
+                else
+                {
+                    fprintf(stderr, "Syntax Error: Expected ';' after function.\n");
+                    exit(2);
+                }
             }
             else
             {
@@ -504,7 +521,10 @@ bool p_fcall(token_t *token)
     {
         *token = get_token(NOSKIP);
         if(p_callargs(token))
+        {
+            DPRINT(("RETURNED WITH: %s",token->value));
             return true;
+        }
         else
         {
             fprintf(stderr, "Syntax error: Failed to parse function call arguments\n");
