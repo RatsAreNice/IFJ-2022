@@ -1,0 +1,18 @@
+.IFJcode22
+CREATEFRAME
+PUSHFRAME
+DEFVAR LF@var0 
+ADD LF@var0 int@5 int@7
+DEFVAR LF@var1
+DEFVAR LF@var2
+INT2FLOAT LF@var2 LF@var0
+SUB LF@var1 LF@var2 float@0x1.cp+1
+DEFVAR LF@var3
+DEFVAR LF@var4
+INT2FLOAT LF@var4 int@4
+SUB LF@var3 LF@var1 LF@var4
+DEFVAR LF@var5
+DEFVAR LF@var6
+INT2FLOAT LF@var6 int@2
+ADD LF@var5 LF@var3 LF@var6
+WRITE LF@var5

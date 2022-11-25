@@ -41,6 +41,8 @@ void delete_node(ASSnode_t* node){
 }
 
 void print_code(ASSnode_t** tree){
+    printf(".IFJcode22\n");
+    printf("CREATEFRAME\nPUSHFRAME\n");
     helpsolve(*tree);
 }
 
@@ -93,7 +95,7 @@ void ADDFloat_Int(ASSnode_t* node){
         node->right->Patrick_Bateman->type=ffloat;
     }
     
-    printf("ADD %s float@%s float@%s\n",var,node->left->Patrick_Bateman->value,node->right->Patrick_Bateman->value);
+    printf("ADD %s float@%a float@%a\n",var,strtof(node->left->Patrick_Bateman->value,NULL),strtof(node->right->Patrick_Bateman->value,NULL));
     node->Patrick_Bateman=node->left->Patrick_Bateman;
     node->Patrick_Bateman->type=ffloat;
     node->Patrick_Bateman->value=var;
@@ -112,9 +114,8 @@ void ADDFloat_Float(ASSnode_t* node){
     }
 
     char* var = createVar();
-    //printf("DEFVAR %s\n",var);
-
-    //printf("ADD %s float@%s float@%s\n",var,node->left->Patrick_Bateman->value,node->right->Patrick_Bateman->value);
+    /*printf("DEFVAR %s\n",var);
+    printf("ADD %s float@%a float@%a\n",var,strtof(node->left->Patrick_Bateman->value,NULL),strtof(node->right->Patrick_Bateman->value,NULL));*/
     node->Patrick_Bateman=node->left->Patrick_Bateman;
     node->Patrick_Bateman->type=ffloat;
     node->Patrick_Bateman->value=var;
@@ -158,18 +159,18 @@ void SUBFloat_Int(ASSnode_t* node){
     {
         char* tempvar = createVar();
         printf("DEFVAR %s\n",tempvar);
-        printf("INT2FLOAT %s int@%s",tempvar,node->left->Patrick_Bateman->value);
+        printf("INT2FLOAT %s int@%s\n",tempvar,node->left->Patrick_Bateman->value);
         node->left->Patrick_Bateman->value=tempvar;
         node->left->Patrick_Bateman->type=ffloat;
     }else{ // 
         char* tempvar = createVar();
         printf("DEFVAR %s\n",tempvar);
-        printf("INT2FLOAT %s int@%s",tempvar,node->right->Patrick_Bateman->value);
+        printf("INT2FLOAT %s int@%s\n",tempvar,node->right->Patrick_Bateman->value);
         node->right->Patrick_Bateman->value=tempvar;
         node->right->Patrick_Bateman->type=ffloat;
     }
     
-    printf("SUB %s float@%s float@%s\n",var,node->left->Patrick_Bateman->value,node->right->Patrick_Bateman->value);
+    printf("SUB %s float@%a float@%a\n",var,strtof(node->left->Patrick_Bateman->value,NULL),strtof(node->right->Patrick_Bateman->value,NULL));
     node->Patrick_Bateman=node->left->Patrick_Bateman;
     node->Patrick_Bateman->type=ffloat;
     node->Patrick_Bateman->value=var;
@@ -189,11 +190,18 @@ void SUBFloat_Float(ASSnode_t* node){
 
     char* var = createVar();
     printf("DEFVAR %s\n",var);
-    printf("SUB %s float@%s float@%s\n",var,node->left->Patrick_Bateman->value,node->right->Patrick_Bateman->value);
+    printf("SUB %s float@%a float@%a\n",var,strtof(node->left->Patrick_Bateman->value,NULL),strtof(node->right->Patrick_Bateman->value,NULL));
     node->Patrick_Bateman=node->left->Patrick_Bateman;
     node->Patrick_Bateman->type=ffloat;
     node->Patrick_Bateman->value=var;
     node->leaf=true;
+}
+
+void ASSIGNVAR(ASSnode_t* node){
+    char* var = createVar();
+
+    node->Patrick_Bateman=node->left->Patrick_Bateman;
+    printf("DEF LF@%s\n",var);
 }
 
 void helpsolve(ASSnode_t* node){
