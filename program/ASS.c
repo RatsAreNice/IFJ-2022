@@ -68,8 +68,8 @@ void ADDInt_Int(ASSnode_t* node){
 
 
 void ADDFloat_Int(ASSnode_t* node){
-   /**/ // code for elementary int + float
-    /*if (node->left->leaf==false)
+    // code for elementary int + float
+    if (node->left->leaf==false)
     {
         helpsolve(node->left);
     }
@@ -99,7 +99,7 @@ void ADDFloat_Int(ASSnode_t* node){
     node->Patrick_Bateman=node->left->Patrick_Bateman;
     node->Patrick_Bateman->type=ffloat;
     node->Patrick_Bateman->value=var;
-    node->leaf=true;*/
+    node->leaf=true;
 }
 
 void ADDFloat_Float(ASSnode_t* node){
