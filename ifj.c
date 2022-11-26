@@ -2,7 +2,7 @@
 #include <string.h>
 #include <stdlib.h>
 
-#include "Source/Parser.h"
+#include "Parser.h"
 
 int main(int argc, char const *argv[])
 {
