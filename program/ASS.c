@@ -58,8 +58,8 @@ void ADDInt_Int(ASSnode_t* node){
     }
     
     char* var = createVar();
-    //printf("DEFVAR %s\n",var);
-    //printf("ADD %s %s %s\n",var,node->left->Patrick_Bateman->value,node->right->Patrick_Bateman->value);
+    printf("DEFVAR %s\n",var);
+    printf("ADD %s %s %s\n",var,node->left->Patrick_Bateman->value,node->right->Patrick_Bateman->value);
     node->Patrick_Bateman=node->left->Patrick_Bateman;
     node->Patrick_Bateman->type=integer;
     node->Patrick_Bateman->value=var;
@@ -114,8 +114,8 @@ void ADDFloat_Float(ASSnode_t* node){
     }
 
     char* var = createVar();
-    /*printf("DEFVAR %s\n",var);
-    printf("ADD %s float@%a float@%a\n",var,strtof(node->left->Patrick_Bateman->value,NULL),strtof(node->right->Patrick_Bateman->value,NULL));*/
+    printf("DEFVAR %s\n",var);
+    printf("ADD %s float@%a float@%a\n",var,strtof(node->left->Patrick_Bateman->value,NULL),strtof(node->right->Patrick_Bateman->value,NULL));
     node->Patrick_Bateman=node->left->Patrick_Bateman;
     node->Patrick_Bateman->type=ffloat;
     node->Patrick_Bateman->value=var;
@@ -189,7 +189,7 @@ void SUBFloat_Float(ASSnode_t* node){
     }
 
     char* var = createVar();
-    printf("DEFVAR %s\n",var);
+    printf("DEFVAR LF@%s\n",var);
     printf("SUB %s float@%a float@%a\n",var,strtof(node->left->Patrick_Bateman->value,NULL),strtof(node->right->Patrick_Bateman->value,NULL));
     node->Patrick_Bateman=node->left->Patrick_Bateman;
     node->Patrick_Bateman->type=ffloat;
@@ -201,7 +201,7 @@ void ASSIGNVAR(ASSnode_t* node){
     char* var = createVar();
 
     node->Patrick_Bateman=node->left->Patrick_Bateman;
-    printf("DEF LF@%s\n",var);
+    printf("DEFVAR LF@%s\n",var);
 }
 
 void helpsolve(ASSnode_t* node){
@@ -270,10 +270,27 @@ void helpsolve(ASSnode_t* node){
 
 }
 
+char* checkvar(token_t* Patrick_Bateman){
+    if (Patrick_Bateman->type==VAR)
+    {
+        return strcat("LF@",Patrick_Bateman->value);
+    }else{
+        switch (expression)
+        {
+        case /* constant-expression */:
+            /* code */
+            break;
+        
+        default:
+            break;
+        }
+    }
+}
+
 char* createVar(){
     static unsigned int varcount;
     char* str = malloc(sizeof(char)*14); // var + maxuint length + \0 
-    //sprintf(str,"var%d",varcount);
+    sprintf(str,"var%d",varcount);
     varcount++;
     return str;
 }

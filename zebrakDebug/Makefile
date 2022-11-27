@@ -1,6 +1,6 @@
 CC=gcc
 CFLAGS=-Wall -std=c11 -pedantic
-FILE=testASS.c ../Source/ASS.c
+FILE=testASS.c ../program/ASS.c
 
 
 
@@ -12,7 +12,7 @@ compileASS:
 	$(CC) $(CFLAGS) $(FILE) -o testASo
 
 runASS:
-	./testASo
+	./testASo > out.txt
 
 cleanASS:
 	rm -f testASo

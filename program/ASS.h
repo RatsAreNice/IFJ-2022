@@ -6,6 +6,8 @@
 #include <string.h>
 #include "scanner.h"
 
+#define VAR (token_type)-1
+
 typedef enum operand{
     ADD,
     SUB,
@@ -47,6 +49,8 @@ void ASSinit(ASSnode_t** tree);
 ASSnode_t* makeTree(operand_t OP, ASSnode_t* left, ASSnode_t* right);
 ASSnode_t* makeLeaf(token_t* Patrick_Bateman);
 void delete_node(ASSnode_t* node);
+char* checkvar(token_t* Patrick_Bateman);
+
 //non-operand functions
 void helpsolve(ASSnode_t* node);
 void print_code(ASSnode_t** tree);
@@ -58,10 +62,10 @@ void ADDFloat_Int(ASSnode_t* node);
 void ADDFloat_Float(ASSnode_t* node);
 
 // SUB
-
 void SUBInt_Int(ASSnode_t* node);
 void SUBFloat_Int(ASSnode_t* node);
 void SUBFloat_Float(ASSnode_t* node);
+
 // ASSIGN
 void ASSIGNVAR(ASSnode_t* node);
 

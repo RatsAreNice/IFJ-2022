@@ -1,4 +1,4 @@
-#include "../Source/ASS.h"
+#include "../program/ASS.h"
 
 int main(){
 
@@ -29,8 +29,6 @@ int main(){
     ASSnode_t* twoleaf = makeLeaf(&two);
 
     ASSnode_t* trollec = makeTree(ADD,fiveleaf,sevenleaf);
-    printf("%s\n",five.value);
-    printf("%s\n",seven.value);
     ASSnode_t* lolec   = makeTree(SUB,trollec,threeleaf);
     ASSnode_t* holec   = makeTree(SUB,lolec,fourleaf);
     ASSnode_t* molec   = makeTree(ADD,holec,twoleaf);
@@ -41,5 +39,6 @@ int main(){
 
 
     printf("WRITE var5\n");
+
     return 0;
 }
