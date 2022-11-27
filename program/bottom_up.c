@@ -2,7 +2,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <ctype.h>
-#include "c206.c"
+
 #include "bottom_up.h"
 
 int convert(token_t a){       //konvertuje token na cislo
@@ -411,4 +411,9 @@ int expr(token_t* first,token_t* second, token_type end, token_type end2, int sk
     }
     //printf("%p and %p", first, second);
     return 0;
+<<<<<<< HEAD
 }
+=======
+}
+
+>>>>>>> 3862770b9ff0f799539c38fa60c3a85a836f2271
