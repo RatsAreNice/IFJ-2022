@@ -57,6 +57,7 @@
 
 #include<stdio.h>
 #include<stdlib.h>
+#include"ASS.h"
 
 #define FALSE 0
 #define TRUE 1
@@ -66,10 +67,16 @@ extern int error_flag;
 /** Globální proměnná - indikuje, zda byla operace řešena. */
 extern int solved;
 
+typedef struct unit{
+    int a;
+    ASSnode_t* b;
+    char* c;
+} unit_t;
+
 /** Prvek dvousměrně vázaného seznamu. */
 typedef struct DLLElement {
 	/** Užitečná data. */
-	int data;
+	unit_t data;
 	/** Ukazatel na předcházející prvek seznamu. */
 	struct DLLElement *previousElement;
 	/** Ukazatel na následující prvek seznamu. */
@@ -138,7 +145,7 @@ void DLL_Dispose( DLList *list ) {
  * @param list Ukazatel na inicializovanou strukturu dvousměrně vázaného seznamu
  * @param data Hodnota k vložení na začátek seznamu
  */
-void DLL_InsertFirst( DLList *list, int data ) {
+void DLL_InsertFirst( DLList *list, unit_t data ) {
 	DLLElementPtr newElemPtr;
 	newElemPtr = malloc(sizeof(struct DLLElement));	//vytvorime novy prvok
 	if(newElemPtr == NULL){
@@ -166,7 +173,7 @@ void DLL_InsertFirst( DLList *list, int data ) {
  * @param list Ukazatel na inicializovanou strukturu dvousměrně vázaného seznamu
  * @param data Hodnota k vložení na konec seznamu
  */
-void DLL_InsertLast( DLList *list, int data ) {
+void DLL_InsertLast( DLList *list, unit_t data ) {
 	DLLElementPtr newElemPtr;
 	newElemPtr = malloc(sizeof(struct DLLElement));	//vytvorime novy prvok
 	if(newElemPtr == NULL){
@@ -215,7 +222,7 @@ void DLL_Last( DLList *list ) {
  * @param list Ukazatel na inicializovanou strukturu dvousměrně vázaného seznamu
  * @param dataPtr Ukazatel na cílovou proměnnou
  */
-void DLL_GetFirst( DLList *list, int *dataPtr ) {
+void DLL_GetFirst( DLList *list, unit_t *dataPtr ) {
 	if(list->firstElement == NULL){
 		DLL_Error();
 	}
@@ -231,7 +238,7 @@ void DLL_GetFirst( DLList *list, int *dataPtr ) {
  * @param list Ukazatel na inicializovanou strukturu dvousměrně vázaného seznamu
  * @param dataPtr Ukazatel na cílovou proměnnou
  */
-void DLL_GetLast( DLList *list, int *dataPtr ) {
+void DLL_GetLast( DLList *list, unit_t *dataPtr ) {
 	if(list->firstElement == NULL){
 		DLL_Error();
 	}
@@ -350,7 +357,7 @@ void DLL_DeleteBefore( DLList *list ) {
  * @param list Ukazatel na inicializovanou strukturu dvousměrně vázaného seznamu
  * @param data Hodnota k vložení do seznamu za právě aktivní prvek
  */
-void DLL_InsertAfter( DLList *list, int data ) {
+void DLL_InsertAfter( DLList *list, unit_t data ) {
 	if(list->activeElement !=NULL){
 		DLLElementPtr newElement;
 		newElement = malloc(sizeof(struct DLLElement));
@@ -381,7 +388,7 @@ void DLL_InsertAfter( DLList *list, int data ) {
  * @param list Ukazatel na inicializovanou strukturu dvousměrně vázaného seznamu
  * @param data Hodnota k vložení do seznamu před právě aktivní prvek
  */
-void DLL_InsertBefore( DLList *list, int data ) {
+void DLL_InsertBefore( DLList *list, unit_t data ) {
 	if(list->activeElement != NULL){
 		DLLElementPtr newElement;
 		newElement = malloc(sizeof(struct DLLElement));
@@ -410,7 +417,7 @@ void DLL_InsertBefore( DLList *list, int data ) {
  * @param list Ukazatel na inicializovanou strukturu dvousměrně vázaného seznamu
  * @param dataPtr Ukazatel na cílovou proměnnou
  */
-void DLL_GetValue( DLList *list, int *dataPtr ) {
+void DLL_GetValue( DLList *list, unit_t *dataPtr ) {
 	if(list->activeElement == NULL){
 		DLL_Error();
 	}
@@ -426,7 +433,7 @@ void DLL_GetValue( DLList *list, int *dataPtr ) {
  * @param list Ukazatel na inicializovanou strukturu dvousměrně vázaného seznamu
  * @param data Nová hodnota právě aktivního prvku
  */
-void DLL_SetValue( DLList *list, int data ) {
+void DLL_SetValue( DLList *list, unit_t data ) {
 	if(list->activeElement != NULL){
 		list->activeElement->data = data;
 	}
