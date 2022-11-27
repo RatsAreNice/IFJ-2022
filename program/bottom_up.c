@@ -109,8 +109,11 @@ unit_t cmp_to_rule(unit_t rs[]){                  //funkcia dostane pravu stranu
     neterminal.vvalue = TESTQ;
     if(rs[0].ttyp == 3){                         // <exp> -> i
         neterminal.ttyp = -3;
-        neterminal.uzol = makeLeaf(&(rs[0].vvalue));            //vo vytvorenom neterminale bude ukazatel na vytvoreny leaf
         neterminal.vvalue = rs[0].vvalue;
+        token_t* abc;
+        abc = malloc(sizeof(token_t));
+        *abc = rs[0].vvalue; 
+        neterminal.uzol = makeLeaf(abc);            //vo vytvorenom neterminale bude ukazatel na vytvoreny leaf. v leafe je hodnota terminalu, z ktoreho neterminal vznikol
     }
     else if(rs[0].ttyp == 0){                         //<null> -> null
         neterminal.ttyp = -2;
@@ -129,7 +132,7 @@ unit_t cmp_to_rule(unit_t rs[]){                  //funkcia dostane pravu stranu
     }
     else if((rs[0].ttyp == -3|| rs[0].ttyp == -2) && rs[1].ttyp == 6 && (rs[2].ttyp == -3 || rs[2].ttyp == -2)){                    // <exp> -> <exp>||<nnull> * <exp>||<nnull>
         neterminal.ttyp = -3;
-        //neterminal.uzol = makeTree()                        //makeTree([operand vypocitany z tokenu rs[0].value.ttype],rs[0].uzol,rs[2].uzol)
+        neterminal.uzol = makeTree(MUL,rs[0].uzol,rs[2].uzol);                                      //vytvori strom s operandom *, naviaze uzly operandov
         neterminal.vvalue = rs[1].vvalue;
     }
     else if((rs[0].ttyp == -3|| rs[0].ttyp == -2) && rs[1].ttyp == 7 && (rs[2].ttyp == -3 || rs[2].ttyp == -2)){                    // <exp> -> <exp>||<nnull> / <exp>||<nnull>
@@ -162,7 +165,6 @@ unit_t cmp_to_rule(unit_t rs[]){                  //funkcia dostane pravu stranu
         fprintf(stderr,"redukcia retazca ktory nieje na pravej strane ziadneho pravidla - nespravna syntax retazec = %d : %d : %d",rs[0].ttyp,rs[1].ttyp,rs[2].ttyp);
         exit(2);
     }
-    printf("redukujem %d : %d : %d  na %d ; %d \n",rs[0].ttyp,rs[1].ttyp,rs[2].ttyp,neterminal.ttyp,neterminal.vvalue.type);
     return neterminal;
 }
 
@@ -375,7 +377,7 @@ int expr(token_t* first,token_t* second, token_type end, token_type end2, int sk
             }
 
             neterminal = cmp_to_rule(rs);       //v premmenej neterminal je neterminal ktory musime vlozit na zasobnik po tom co odstranime symboly medzi <>, vratane '<' '>' samotnych
-
+            //printf("neterminal uzol value : %s",neterminal.uzol->Patrick_Bateman->value);
             DLL_Last(&a);                       
             while(q.ttyp != '<'){
                 DLL_Previous(&a);
@@ -409,5 +411,12 @@ int expr(token_t* first,token_t* second, token_type end, token_type end2, int sk
         }                                                           //najpravsi terminal je aktivny
     }
     //printf("%p and %p", first, second);
+    // DLL_Last(&a);
+    // DLL_GetValue(&a,&q);
+    // printf("end : %d\n",q.ttyp);
+    // printf("            %d\n",q.uzol->OP);
+    // printf("     %d                 %s\n",q.uzol->left->OP,q.uzol->right->Patrick_Bateman->value);
+    // printf("%s     %s",q.uzol->left->left->Patrick_Bateman->value,q.uzol->left->right->Patrick_Bateman->value);
+    // printf("\n");
     return 0;
 }
