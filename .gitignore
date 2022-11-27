@@ -58,4 +58,4 @@ Mkfile.old
 dkms.conf
 
 #oliver
-.ZoneIdentifier
+*:Zone.Identifier
