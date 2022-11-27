@@ -2,7 +2,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <ctype.h>
-#include "c206.c"
+
 #include "bottom_up.h"
 
 int convert(token_t a){       //konvertuje token na cislo
@@ -413,34 +413,3 @@ int expr(token_t* first,token_t* second, token_type end, token_type end2, int sk
     return 0;
 }
 
-int main(){
-    unit_t x;
-    x.ttyp = 4;
-    x.uzol = NULL;
-    token_t TESTQ;
-    TESTQ.type = funvoid;
-    TESTQ.value = "";
-    x.vvalue = TESTQ;
-    DLList a;
-    DLL_Init(&a);
-    DLL_InsertFirst(&a, x);
-    DLL_First(&a);
-    unit_t y;
-    DLL_GetValue(&a, &y);
-    
-    token_t q;
-    token_t lelec;
-    q = get_token(0);
-    printf("%d : %s\n",q.type,q.value);
-    q = get_token(0);
-    printf("%d : %s\n",q.type,q.value);
-    q = get_token(0);
-    printf("%d : %s\n",q.type,q.value);
-    q = get_token(0);
-    printf("%d : %s\n",q.type,q.value);
-    lelec = get_token(0);
-    q = get_token(0);
-    printf("%d : %s\n",q.type,q.value);
-    expr(&lelec,&q,lsetbracket,lsetbracket,0);
-    return 0;
-}

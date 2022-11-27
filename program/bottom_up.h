@@ -2,6 +2,7 @@
 #define BOTTOM_UP_H
 #include "scanner.h"
 #include "ASS.h"
+#include "c206.h"
 
 int convert(token_t a);
 unit_t get_input(token_type ** first,char* firstv, token_type ** second,char*secondv, token_t ** token, token_type end, token_type end2,int skip,int* bracketcount);
