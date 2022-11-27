@@ -45,19 +45,22 @@ int convert(token_t a){       //konvertuje token na cislo
         case rbracket:
             return 11;
         default:
-            fprintf(stderr,"neocakavany znak vo vyraze: %s\n" ,a.value);
+            fprintf(stderr,"neocakavany znak vo vyraze: %d\n" ,a.type);
             exit(2);
     }
 }    
 
-int get_input(token_type ** first, token_type ** second, token_t ** token, token_type end, token_type end2,int skip,int* bracketcount){           //ziska token zo vstupu a konvertuje ho
+unit_t get_input(token_type ** first,char* firstv, token_type ** second,char* secondv, token_t ** token, token_type end, token_type end2,int skip,int* bracketcount){           //ziska token zo vstupu a konvertuje ho
     token_t input;
+    unit_t output;
     int b;
     if(*first != NULL){
         input.type = **first;
+        input.value = firstv;
         *first = NULL;
     }else if(*second != NULL){
         input.type = **second;
+        input.value = secondv;
         *second = NULL;
     }
     else{                           //first aj second su NULL
@@ -91,61 +94,70 @@ int get_input(token_type ** first, token_type ** second, token_t ** token, token
     if(b == 11){
         *bracketcount=*bracketcount-1;
     }
-    return b;
+    output.ttyp = b;
+    output.vvalue = input.value;
+    output.uzol = NULL;
+    return output;
 }
 
-int cmp_to_rule(int rs[]){                  //funkcia dostane pravu stranu pravidla. vrati lavu stranu tohto pravidla. (vracia neterminal reprezentovany INTom)
-    if(rs[0] == 3){                         // <exp> -> i
-        return -3;
+unit_t cmp_to_rule(unit_t rs[]){                  //funkcia dostane pravu stranu pravidla. vrati lavu stranu tohto pravidla. (vracia neterminal)
+    unit_t neterminal;
+    neterminal.ttyp = -30;
+    neterminal.uzol = NULL;
+    neterminal.vvalue = "";
+    if(rs[0].ttyp == 3){                         // <exp> -> i
+        neterminal.ttyp = -3;
     }
-    if(rs[0] == 0){                         //<null> -> null
-        return -2;
+    else if(rs[0].ttyp == 0){                         //<null> -> null
+        neterminal.ttyp = -2;
     }
-    if(rs[0] == 10 && rs[1] == -2 && rs[2] == 11){                  //(<nnull>)  -> null
-        return -2;
+    else if(rs[0].ttyp == 10 && rs[1].ttyp == -2 && rs[2].ttyp == 11){                  //(<nnull>)  -> null
+        neterminal.ttyp = -2;
     }
-    if(rs[0] == 10 && rs[1] == -3 && rs[2] == 11){                    // <exp> -> (<exp>)
-        return -3;
+    else if(rs[0].ttyp == 10 && rs[1].ttyp == -3 && rs[2].ttyp == 11){                    // <exp> -> (<exp>)
+        neterminal.ttyp = -3;
     }
-    if((rs[0] == -3|| rs[0] == -2) && rs[1] == 4 && (rs[2] == -3 || rs[2] == -2)){                    // <exp> -> <exp>||<nnull> + <exp>||<nnull>
-        return -3;
+    else if((rs[0].ttyp == -3|| rs[0].ttyp == -2) && rs[1].ttyp == 4 && (rs[2].ttyp == -3 || rs[2].ttyp == -2)){                    // <exp> -> <exp>||<nnull> + <exp>||<nnull>
+        neterminal.ttyp = -3;
     }
-    if((rs[0] == -3|| rs[0] == -2) && rs[1] == 5 && (rs[2] == -3 || rs[2] == -2)){                    // <exp> -> <exp>||<nnull> - <exp>||<nnull>
-        return -3;
+    else if((rs[0].ttyp == -3|| rs[0].ttyp == -2) && rs[1].ttyp == 5 && (rs[2].ttyp == -3 || rs[2].ttyp == -2)){                    // <exp> -> <exp>||<nnull> - <exp>||<nnull>
+        neterminal.ttyp = -3;
     }
-    if((rs[0] == -3|| rs[0] == -2) && rs[1] == 6 && (rs[2] == -3 || rs[2] == -2)){                    // <exp> -> <exp>||<nnull> * <exp>||<nnull>
-        return -3;
+    else if((rs[0].ttyp == -3|| rs[0].ttyp == -2) && rs[1].ttyp == 6 && (rs[2].ttyp == -3 || rs[2].ttyp == -2)){                    // <exp> -> <exp>||<nnull> * <exp>||<nnull>
+        neterminal.ttyp = -3;
     }
-    if((rs[0] == -3|| rs[0] == -2) && rs[1] == 7 && (rs[2] == -3 || rs[2] == -2)){                    // <exp> -> <exp>||<nnull> / <exp>||<nnull>
-        return -3;
+    else if((rs[0].ttyp == -3|| rs[0].ttyp == -2) && rs[1].ttyp == 7 && (rs[2].ttyp == -3 || rs[2].ttyp == -2)){                    // <exp> -> <exp>||<nnull> / <exp>||<nnull>
+        neterminal.ttyp = -3;
     }
-    if(rs[0] == 10 && rs[1] == -4 && rs[2] == 11){                    // <strexp> -> (<strexp>)
-        return -4;
+    else if(rs[0].ttyp == 10 && rs[1].ttyp == -4 && rs[2].ttyp == 11){                    // <strexp> -> (<strexp>)
+        neterminal.ttyp = -4;
     }
-    if(rs[0] == 2 && rs[1] == -1 && rs[2] == -1){                    // <strexp> -> string
-        return -4;
+    else if(rs[0].ttyp == 2 && rs[1].ttyp == -1 && rs[2].ttyp == -1){                    // <strexp> -> string
+        neterminal.ttyp = -4;
     }
-    if((rs[0] == -4 || rs[0] == -2) && rs[1] == 1 && (rs[2] == -4 || rs[2] == -2)){                    // <strexp> -> <strexp>||<nnull> dot <strexp>|<nnull>
-        return -4;
+    else if((rs[0].ttyp == -4 || rs[0].ttyp == -2) && rs[1].ttyp == 1 && (rs[2].ttyp == -4 || rs[2].ttyp == -2)){                    // <strexp> -> <strexp>||<nnull> dot <strexp>|<nnull>
+        neterminal.ttyp = -4;
     }
-    if(rs[0] == 10 && rs[1] == -5 && rs[2] == 11){                    // S -> (S)
-        return -5;
+    else if(rs[0].ttyp == 10 && rs[1].ttyp == -5 && rs[2].ttyp == 11){                    // S -> (S)
+        neterminal.ttyp = -5;
     }
-    if((rs[0] == -3 || rs[0] == -2) && rs[1] == 8 && (rs[2] == -3 || rs[2] == -2)){                    // S -> <exp>|<nnull> relid <exp>|<nnull>
-        return -5;
+    else if((rs[0].ttyp == -3 || rs[0].ttyp == -2) && rs[1].ttyp == 8 && (rs[2].ttyp == -3 || rs[2].ttyp == -2)){                    // S -> <exp>|<nnull> relid <exp>|<nnull>
+        neterminal.ttyp = -5;
     }
-    if((rs[0] == -3 || rs[0] == -2) && rs[1] == 9 && (rs[2] == -3 || rs[2] == -2)){                    // S -> <exp>|<nnull> relid <exp>|<nnull>
-        return -5;
+    else if((rs[0].ttyp == -3 || rs[0].ttyp == -2) && rs[1].ttyp == 9 && (rs[2].ttyp == -3 || rs[2].ttyp == -2)){                    // S -> <exp>|<nnull> relid <exp>|<nnull>
+        neterminal.ttyp = -5;
     }
-    if((rs[0] == -4 || rs[0] == -2) && rs[1] == 8 && (rs[2] == -4 || rs[2] == -2)){                    // S -> <exp>|<nnull> relid <exp>|<nnull>
-        return -5;
+    else if((rs[0].ttyp == -4 || rs[0].ttyp == -2) && rs[1].ttyp == 8 && (rs[2].ttyp == -4 || rs[2].ttyp == -2)){                    // S -> <exp>|<nnull> relid <exp>|<nnull>
+        neterminal.ttyp = -5;
     }
-    if((rs[0] == -4 || rs[0] == -2) && rs[1] == 9 && (rs[2] == -4 || rs[2] == -2)){                    // S -> <strexp>|<nnull> relid <strexp>|<nnull>
-        return -5;
+    else if((rs[0].ttyp == -4 || rs[0].ttyp == -2) && rs[1].ttyp == 9 && (rs[2].ttyp == -4 || rs[2].ttyp == -2)){                    // S -> <strexp>|<nnull> relid <strexp>|<nnull>
+        neterminal.ttyp = -5;
     }else{
-        fprintf(stderr,"redukcia retazca ktory nieje na pravej strane ziadneho pravidla - nespravna syntax retazec = %d : %d : %d",rs[0],rs[1],rs[2]);
+        fprintf(stderr,"redukcia retazca ktory nieje na pravej strane ziadneho pravidla - nespravna syntax retazec = %d : %d : %d",rs[0].ttyp,rs[1].ttyp,rs[2].ttyp);
         exit(2);
     }
+    printf("redukujem %d : %d : %d  na %d\n",rs[0].ttyp,rs[1].ttyp,rs[2].ttyp,neterminal.ttyp);
+    return neterminal;
 }
 
 int expr(token_t* first,token_t* second, token_type end, token_type end2, int skip){
@@ -268,61 +280,85 @@ int expr(token_t* first,token_t* second, token_type end, token_type end2, int sk
     prec_t[12][11] = 'e';
 
     //tabulka
+    char* firstv = "TEST";
+    char* secondv = "TEST";
     int bracketcount;
     bracketcount = 0;
-    int neterminal;
+    unit_t neterminal;
     int endflag = 0;
     char akcia;
-    int b;
+    unit_t b;
     token_type *one, *two;
-    if (first == NULL)
+    if (first == NULL){
         one = NULL;
-    else
+    }
+    else{
         one = &(first->type);
-    if (second == NULL)
+        firstv = first->value;
+    }
+    if (second == NULL){
         two = NULL;
-    else
+    }
+    else{
         two = &(second->type);
+        secondv = second->value;
+    }
     DLList a;
-    int q;
+    unit_t q;       //q = najvyssi terminal na zasobniku
     DLL_Init( &a );
-    DLL_InsertFirst( &a , 12 );     //vlozenie $ do zasobniku
+    unit_t dolar;
+    dolar.ttyp = 12;
+    dolar.vvalue = "";
+    dolar.uzol = NULL;
+    DLL_InsertFirst( &a , dolar );     //vlozenie $ do zasobniku
     DLL_First(&a);
-    int rs[3];
-    b = get_input(&one,&two,&second,end,end2,skip,&bracketcount);
+    unit_t rs[3];
+    b = get_input(&one,firstv,&two,secondv,&second,end,end2,skip,&bracketcount);    //b = aktualny symbol na vstupe
     
-    while((b != 12) || (endflag != 1)){
+    while((b.ttyp != 12) || (endflag != 1)){
         
         endflag = 0;
         for(int i=0;i<3;i++){
-            rs[i] = -1;
+            rs[i].ttyp = -1;
+            rs[i].uzol = NULL;
+            rs[i].vvalue = "";
         } 
         int i = 0;
         DLL_GetValue(&a,&q);
 
-        akcia = prec_t[q][b];
+        akcia = prec_t[q.ttyp][b.ttyp];
         if(akcia == '='){
             DLL_InsertLast(&a,b);
             DLL_Last(&a);               //vlozi sa do zoznamu, stane sa aktivnym (kedze to automaticky musi byt najvrchnejsi terminal)
-            b = get_input(&one,&two,&second,end,end2,skip,&bracketcount);
+            b = get_input(&one,firstv,&two,secondv,&second,end,end2,skip,&bracketcount);
         }
         else if(akcia == '<'){
-            DLL_InsertAfter(&a,'<');        //za aktivny prvok (najvyssi terminal) sa vlozi <
+            unit_t mensitko;
+            mensitko.ttyp = '<';
+            mensitko.uzol = NULL;
+            mensitko.vvalue = "";
+
+            DLL_InsertAfter(&a,mensitko);        //za aktivny prvok (najvyssi terminal) sa vlozi <
             DLL_InsertLast(&a,b);           //push b
             DLL_Last(&a);                   //make b active (novy najvrchnejsi terminal)
-            b = get_input(&one,&two,&second,end,end2,skip,&bracketcount);       //precitaj dalsi symbol b zo vstupu
+            b = get_input(&one,firstv,&two,secondv,&second,end,end2,skip,&bracketcount);       //precitaj dalsi symbol b zo vstupu
         }
         else if(akcia == '>'){
             DLL_Last(&a);
-            DLL_InsertAfter(&a,'>');
+            unit_t vacsitko;
+            vacsitko.ttyp = '>';
+            vacsitko.uzol = NULL;
+            vacsitko.vvalue = "";
+
+            DLL_InsertAfter(&a,vacsitko);
             DLL_GetValue(&a,&q);
-            while(q != '<'){                //posuvaj sa v zozname dolava pokial nenarazis na <
+            while(q.ttyp != '<'){                //posuvaj sa v zozname dolava pokial nenarazis na <
                 DLL_Previous(&a);
                 DLL_GetValue(&a,&q);
             }
             DLL_Next(&a);
             DLL_GetValue(&a,&q);
-            while(q != '>'){
+            while(q.ttyp != '>'){
                 rs[i] = q;                //do pola rs sa uklada vyraz medzi <>
                 DLL_Next(&a);
                 DLL_GetValue(&a,&q);
@@ -332,7 +368,7 @@ int expr(token_t* first,token_t* second, token_type end, token_type end2, int sk
             neterminal = cmp_to_rule(rs);       //v premmenej neterminal je neterminal ktory musime vlozit na zasobnik po tom co odstranime symboly medzi <>, vratane '<' '>' samotnych
 
             DLL_Last(&a);                       
-            while(q != '<'){
+            while(q.ttyp != '<'){
                 DLL_Previous(&a);
                 DLL_DeleteAfter(&a);
                 DLL_GetValue(&a,&q);
@@ -348,17 +384,17 @@ int expr(token_t* first,token_t* second, token_type end, token_type end2, int sk
 
         DLL_Last(&a);           //kontrola ci zasobnik obsahuje iba $S
         DLL_GetValue(&a, &q);   
-        if(q == -5 || q == -3 || q == -4 || q == - 2){
+        if(q.ttyp == -5 || q.ttyp == -3 || q.ttyp == -4 || q.ttyp == - 2){
             DLL_Previous(&a);
             DLL_GetValue(&a, &q);
-            if(q == 12){
+            if(q.ttyp == 12){
                 endflag = 1;                //ak ano, nastavi sa endflag na 1
             }
         }
 
         DLL_Last(&a);
         DLL_GetValue(&a,&q);
-        while(q<0 || q == '<' || q == '>' || q == '='){             //od posledneho chod cez vsetky prvky na zasobniku, pokial nenarazis na terminal
+        while(q.ttyp <0 || q.ttyp == '<' || q.ttyp == '>' || q.ttyp == '='){             //od posledneho chod cez vsetky prvky na zasobniku, pokial nenarazis na terminal
             DLL_Previous(&a);
             DLL_GetValue(&a,&q);
         }                                                           //najpravsi terminal je aktivny

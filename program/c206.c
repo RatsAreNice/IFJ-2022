@@ -68,9 +68,9 @@ extern int error_flag;
 extern int solved;
 
 typedef struct unit{
-    int a;
-    ASSnode_t* b;
-    char* c;
+    int ttyp;
+    ASSnode_t* uzol;
+    char* vvalue;
 } unit_t;
 
 /** Prvek dvousměrně vázaného seznamu. */
