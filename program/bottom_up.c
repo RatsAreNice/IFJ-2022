@@ -95,7 +95,7 @@ unit_t get_input(token_type ** first,char* firstv, token_type ** second,char* se
         *bracketcount=*bracketcount-1;
     }
     output.ttyp = b;
-    output.vvalue = input.value;
+    output.vvalue = input;
     output.uzol = NULL;
     return output;
 }
@@ -104,9 +104,14 @@ unit_t cmp_to_rule(unit_t rs[]){                  //funkcia dostane pravu stranu
     unit_t neterminal;
     neterminal.ttyp = -30;
     neterminal.uzol = NULL;
-    neterminal.vvalue = "";
+    token_t TESTQ;
+    TESTQ.type = funvoid;
+    TESTQ.value = "";
+    neterminal.vvalue = TESTQ;
     if(rs[0].ttyp == 3){                         // <exp> -> i
         neterminal.ttyp = -3;
+        neterminal.uzol = makeLeaf(&(rs[0].vvalue));
+        neterminal.vvalue = rs[0].vvalue;
     }
     else if(rs[0].ttyp == 0){                         //<null> -> null
         neterminal.ttyp = -2;
@@ -125,6 +130,7 @@ unit_t cmp_to_rule(unit_t rs[]){                  //funkcia dostane pravu stranu
     }
     else if((rs[0].ttyp == -3|| rs[0].ttyp == -2) && rs[1].ttyp == 6 && (rs[2].ttyp == -3 || rs[2].ttyp == -2)){                    // <exp> -> <exp>||<nnull> * <exp>||<nnull>
         neterminal.ttyp = -3;
+        neterminal.vvalue = rs[1].vvalue;
     }
     else if((rs[0].ttyp == -3|| rs[0].ttyp == -2) && rs[1].ttyp == 7 && (rs[2].ttyp == -3 || rs[2].ttyp == -2)){                    // <exp> -> <exp>||<nnull> / <exp>||<nnull>
         neterminal.ttyp = -3;
@@ -156,6 +162,7 @@ unit_t cmp_to_rule(unit_t rs[]){                  //funkcia dostane pravu stranu
         fprintf(stderr,"redukcia retazca ktory nieje na pravej strane ziadneho pravidla - nespravna syntax retazec = %d : %d : %d",rs[0].ttyp,rs[1].ttyp,rs[2].ttyp);
         exit(2);
     }
+    printf("REE %d : %d : %d\n",rs[0].vvalue.type,rs[1].vvalue.type,rs[2].vvalue.type);
     printf("redukujem %d : %d : %d  na %d\n",rs[0].ttyp,rs[1].ttyp,rs[2].ttyp,neterminal.ttyp);
     return neterminal;
 }
@@ -308,7 +315,10 @@ int expr(token_t* first,token_t* second, token_type end, token_type end2, int sk
     DLL_Init( &a );
     unit_t dolar;
     dolar.ttyp = 12;
-    dolar.vvalue = "";
+    token_t TESTQ;
+    TESTQ.type = funvoid;
+    TESTQ.value = "";
+    dolar.vvalue = TESTQ;
     dolar.uzol = NULL;
     DLL_InsertFirst( &a , dolar );     //vlozenie $ do zasobniku
     DLL_First(&a);
@@ -321,7 +331,7 @@ int expr(token_t* first,token_t* second, token_type end, token_type end2, int sk
         for(int i=0;i<3;i++){
             rs[i].ttyp = -1;
             rs[i].uzol = NULL;
-            rs[i].vvalue = "";
+            rs[i].vvalue = TESTQ;
         } 
         int i = 0;
         DLL_GetValue(&a,&q);
@@ -336,7 +346,7 @@ int expr(token_t* first,token_t* second, token_type end, token_type end2, int sk
             unit_t mensitko;
             mensitko.ttyp = '<';
             mensitko.uzol = NULL;
-            mensitko.vvalue = "";
+            mensitko.vvalue = TESTQ;
 
             DLL_InsertAfter(&a,mensitko);        //za aktivny prvok (najvyssi terminal) sa vlozi <
             DLL_InsertLast(&a,b);           //push b
@@ -348,7 +358,7 @@ int expr(token_t* first,token_t* second, token_type end, token_type end2, int sk
             unit_t vacsitko;
             vacsitko.ttyp = '>';
             vacsitko.uzol = NULL;
-            vacsitko.vvalue = "";
+            vacsitko.vvalue = TESTQ;
 
             DLL_InsertAfter(&a,vacsitko);
             DLL_GetValue(&a,&q);
@@ -400,5 +410,37 @@ int expr(token_t* first,token_t* second, token_type end, token_type end2, int sk
         }                                                           //najpravsi terminal je aktivny
     }
     //printf("%p and %p", first, second);
+    return 0;
+}
+
+int main(){
+    unit_t x;
+    x.ttyp = 4;
+    x.uzol = NULL;
+    token_t TESTQ;
+    TESTQ.type = funvoid;
+    TESTQ.value = "";
+    x.vvalue = TESTQ;
+    DLList a;
+    DLL_Init(&a);
+    DLL_InsertFirst(&a, x);
+    DLL_First(&a);
+    unit_t y;
+    DLL_GetValue(&a, &y);
+    
+    token_t q;
+    token_t lelec;
+    q = get_token(0);
+    printf("%d : %s\n",q.type,q.value);
+    q = get_token(0);
+    printf("%d : %s\n",q.type,q.value);
+    q = get_token(0);
+    printf("%d : %s\n",q.type,q.value);
+    q = get_token(0);
+    printf("%d : %s\n",q.type,q.value);
+    lelec = get_token(0);
+    q = get_token(0);
+    printf("%d : %s\n",q.type,q.value);
+    expr(&lelec,&q,lsetbracket,lsetbracket,0);
     return 0;
 }

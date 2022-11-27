@@ -70,9 +70,8 @@ extern int solved;
 typedef struct unit{
     int ttyp;
     ASSnode_t* uzol;
-    char* vvalue;
+    token_t vvalue;
 } unit_t;
-
 /** Prvek dvousměrně vázaného seznamu. */
 typedef struct DLLElement {
 	/** Užitečná data. */
