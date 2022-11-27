@@ -2,6 +2,8 @@
 #define PARSER_H
 #include <stdbool.h>
 #include "scanner.h"
+#include "bottom_up.h"
+
 bool parse();
 
 bool p_start(token_t * token);

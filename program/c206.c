@@ -1,97 +1,20 @@
-/* ******************************* c206.c *********************************** */
-/*  Předmět: Algoritmy (IAL) - FIT VUT v Brně                                 */
-/*  Úkol: c206 - Dvousměrně vázaný lineární seznam                            */
-/*  Návrh a referenční implementace: Bohuslav Křena, říjen 2001               */
-/*  Vytvořil: Martin Tuček, říjen 2004                                        */
-/*  Upravil: Kamil Jeřábek, září 2020                                         */
-/*           Daniel Dolejška, září 2021                                       */
-/*           Daniel Dolejška, září 2022                                       */
-/* ************************************************************************** */
-/*
-** Implementujte abstraktní datový typ dvousměrně vázaný lineární seznam.
-** Užitečným obsahem prvku seznamu je hodnota typu int. Seznam bude jako datová
-** abstrakce reprezentován proměnnou typu DLList (DL znamená Doubly-Linked
-** a slouží pro odlišení jmen konstant, typů a funkcí od jmen u jednosměrně
-** vázaného lineárního seznamu). Definici konstant a typů naleznete
-** v hlavičkovém souboru c206.h.
-**
-** Vaším úkolem je implementovat následující operace, které spolu s výše
-** uvedenou datovou částí abstrakce tvoří abstraktní datový typ obousměrně
-** vázaný lineární seznam:
-**
-**      DLL_Init ........... inicializace seznamu před prvním použitím,
-**      DLL_Dispose ........ zrušení všech prvků seznamu,
-**      DLL_InsertFirst .... vložení prvku na začátek seznamu,
-**      DLL_InsertLast ..... vložení prvku na konec seznamu,
-**      DLL_First .......... nastavení aktivity na první prvek,
-**      DLL_Last ........... nastavení aktivity na poslední prvek,
-**      DLL_GetFirst ....... vrací hodnotu prvního prvku,
-**      DLL_GetLast ........ vrací hodnotu posledního prvku,
-**      DLL_DeleteFirst .... zruší první prvek seznamu,
-**      DLL_DeleteLast ..... zruší poslední prvek seznamu,
-**      DLL_DeleteAfter .... ruší prvek za aktivním prvkem,
-**      DLL_DeleteBefore ... ruší prvek před aktivním prvkem,
-**      DLL_InsertAfter .... vloží nový prvek za aktivní prvek seznamu,
-**      DLL_InsertBefore ... vloží nový prvek před aktivní prvek seznamu,
-**      DLL_GetValue ....... vrací hodnotu aktivního prvku,
-**      DLL_SetValue ....... přepíše obsah aktivního prvku novou hodnotou,
-**      DLL_Previous ....... posune aktivitu na předchozí prvek seznamu,
-**      DLL_Next ........... posune aktivitu na další prvek seznamu,
-**      DLL_IsActive ....... zjišťuje aktivitu seznamu.
-**
-** Při implementaci jednotlivých funkcí nevolejte žádnou z funkcí
-** implementovaných v rámci tohoto příkladu, není-li u funkce explicitně
- * uvedeno něco jiného.
-**
-** Nemusíte ošetřovat situaci, kdy místo legálního ukazatele na seznam
-** předá někdo jako parametr hodnotu NULL.
-**
-** Svou implementaci vhodně komentujte!
-**
-** Terminologická poznámka: Jazyk C nepoužívá pojem procedura.
-** Proto zde používáme pojem funkce i pro operace, které by byly
-** v algoritmickém jazyce Pascalovského typu implemenovány jako procedury
-** (v jazyce C procedurám odpovídají funkce vracející typ void).
-**
-**/
-
 #include<stdio.h>
 #include<stdlib.h>
-#include"ASS.h"
+#include"c206.h"
 
 #define FALSE 0
 #define TRUE 1
 
-/** Globální proměnná - příznak ošetření chyby. */
-extern int error_flag;
-/** Globální proměnná - indikuje, zda byla operace řešena. */
-extern int solved;
 
-typedef struct unit{
-    int a;
-    ASSnode_t* b;
-    char* c;
-} unit_t;
+extern int error_flag;
+
+
 
 /** Prvek dvousměrně vázaného seznamu. */
-typedef struct DLLElement {
-	/** Užitečná data. */
-	unit_t data;
-	/** Ukazatel na předcházející prvek seznamu. */
-	struct DLLElement *previousElement;
-	/** Ukazatel na následující prvek seznamu. */
-	struct DLLElement *nextElement;
-} *DLLElementPtr;
+
 
 /** Dvousměrně vázaný seznam. */
-typedef struct {
-	/** Ukazatel na první prvek seznamu. */
-	DLLElementPtr firstElement;
-	/** Ukazatel na aktuální prvek seznamu. */
-	DLLElementPtr activeElement;
-	/** Ukazatel na posledni prvek seznamu. */
-	DLLElementPtr lastElement;
-} DLList;
+
 
 int error_flag;
 int solved;
