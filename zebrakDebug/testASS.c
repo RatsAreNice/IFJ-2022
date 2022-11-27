@@ -13,8 +13,8 @@ int main(){
     seven.type=integer;
     seven.value="7";
     token_t three;
-    three.type=ffloat;
-    three.value="3.5";
+    three.type=integer;
+    three.value="3";
     token_t four;
     four.type=integer;
     four.value="4";
@@ -38,7 +38,7 @@ int main(){
     print_code(root);
 
 
-    printf("WRITE var5\n");
+    printf("WRITE LF@var3\n");
 
     return 0;
 }

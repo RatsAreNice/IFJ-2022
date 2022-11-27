@@ -1,3 +1,6 @@
+//Abstraktny Syntakticky Strom
+//autor: Matus Dobias
+
 #include "ASS.h"
 
 void ASSinit(ASSnode_t** tree){
@@ -10,6 +13,7 @@ ASSnode_t* makeTree(operand_t OP, ASSnode_t* left, ASSnode_t* right){
     {
         exit(99);
     }
+    temp->isvar=false;
     temp->leaf=false;
     temp->left=left;
     temp->right=right;
@@ -26,6 +30,7 @@ ASSnode_t* makeLeaf(token_t* Patrick_Bateman){
     {
         exit(99);
     }
+    temp->isvar=false;
     temp->leaf=true;
     temp->left=NULL;
     temp->right=NULL;
@@ -44,157 +49,163 @@ void print_code(ASSnode_t** tree){
     printf(".IFJcode22\n");
     printf("CREATEFRAME\nPUSHFRAME\n");
     helpsolve(*tree);
+    if ((*tree)->isvar==true)
+    {
+        free(TOK_PATH((*tree))->value);
+    }
+    
+    free(*tree);
 }
 
 void ADDInt_Int(ASSnode_t* node){
     // code for elementary int + int
-    if (node->left->leaf==false)
-    {
-        helpsolve(node->left);
-    }
-    if (node->right->leaf==false)
-    {
-        helpsolve(node->right);
-    }
+    LEAFCHECK // macro
     
     char* var = createVar();
-    printf("DEFVAR %s\n",var);
-    printf("ADD %s %s %s\n",var,node->left->Patrick_Bateman->value,node->right->Patrick_Bateman->value);
+    printf("DEFVAR LF@%s\n",var);
+    GETTHEM
+    printf("ADD LF@%s %s %s\n",var,str1,str2);
+    FREETHEM
     node->Patrick_Bateman=node->left->Patrick_Bateman;
     node->Patrick_Bateman->type=integer;
+    if (node->left->isvar) free(TOK_PATH(node->left)->value); 
+    if (node->right->isvar) free(TOK_PATH(node->right)->value);
+    node->isvar=true;
     node->Patrick_Bateman->value=var;
     node->leaf=true;
+    FREESONS
 }
 
 
 void ADDFloat_Int(ASSnode_t* node){
     // code for elementary int + float
-    if (node->left->leaf==false)
-    {
-        helpsolve(node->left);
-    }
-    if (node->right->leaf==false)
-    {
-        helpsolve(node->right);
-    }
+    LEAFCHECK // macro
 
     char* var = createVar();
-    printf("DEFVAR %s\n",var);
+    printf("DEFVAR LF@%s\n",var);
     if (node->left->Patrick_Bateman->type==integer)
     {
         char* tempvar = createVar();
-        printf("DEFVAR %s\n",tempvar);
-        printf("INT2FLOAT %s int@%s\n",tempvar,node->left->Patrick_Bateman->value);
+        printf("DEFVAR LF@%s\n",tempvar);
+        char* str1=checkvar(node->left);
+        printf("INT2FLOAT LF@%s %s\n",tempvar,str1);
+        free(str1);
         node->left->Patrick_Bateman->value=tempvar;
         node->left->Patrick_Bateman->type=ffloat;
     }else{ // 
         char* tempvar = createVar();
-        printf("DEFVAR %s\n",tempvar);
-        printf("INT2FLOAT %s int@%s\n",tempvar,node->right->Patrick_Bateman->value);
+        printf("DEFVAR LF@%s\n",tempvar);
+        char* str1=checkvar(node->left);
+        printf("INT2FLOAT LF@%s %s\n",tempvar,str1);
+        free(str1);
         node->right->Patrick_Bateman->value=tempvar;
         node->right->Patrick_Bateman->type=ffloat;
     }
-    
-    printf("ADD %s float@%a float@%a\n",var,strtof(node->left->Patrick_Bateman->value,NULL),strtof(node->right->Patrick_Bateman->value,NULL));
+    GETTHEM
+    printf("ADD %s %s %s\n",var,str1,str2);
+    FREETHEM
     node->Patrick_Bateman=node->left->Patrick_Bateman;
     node->Patrick_Bateman->type=ffloat;
+    if (node->left->isvar) free(TOK_PATH(node->left)->value); 
+    if (node->right->isvar) free(TOK_PATH(node->right)->value);
+    node->isvar=true;
     node->Patrick_Bateman->value=var;
     node->leaf=true;
+    FREESONS
 }
 
 void ADDFloat_Float(ASSnode_t* node){
     // code for elementary float + float
-    if (node->left->leaf==false)
-    {
-        helpsolve(node->left);
-    }
-    if (node->right->leaf==false)
-    {
-        helpsolve(node->right);
-    }
+    LEAFCHECK // macro
 
     char* var = createVar();
-    printf("DEFVAR %s\n",var);
-    printf("ADD %s float@%a float@%a\n",var,strtof(node->left->Patrick_Bateman->value,NULL),strtof(node->right->Patrick_Bateman->value,NULL));
+    printf("DEFVAR LF@%s\n",var);
+    GETTHEM
+    printf("ADD LF@%s %s %s\n",var,str1,str2);
+    FREETHEM
     node->Patrick_Bateman=node->left->Patrick_Bateman;
     node->Patrick_Bateman->type=ffloat;
+    if (node->left->isvar) free(TOK_PATH(node->left)->value); 
+    if (node->right->isvar) free(TOK_PATH(node->right)->value);
+    node->isvar=true;
     node->Patrick_Bateman->value=var;
     node->leaf=true;
+    FREESONS
 }
 
 void SUBInt_Int(ASSnode_t* node){
     // code for elementary int - int
-    if (node->left->leaf==false)
-    {
-        helpsolve(node->left);
-    }
-    if (node->right->leaf==false)
-    {
-        helpsolve(node->right);
-    }
+    LEAFCHECK // macro
 
     char* var = createVar();
-    printf("DEFVAR %s\n",var);
-    printf("SUB %s int@%s int@%s\n",var,node->left->Patrick_Bateman->value,node->right->Patrick_Bateman->value);
+    printf("DEFVAR LF@%s\n",var);
+    GETTHEM
+    printf("SUB LF@%s %s %s\n",var,str1,str2);
+    FREETHEM
     node->Patrick_Bateman=node->left->Patrick_Bateman;
     node->Patrick_Bateman->type=integer;
+    if (node->left->isvar) free(TOK_PATH(node->left)->value); 
+    if (node->right->isvar) free(TOK_PATH(node->right)->value);
+    node->isvar=true;
     node->Patrick_Bateman->value=var;
     node->leaf=true;
+    FREESONS
 }
 
 void SUBFloat_Int(ASSnode_t* node){
     // code for elementary int - float
-    if (node->left->leaf==false)
-    {
-        helpsolve(node->left);
-    }
-    if (node->right->leaf==false)
-    {
-        helpsolve(node->right);
-    }
+    LEAFCHECK // macro
 
     char* var = createVar();
-    printf("DEFVAR %s\n",var);
+    printf("DEFVAR LF@%s\n",var);
     if (node->left->Patrick_Bateman->type==integer)
     {
         char* tempvar = createVar();
-        printf("DEFVAR %s\n",tempvar);
-        printf("INT2FLOAT %s int@%s\n",tempvar,node->left->Patrick_Bateman->value);
+        printf("DEFVAR LF@%s\n",tempvar);
+        char* str1=checkvar(node->left);
+        printf("INT2FLOAT LF@%s %s\n",tempvar,str1);
+        free(str1);
         node->left->Patrick_Bateman->value=tempvar;
         node->left->Patrick_Bateman->type=ffloat;
     }else{ // 
         char* tempvar = createVar();
-        printf("DEFVAR %s\n",tempvar);
-        printf("INT2FLOAT %s int@%s\n",tempvar,node->right->Patrick_Bateman->value);
+        printf("DEFVAR LF@%s\n",tempvar);
+        char* str1=checkvar(node->left);
+        printf("INT2FLOAT %s %s\n",tempvar,str1);
+        free(str1);
         node->right->Patrick_Bateman->value=tempvar;
         node->right->Patrick_Bateman->type=ffloat;
     }
-    
-    printf("SUB %s float@%a float@%a\n",var,strtof(node->left->Patrick_Bateman->value,NULL),strtof(node->right->Patrick_Bateman->value,NULL));
+    GETTHEM
+    printf("SUB LF@%s %s %s\n",var,str1,str2);
+    FREETHEM
     node->Patrick_Bateman=node->left->Patrick_Bateman;
     node->Patrick_Bateman->type=ffloat;
+    if (node->left->isvar) free(TOK_PATH(node->left)->value); 
+    if (node->right->isvar) free(TOK_PATH(node->right)->value);
+    node->isvar=true;
     node->Patrick_Bateman->value=var;
     node->leaf=true;
+    FREESONS
 }
 
 void SUBFloat_Float(ASSnode_t* node){
     // code for elementary float - float
-    if (node->left->leaf==false)
-    {
-        helpsolve(node->left);
-    }
-    if (node->right->leaf==false)
-    {
-        helpsolve(node->right);
-    }
+    LEAFCHECK // macro
 
     char* var = createVar();
     printf("DEFVAR LF@%s\n",var);
-    printf("SUB %s float@%a float@%a\n",var,strtof(node->left->Patrick_Bateman->value,NULL),strtof(node->right->Patrick_Bateman->value,NULL));
+    GETTHEM 
+    printf("SUB LF@%s %s %s\n",var,str1,str2);
+    FREETHEM 
     node->Patrick_Bateman=node->left->Patrick_Bateman;
     node->Patrick_Bateman->type=ffloat;
+    if (node->left->isvar) free(TOK_PATH(node->left)->value); 
+    if (node->right->isvar) free(TOK_PATH(node->right)->value);
+    node->isvar=true;
     node->Patrick_Bateman->value=var;
     node->leaf=true;
+    FREESONS
 }
 
 void ASSIGNVAR(ASSnode_t* node){
@@ -209,14 +220,7 @@ void helpsolve(ASSnode_t* node){
     switch (node->OP)
     {
     case ADD:
-       if (node->left->leaf==false)
-       {
-            helpsolve(node->left);
-       }
-       if (node->right->leaf==false)
-       {
-            helpsolve(node->right);
-       }
+       LEAFCHECK // macro
        if (node->left->leaf==true && node->right->leaf==true)
        {
             if (node->left->Patrick_Bateman->type==ffloat && node->right->Patrick_Bateman->type==ffloat )
@@ -237,20 +241,13 @@ void helpsolve(ASSnode_t* node){
        break;
        
     case SUB:
-        if (node->left->leaf==false)
-       {
-            helpsolve(node->left);
-       }
-       if (node->right->leaf==false)
-       {
-            helpsolve(node->right);
-       }
+       LEAFCHECK // macro
         if (node->left->leaf==true && node->right->leaf==true)
        {
-            if (node->left->Patrick_Bateman->type==ffloat && node->right->Patrick_Bateman->type==ffloat )
+            if (node->TOK_PATH(left)->type==ffloat && node->TOK_PATH(right)->type==ffloat )
             {
                 SUBFloat_Float(node);
-            } else if (node->left->Patrick_Bateman->type==integer && node->right->Patrick_Bateman->type==integer)
+            } else if (node->TOK_PATH(left)->type==integer && node->TOK_PATH(right)->type==integer)
             {
                 SUBInt_Int(node);
             }
@@ -265,24 +262,40 @@ void helpsolve(ASSnode_t* node){
        break;
     default:
         fprintf(stderr,"UNEXPECTED OPERAND HOW DID THAT HAPPEN\n");
-        break;
+        exit(7);
     }
 
 }
 
-char* checkvar(token_t* Patrick_Bateman){
-    if (Patrick_Bateman->type==VAR)
+void floatify(token_t* Patrick_Bateman){
+    sprintf(Patrick_Bateman->value,"%a",strtof(Patrick_Bateman->value,NULL));
+}
+
+char* checkvar(ASSnode_t* node){
+    
+    char* strptr=malloc(sizeof(char)*20);
+    if (node->isvar)
     {
-        return strcat("LF@",Patrick_Bateman->value);
+        sprintf(strptr,"LF@%s",TOK_PATH(node)->value);
+        return strptr;
     }else{
-        switch (expression)
+        switch (TOK_PATH(node)->type)
         {
-        case /* constant-expression */:
-            /* code */
-            break;
+        case integer:
+            sprintf(strptr,"int@%s",TOK_PATH(node)->value);
+            return strptr;
+        case ffloat:
+            floatify(TOK_PATH(node));
+            sprintf(strptr,"float@%s",TOK_PATH(node)->value);
+            return strptr;
+        case string:
+            sprintf(strptr,"string@%s",TOK_PATH(node)->value);
+            return strptr;
         
         default:
-            break;
+            fprintf(stderr,"JIHAD JIHAD JIHAD\n");
+            exit(17);
+           
         }
     }
 }
