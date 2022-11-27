@@ -110,7 +110,7 @@ unit_t cmp_to_rule(unit_t rs[]){                  //funkcia dostane pravu stranu
     neterminal.vvalue = TESTQ;
     if(rs[0].ttyp == 3){                         // <exp> -> i
         neterminal.ttyp = -3;
-        neterminal.uzol = makeLeaf(&(rs[0].vvalue));
+        neterminal.uzol = makeLeaf(&(rs[0].vvalue));            //vo vytvorenom neterminale bude ukazatel na vytvoreny leaf
         neterminal.vvalue = rs[0].vvalue;
     }
     else if(rs[0].ttyp == 0){                         //<null> -> null
@@ -130,6 +130,7 @@ unit_t cmp_to_rule(unit_t rs[]){                  //funkcia dostane pravu stranu
     }
     else if((rs[0].ttyp == -3|| rs[0].ttyp == -2) && rs[1].ttyp == 6 && (rs[2].ttyp == -3 || rs[2].ttyp == -2)){                    // <exp> -> <exp>||<nnull> * <exp>||<nnull>
         neterminal.ttyp = -3;
+        //neterminal.uzol = makeTree()                        //makeTree([operand vypocitany z tokenu rs[0].value.ttype],rs[0].uzol,rs[2].uzol)
         neterminal.vvalue = rs[1].vvalue;
     }
     else if((rs[0].ttyp == -3|| rs[0].ttyp == -2) && rs[1].ttyp == 7 && (rs[2].ttyp == -3 || rs[2].ttyp == -2)){                    // <exp> -> <exp>||<nnull> / <exp>||<nnull>
@@ -162,8 +163,7 @@ unit_t cmp_to_rule(unit_t rs[]){                  //funkcia dostane pravu stranu
         fprintf(stderr,"redukcia retazca ktory nieje na pravej strane ziadneho pravidla - nespravna syntax retazec = %d : %d : %d",rs[0].ttyp,rs[1].ttyp,rs[2].ttyp);
         exit(2);
     }
-    printf("REE %d : %d : %d\n",rs[0].vvalue.type,rs[1].vvalue.type,rs[2].vvalue.type);
-    printf("redukujem %d : %d : %d  na %d\n",rs[0].ttyp,rs[1].ttyp,rs[2].ttyp,neterminal.ttyp);
+    printf("redukujem %d : %d : %d  na %d ; %d \n",rs[0].ttyp,rs[1].ttyp,rs[2].ttyp,neterminal.ttyp,neterminal.vvalue.type);
     return neterminal;
 }
 
@@ -410,37 +410,5 @@ int expr(token_t* first,token_t* second, token_type end, token_type end2, int sk
         }                                                           //najpravsi terminal je aktivny
     }
     //printf("%p and %p", first, second);
-    return 0;
-}
-
-int main(){
-    unit_t x;
-    x.ttyp = 4;
-    x.uzol = NULL;
-    token_t TESTQ;
-    TESTQ.type = funvoid;
-    TESTQ.value = "";
-    x.vvalue = TESTQ;
-    DLList a;
-    DLL_Init(&a);
-    DLL_InsertFirst(&a, x);
-    DLL_First(&a);
-    unit_t y;
-    DLL_GetValue(&a, &y);
-    
-    token_t q;
-    token_t lelec;
-    q = get_token(0);
-    printf("%d : %s\n",q.type,q.value);
-    q = get_token(0);
-    printf("%d : %s\n",q.type,q.value);
-    q = get_token(0);
-    printf("%d : %s\n",q.type,q.value);
-    q = get_token(0);
-    printf("%d : %s\n",q.type,q.value);
-    lelec = get_token(0);
-    q = get_token(0);
-    printf("%d : %s\n",q.type,q.value);
-    expr(&lelec,&q,lsetbracket,lsetbracket,0);
     return 0;
 }
