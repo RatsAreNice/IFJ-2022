@@ -246,7 +246,7 @@ unit_t cmp_to_rule(unit_t rs[]){                  //funkcia dostane pravu stranu
     return neterminal;
 }
 
-int expr(token_t* first,token_t* second, token_type end, token_type end2, int skip){
+ASSnode_t* expr(token_t* first,token_t* second, token_type end, token_type end2, int skip){
 
     //tabulka
     char prec_t[13][13];
@@ -496,5 +496,5 @@ int expr(token_t* first,token_t* second, token_type end, token_type end2, int sk
     // printf("            %s\n",q.uzol->Patrick_Bateman->value);
 
     //strom = q.uzol
-    return 0;
+    return q.uzol;
 }
