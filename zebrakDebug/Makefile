@@ -27,4 +27,4 @@ valgrindASS: compileASS memtestASS cleanASS
 interpret:
 	./testASo > out.txt
 	./ic22int out.txt > result.txt
-	rm -f out.txt
+	

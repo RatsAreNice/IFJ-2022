@@ -209,11 +209,48 @@ void SUBFloat_Float(ASSnode_t* node){
 }
 
 void ASSIGNVAR(ASSnode_t* node){
-    char* var = createVar();
+    char* var = malloc(sizeof(char)*strlen(TOK_PATH(node)->value));
 
-    node->Patrick_Bateman=node->left->Patrick_Bateman;
-    printf("DEFVAR LF@%s\n",var);
+    strcpy(var,TOK_PATH(node)->value);
+    TOK_PATH(node)->value=var; //CHCEM SA UISTIT ZE TAM BUDE MALLOC
+
+    printf("DEFVAR LF@%s\n",TOK_PATH(node)->value);
+    TOK_PATH(node)->type=TOK_PATH(node->left)->type;
+    node->leaf=true;
+    node->isvar=true;
+    char* str1 = checkvar(node);
+    char* str2 = checkvar(node->left);
+    printf("MOVE %s %s\n",str1,str2);
+    FREETHEM
+    delete_node(node->left);
 }
+
+void ASSIGNVARInt_Float(ASSnode_t* node){
+    char* tempvar = createVar();
+    printf("DEFVAR LF@%s\n",tempvar);
+    char* str1=checkvar(node->left);
+    printf("FLOAT2INT LF@%s %s\n",tempvar,str1);
+    free(str1);
+    if(node->left->isvar) free(TOK_PATH(node->left)->value);
+    TOK_PATH(node->left)->value=tempvar;
+    TOK_PATH(node->left)->type=integer;
+    ASSIGNVAR(node);
+    
+}
+void ASSIGNVARFloat_Int(ASSnode_t* node){
+    char* tempvar = createVar();
+    printf("DEFVAR LF@%s\n",tempvar);
+    char* str1=checkvar(node->left);
+    printf("INT2FLOAT LF@%s %s\n",tempvar,str1);
+    free(str1);
+    if(node->left->isvar) free(TOK_PATH(node->left)->value);
+    TOK_PATH(node->left)->value=tempvar;
+    TOK_PATH(node->left)->type=integer;
+    ASSIGNVAR(node);
+    
+    
+}
+
 
 void helpsolve(ASSnode_t* node){
 
@@ -241,7 +278,7 @@ void helpsolve(ASSnode_t* node){
        break;
        
     case SUB:
-       LEAFCHECK // macro
+        LEAFCHECK // macro
         if (node->left->leaf==true && node->right->leaf==true)
        {
             if (node->TOK_PATH(left)->type==ffloat && node->TOK_PATH(right)->type==ffloat )
@@ -256,10 +293,36 @@ void helpsolve(ASSnode_t* node){
                 SUBFloat_Int(node);
             }
             break;
-
        } 
-       
        break;
+    case ASSIGN:
+        if (node->left->leaf==false) helpsolve(node->left);
+        if (node->left->leaf==true)
+        {
+            if (TOK_PATH(node->left)->type==ID_variable)
+            {
+                ASSIGNVAR(node);
+                break;
+            }
+            if (TOK_PATH(node->left)->type == TOK_PATH(node)->type)
+            {
+                ASSIGNVAR(node);
+                break;
+            } else if (TOK_PATH(node)->type==ffloat && TOK_PATH(node->left)->type==integer)
+            {
+                ASSIGNVARFloat_Int(node);
+                break;
+            } else if (TOK_PATH(node)->type==ffloat && TOK_PATH(node->left)->type==integer)
+            {
+                ASSIGNVARFloat_Int(node);
+                break;
+            }
+            
+            
+        }
+        
+        
+        
     default:
         fprintf(stderr,"UNEXPECTED OPERAND HOW DID THAT HAPPEN\n");
         exit(7);

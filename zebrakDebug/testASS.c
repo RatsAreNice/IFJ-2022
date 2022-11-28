@@ -21,6 +21,10 @@ int main(){
     token_t two;
     two.type=integer;
     two.value="2";
+    token_t batukam;
+    batukam.type=ffloat;
+    batukam.value="kredenc";
+
 
     ASSnode_t* fiveleaf = makeLeaf(&five);
     ASSnode_t* sevenleaf = makeLeaf(&seven);
@@ -30,15 +34,20 @@ int main(){
 
     ASSnode_t* trollec = makeTree(ADD,fiveleaf,sevenleaf);
     ASSnode_t* lolec   = makeTree(SUB,trollec,threeleaf);
+
+    //SUBTRACTION EXAMPLE
     ASSnode_t* holec   = makeTree(SUB,lolec,fourleaf);
+
+    //ADDITION EXAMPLE
     ASSnode_t* molec   = makeTree(ADD,holec,twoleaf);
-    root=&molec;
 
-    
+    //ASSIGN EXAMPLE
+    ASSnode_t* golec   = makeTree(ASSIGN,molec,molec);
+    golec->Patrick_Bateman=&batukam;
+
+    root=&golec;
     print_code(root);
-
-
-    printf("WRITE LF@var3\n");
+    printf("WRITE LF@kredenc\n");
 
     return 0;
 }

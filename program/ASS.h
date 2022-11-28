@@ -77,5 +77,6 @@ void SUBFloat_Float(ASSnode_t* node);
 
 // ASSIGN
 void ASSIGNVAR(ASSnode_t* node);
-
+void ASSIGNVARInt_Float(ASSnode_t* node);
+void ASSIGNVARFloat_Int(ASSnode_t* node);
 #endif
