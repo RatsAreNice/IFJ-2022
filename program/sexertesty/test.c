@@ -1,4 +1,4 @@
-//Autor : Oliver Nemcek <xnemce08>
+//Autor : Oliver Nemcek <xnemce08> a Jeffrey Epstein <xdite00>
 //parameter funkcie get_token(int skip) udava ci sa preskakuju prazdne znaky. ak skip == 0 nepreskakuje sa nic. ak skip == 1, preskakuju sa iba prazdne znaky, ak skip != 1 && skip != 0, preskakuju sa prazdne znaky a komentare
 #include <stdio.h>
 #include <string.h>
