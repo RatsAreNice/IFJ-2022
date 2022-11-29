@@ -4,10 +4,10 @@ CFLAGS=-Wall -std=c11 -pedantic
 all: compile run 
 
 compile:
-	$(CC) $(CFLAGS) -o test.c
+	$(CC) $(CFLAGS) test.c -o test
 
 run:
-	./test
+	./test < input.txt
 
 clean:
 	rm -f test

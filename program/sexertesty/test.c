@@ -732,8 +732,8 @@ token_t get_token(int skip){
 
 int main (int argc, char *argv[]) {
     token_t nigger = get_token(0);
-    token_t test; 
-    int koko;
+    
+    
     int ref[118] = {prolog1, prolog2, ID_variable, assign, integer, semicolon, function, ID_function, lbracket, type, ID_variable, 
     rbracket, colon, funvoid, lsetbracket, ID_variable, assign, string, semicolon, funif, lbracket, integer, identity, integer, rbracket, 
     lsetbracket, ID_variable, assign, integer, semicolon, ID_function, lbracket, ID_variable, rbracket, semicolon, rsetbracket,
