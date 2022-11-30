@@ -566,11 +566,15 @@ token_t get_token(int skip){
                 str = "?";
                 i=0;
                 a = getchar();
-                if(a == '>'){
+                if(a == '>'){                   //nasiel sa epilog ?>
                     a = getchar();
-                    if(a != '\n'){
+                    if(a != '\r'){              
                         ungetc(a, stdin);
-                    }
+                    }                           //ak nasledujuci znak je prvy znak windows newlinu, skonzumuje sa
+                    a = getchar();
+                    if(a != '\n'){  
+                        ungetc(a, stdin);
+                    }                           //ak nasledujuci znak je druhy znak windows newlinu/jediny znak linux newlinu, skonzumuje sa
                     //*skip=2; // scanner sa prepne do post-epilog modu.
                     return make_token(epilog,"?>");
                     break;
@@ -692,7 +696,7 @@ token_t get_token(int skip){
                     exit(1);
                 }
                 a = getchar();
-                if(a != ' ' && a != '\n' && a != '\t'){
+                if(a != ' ' && a != '\n' && a != '\t' && a != '\r'){                    //toto by sa nikdy nemalo stat
                     fprintf(stderr, "chybna znacka <?php");
                     exit(1);
                 }
