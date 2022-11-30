@@ -300,13 +300,16 @@ void helpsolve(ASSnode_t* node) {
         exit(7);
       }
       break;
-    case EQ:
+    //case EQ:
     case GT:
     case LT:
       LEAFCHECK  // macro
-          if (node->left->leaf == true && node->right->leaf == true) {
+      char* tstr1 = CHECKTYPE(node->left);
+      char* tstr2 = 
+        if (node->left->leaf == true && node->right->leaf == true) {
         if (TOK_PATH(node->left)->type == TOK_PATH(node->right)->type) {
-          // comp
+          // NILCHECK
+          // 
         } else if (TOK_PATH(node->left)->type == string &&
                    !(TOK_PATH(node->right)->type == string)) {
           fprintf(stderr, "Expected a string in the 2nd operand");
@@ -337,6 +340,14 @@ void COMPCONV(ASSnode_t* node) {
   if (TOK_PATH(node->left)->type == integer) {
   }
 }
+char* CHECKTYPE(ASSnode_t* node){
+  static unsigned int typevarcount;
+  char* str = malloc(sizeof(char)*18);
+  sprintf(str, "tempvar%d", typevarcount);
+  typevarcount++;
+  return str;
+}
+
 char* checkvar(ASSnode_t* node) {
   char* strptr = malloc(sizeof(char) * 20);
   if (node->isvar) {
@@ -364,7 +375,7 @@ char* checkvar(ASSnode_t* node) {
 
 char* createVar() {
   static unsigned int varcount;
-  char* str = malloc(sizeof(char) * 14);  // var + maxuint length + \0
+  char* str = malloc(sizeof(char) * 14);  // var + maxuint length(10) + \0 asi 
   sprintf(str, "var%d", varcount);
   varcount++;
   return str;
