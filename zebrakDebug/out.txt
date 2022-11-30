@@ -1,21 +1,16 @@
 .IFJcode22
 CREATEFRAME
 PUSHFRAME
-
-
 DEFVAR LF@var0
+ADD LF@var0 int@5 int@7
 DEFVAR LF@var1
+SUB LF@var1 LF@var0 int@3
 DEFVAR LF@var2
-MOVE LF@var1 string@kek
-MOVE LF@var2 int@15
-DEFVAR LF@type1
-DEFVAR LF@type2
-TYPE LF@type1 LF@var1
-TYPE LF@type2 LF@var2
-DEFVAR LF@temp1
-
-EQ temp1 
-
-
-
-WRITE LF@type2
+SUB LF@var2 LF@var1 int@4
+DEFVAR LF@var3
+ADD LF@var3 LF@var2 int@2
+DEFVAR LF@var4
+INT2FLOAT LF@var4 LF@var3
+DEFVAR LF@kredenc
+MOVE LF@kredenc LF@var4
+WRITE LF@kredenc

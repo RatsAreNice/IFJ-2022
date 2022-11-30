@@ -7,7 +7,8 @@
 
 #include "scanner.h"
 
-#define VAR (token_type) - 1
+#define VAR (token_type)-1
+#define bbool (token_type)-2
 #define TOK_PATH(x) x->Patrick_Bateman
 #define LEAFCHECK                 \
   if (node->left->leaf == false)  \
@@ -70,6 +71,7 @@ ASSnode_t *makeLeaf(token_t *Patrick_Bateman);
 void delete_node(ASSnode_t *node);
 
 // non-operand functions
+char* labelgen();
 char *checkvar(ASSnode_t *node);
 void floatify(token_t *);
 void helpsolve(ASSnode_t *node);
@@ -94,7 +96,7 @@ void ASSIGNVARFloat_Int(ASSnode_t *node);
 // LT,GT,EQ
 void NILCHECK(ASSnode_t *node);
 char *CHECKTYPE(ASSnode_t *node);
-void COMPCONV(ASSnode_t *node);
 void LTCOMP(ASSnode_t *node);
+void GTCOMP(ASSnode_t *node);
 
 #endif
