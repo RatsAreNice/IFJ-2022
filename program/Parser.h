@@ -6,7 +6,7 @@
 
 bool parse();
 
-bool p_start(token_t * token);
+bool p_start(token_t * token, ASSnode_t **astree);
 
 bool p_prolog(token_t * token);
 bool p_prolog_sub1(token_t * token);
@@ -37,11 +37,11 @@ bool p_elsebody(token_t *token);
 bool p_whilestat(token_t * token);
 bool p_whilebody(token_t * token);
 
-bool p_assigned(token_t * token);
+bool p_assigned(token_t *token, ASSnode_t *astree);
 bool p_const(token_t * token, token_type expect1, token_type expect2);
-bool p_fcall(token_t * token);
-bool p_callargs(token_t * token);
-bool p_ncallargs(token_t * token);
+bool p_fcall(token_t *token, ASSnode_t *astree);
+bool p_callargs(token_t *token, ASSnode_t *astree);
+bool p_ncallargs(token_t *token, ASSnode_t *astree);
 bool p_retval(token_t * token);
-bool p_vals(token_t * token);
+bool p_vals(token_t * token, ASSnode_t *astree);
 #endif

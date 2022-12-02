@@ -6,8 +6,6 @@
 #include <string.h>
 #include "scanner.h"
 
-
-
 #define VAR (token_type)-1
 #define bbool (token_type)-2
 #define TOK_PATH(x) x->Patrick_Bateman
@@ -54,6 +52,9 @@ typedef enum operand
   IF,
   THEN,
   LEAF,
+  FUNCTIONCALL,
+  ARGS,
+  RYAN_GOSLING
 
 } operand_t;
 

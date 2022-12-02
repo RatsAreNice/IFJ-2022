@@ -6,7 +6,7 @@
 
 int main(int argc, char const *argv[])
 {
-    parse();
+    printf("Parse result: %d",parse());
     return 0;
 }
 

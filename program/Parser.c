@@ -21,7 +21,7 @@ parser 'states'?
 <retval>
 <vals>
 */
-//#define DEBUG
+#define DEBUG
 #ifdef DEBUG
 # define DPRINT(x) printf x
 #else
@@ -41,7 +41,7 @@ parser 'states'?
 
 bool parse();
 
-bool p_start(token_t * token);
+bool p_start(token_t * token, ASSnode_t **astree);
 
 bool p_prolog(token_t * token);
 bool p_prolog_sub1(token_t * token);
@@ -67,18 +67,18 @@ bool p_elsebody(token_t *token);
 bool p_whilestat(token_t * token);
 bool p_whilebody(token_t * token);
 
-bool p_assigned(token_t * token);
+bool p_assigned(token_t *token, ASSnode_t *astree);
 bool p_const(token_t * token, token_type expect1, token_type expect2);
-bool p_fcall(token_t * token);
-bool p_callargs(token_t * token);
-bool p_ncallargs(token_t * token);
+bool p_fcall(token_t *token, ASSnode_t *astree);
+bool p_callargs(token_t * token, ASSnode_t *astree);
+bool p_ncallargs(token_t *token, ASSnode_t *astree);
 bool p_retval(token_t * token);
-bool p_vals(token_t * token);
+bool p_vals(token_t *token, ASSnode_t* astree);
 
 typedef enum
 {
-    NOSKIP,
-    SKIP
+    SKIP,
+    NOSKIP
 } scannermode;
 
 void* safeMalloc(size_t size)
@@ -218,19 +218,22 @@ bool parse()
     symDLL_InsertLast(&symtablelist, mainsymtable);
     symDLL_First(&symtablelist);
 
-    token_t token = get_token(SKIP);
-
-    if ( p_start(&token) == false )
+    token_t token = get_token(NOSKIP);
+    ASSnode_t *root;
+    ASSinit(&root);
+    //*root = makeTree(RYAN_GOSLING, NULL, NULL);
+    if ( p_start(&token, root) == false )
     {
         fprintf(stderr, "Unknown syntax error.\n");
         exit(2);
     }
+
     return true;
 }
 
-bool p_start(token_t * token)
+bool p_start(token_t * token, ASSnode_t *astree)
 {
-    return p_prolog(token) && p_body(token, true);
+    return p_prolog(token) && p_body(token, true, astree);
 }
 
 bool p_prolog(token_t * token)
@@ -250,7 +253,7 @@ bool p_prolog_sub1(token_t * token)
     if(token->type == prolog1)
     {
         DPRINT(("Token %s matches prolog_sub_1!\n", token->value));
-        *token = get_token(NOSKIP);
+        *token = get_token(SKIP);
         return true;
     }
     else
@@ -266,7 +269,7 @@ bool p_prolog_sub2(token_t * token)
     if(token->type == prolog2)
     {
         DPRINT(("Token %s matches prolog_sub_2!\n", token->value));
-        *token = get_token(NOSKIP);
+        *token = get_token(SKIP);
         return true;
     }
     else
@@ -277,27 +280,27 @@ bool p_prolog_sub2(token_t * token)
     return false;
 }
 
-bool p_body(token_t * token, bool defallowed)
+bool p_body(token_t * token, bool defallowed, ASSnode_t *astree)
 {
     token_t oldtoken;
     DPRINT(("Got to body with token %s of type %d\n", token->value, token->type));
     switch(token->type)
     {
         case funreturn:
-            *token = get_token(NOSKIP);
+            *token = get_token(SKIP);
             if(token->type == semicolon)
             {
-                *token = get_token(NOSKIP);
+                *token = get_token(SKIP);
                 return p_body(token, defallowed);
             }
             else if(token->type == ID_function)
             {
-                *token = get_token(NOSKIP);
+                *token = get_token(SKIP);
                 if(p_fcall(token))
                 {
                     if(token->type == semicolon)
                     {
-                        *token = get_token(NOSKIP);
+                        *token = get_token(SKIP);
                         return p_body(token,defallowed);
                     }
                     else
@@ -315,10 +318,12 @@ bool p_body(token_t * token, bool defallowed)
             }
             else
             {
-                if(expr(NULL, token, semicolon, semicolon, 0) == 0)
+                ASSnode_t *exprptr = NULL;
+                exprptr = expr(NULL, token, semicolon, semicolon, 0);
+                if(exprptr != NULL)
                 {
                     //DPRINT(("SECOND: %s was an expression in if statement\n", token.value));
-                    *token = get_token(NOSKIP);
+                    *token = get_token(SKIP);
                     DPRINT(("%s\n", token->value));
                     return p_body(token, defallowed);
                 }
@@ -327,17 +332,30 @@ bool p_body(token_t * token, bool defallowed)
                     fprintf(stderr, "Syntax error: Failed to handle expression.\n");
                     exit(2);
                 }
+                //if(expr(NULL, token, semicolon, semicolon, 0) == 0)
+                //{
+                //    //DPRINT(("SECOND: %s was an expression in if statement\n", token.value));
+                //    *token = get_token(SKIP);
+                //    DPRINT(("%s\n", token->value));
+                //    return p_body(token, defallowed);
+                //}
+                //else
+                //{
+                //    fprintf(stderr, "Syntax error: Failed to handle expression.\n");
+                //    exit(2);
+                //}
             }
             return false;
 
         case ID_function:
             DPRINT(("ID FUNCTION %s of type %d\n", token->value, token->type));
-            *token = get_token(NOSKIP);
+            tree
+            *token = get_token(SKIP);
             if(p_fcall(token))
             {
                 if(token->type == semicolon)
                 {
-                    *token = get_token(NOSKIP);
+                    *token = get_token(SKIP);
                     return p_body(token,defallowed);
                 }
                 else
@@ -357,7 +375,7 @@ bool p_body(token_t * token, bool defallowed)
         case string:
             if(p_const(token, semicolon, semicolon))
             {
-                *token = get_token(NOSKIP);
+                *token = get_token(SKIP);
                 return true && p_body(token, defallowed);
             }
             else
@@ -367,12 +385,15 @@ bool p_body(token_t * token, bool defallowed)
             }
         case ID_variable:
             oldtoken = *token;
-            *token = get_token(NOSKIP);
+            *token = get_token(SKIP);
             if(token->type != assign)
             {
-                if (expr(&oldtoken, token, semicolon, semicolon, 0) == 0)
+                ASSnode_t* exprptr = NULL;
+                exprptr = expr(&oldtoken, token, semicolon, semicolon, 0);
+                if(exprptr != NULL)
+                //if (expr(&oldtoken, token, semicolon, semicolon, 0) == 0)
                 {   
-                    *token = get_token(NOSKIP);
+                    *token = get_token(SKIP);
                     return true && p_body(token, defallowed);
                 }
                 else
@@ -383,10 +404,13 @@ bool p_body(token_t * token, bool defallowed)
             }
             else
             {
-                *token = get_token(NOSKIP);
-                if(p_assigned(token))
+                ASSnode_t* assignment = makeTree(ASSIGN, NULL, makeLeaf(token));
+                //ASSnode_t** assignmentptr = &assignment;
+                *token = get_token(SKIP);
+                if(p_assigned(token, assignment))
                 {
-                    *token = get_token(NOSKIP);
+                    *token = get_token(SKIP);
+
                     return true && p_body(token, defallowed);
                 }
                 else
@@ -403,7 +427,7 @@ bool p_body(token_t * token, bool defallowed)
             }
             else
             {
-                *token = get_token(NOSKIP);
+                *token = get_token(SKIP);
                 return p_fundec(token) && p_body(token, defallowed);
             }
         case epilog:
@@ -414,7 +438,7 @@ bool p_body(token_t * token, bool defallowed)
             }
             else
             {
-                *token = get_token(SKIP);
+                *token = get_token(NOSKIP);
                 if(token->type != eof)
                 {
                     fprintf(stderr, "Syntax error: Tokens found after epilog\n");
@@ -430,7 +454,7 @@ bool p_body(token_t * token, bool defallowed)
         case rsetbracket:
             if(!defallowed)
             {
-                *token = get_token(NOSKIP);
+                *token = get_token(SKIP);
                 return true;
             }
             else
@@ -456,11 +480,13 @@ bool p_body(token_t * token, bool defallowed)
 bool p_const(token_t * token, token_type expect1, token_type expect2)
 {
     token_t oldtoken = *token;
-    *token = get_token(NOSKIP);
+    *token = get_token(SKIP);
     if(token->type != expect1 && token->type != expect2)
     {
-
-        if(expr(&oldtoken, token, expect1, expect2, 0) == 0)
+        ASSnode_t* exprptr = NULL;
+        exprptr = expr(&oldtoken, token, expect1, expect2, 0);
+        if(exprptr != NULL)
+        //if(expr(&oldtoken, token, expect1, expect2, 0) == 0)
         {
             DPRINT(("%s was an expression.\n", oldtoken.value));
             return true;
@@ -478,33 +504,36 @@ bool p_const(token_t * token, token_type expect1, token_type expect2)
     }
 }
 
-bool p_assigned(token_t *token)
+bool p_assigned(token_t *token, ASSnode_t *astree)
 {
     if(token->type == ID_function)
     {
-        *token = get_token(NOSKIP);
-        return p_fcall(token);
+        astree->left = makeTree(FUNCTIONCALL, NULL, makeLeaf(token));
+        *token = get_token(SKIP);
+        return p_fcall(token, astree->left);
     }
     else //if(token->type == ID_variable)
     {
         token_t oldtoken = *token;
-        *token = get_token(NOSKIP);
-        if(token->type != semicolon)
+        *token = get_token(SKIP);
+        //if(token->type != semicolon)
+        //{
+        ASSnode_t* exprptr = NULL;
+        exprptr = expr(&oldtoken, token, semicolon, semicolon, 0);
+        if(exprptr != NULL)
         {
-            if(expr(&oldtoken, token, semicolon, semicolon, 0) == 0)
-            {
-                DPRINT(("%s was an expression.\n", oldtoken.value));
-                //*token = get_token(NOSKIP);
-                return true;
-            }
-            else
-            {
-                fprintf(stderr, "Syntax error: Failed to handle expression.\n");
-                exit(2);
-            }
+            DPRINT(("%s was an expression.\n", oldtoken.value));
+            //*token = get_token(SKIP);
+            return true;
         }
         else
-            return true;
+        {
+            fprintf(stderr, "Syntax error: Failed to handle expression.\n");
+            exit(2);
+        }
+        //}
+        //else
+        //    return true;
     }
     //else if(token->type == ffloat || token->type == integer || token->type == string)
     //    return p_const(token);
@@ -515,14 +544,14 @@ bool p_assigned(token_t *token)
     //}
 }
 
-bool p_fcall(token_t *token)
+bool p_fcall(token_t *token, ASSnode_t *astree)
 {
     if(token->type == lbracket)
     {
-        *token = get_token(NOSKIP);
-        if(p_callargs(token))
+        *token = get_token(SKIP);
+        if(p_callargs(token, astree))
         {
-            DPRINT(("RETURNED WITH: %s",token->value));
+            DPRINT(("RETURNED WITH: %s\n",token->value));
             return true;
         }
         else
@@ -538,30 +567,32 @@ bool p_fcall(token_t *token)
     }
 }
 
-bool p_callargs(token_t *token)
+bool p_callargs(token_t *token, ASSnode_t *astree)
 {
     if(token->type == rbracket)
     {
-        *token = get_token(NOSKIP);
+        *token = get_token(SKIP);
         return true;
     }
     else
     {
-        return p_vals(token) && p_ncallargs(token);
+        astree->left = makeTree(ARGS, NULL, NULL);
+        return p_vals(token, astree->left) && p_ncallargs(token, astree->left);
     }
 }
 
-bool p_ncallargs(token_t *token)
+bool p_ncallargs(token_t *token, ASSnode_t *astree)
 {
     if(token->type == rbracket)
     {
-        *token = get_token(NOSKIP);
+        *token = get_token(SKIP);
         return true;
     }
     else if(token->type == comma)
     {
-        *token = get_token(NOSKIP);
-        return p_vals(token) && p_ncallargs(token);
+        astree->right = makeTree(ARGS, NULL, NULL);
+        *token = get_token(SKIP);
+        return p_vals(token, astree->right) && p_ncallargs(token, astree->right);
     }
     else
     {
@@ -570,22 +601,26 @@ bool p_ncallargs(token_t *token)
     }
 }
 
-bool p_vals(token_t *token)
+bool p_vals(token_t *token, ASSnode_t* astree)
 {
     DPRINT(("Called p_vals with %s\n", token->value));
     if(token->type == ID_function)
     {
-        *token = get_token(NOSKIP);
-        return p_fcall(token);
+        astree->left = makeTree(FUNCTIONCALL, NULL, makeLeaf(token));
+        *token = get_token(SKIP);
+        return p_fcall(token, astree->left);
     }
     else
     {
         token_t oldtoken = *token;
-        *token = get_token(NOSKIP);
+        *token = get_token(SKIP);
         if(token->type == comma || token->type == rbracket || token->type == semicolon)
             {
                 if(oldtoken.type == ID_variable || oldtoken.type == ffloat || oldtoken.type == integer || oldtoken.type == string)
+                {
+                    astree->left = makeLeaf(&oldtoken);
                     return true;
+                }
                 else
                 {
                     fprintf(stderr, "Syntax error: Expected fID, vID or constant in function arg, got %s.\n", token->value);
@@ -594,7 +629,7 @@ bool p_vals(token_t *token)
                 //if(expr(&oldtoken, token, comma, rbracket, 0) == 0)
                 //{
                 //    DPRINT(("FIRST: %s was an expression in if statement\n", token->value));
-                //    //*token = get_token(NOSKIP);
+                //    //*token = get_token(SKIP);
                 //    DPRINT(("%s\n", token->value));
                 //    return true;
                 //}
@@ -609,10 +644,14 @@ bool p_vals(token_t *token)
             //fprintf(stderr, "Syntax error: Unexpected symbol in fcall: %s.\n", token->value);
             //exit(2);
             // TOTO JE FUNEXP WTF
-            if(expr(&oldtoken, token, comma, rbracket, 0) == 0)
+            ASSnode_t *exprptr = NULL;
+            exprptr = expr(&oldtoken, token, comma, rbracket, 0);
+            if(exprptr != NULL)
+            //if(expr(&oldtoken, token, comma, rbracket, 0) == 0)
             {
                 DPRINT(("SECOND: %s was an expression in if statement\n", oldtoken.value));
-                //*token = get_token(NOSKIP);
+                astree->left = exprptr;
+                //*token = get_token(SKIP);
                 DPRINT(("%s\n", token->value));
                 return true;
             }
@@ -627,17 +666,17 @@ bool p_vals(token_t *token)
 
 bool p_ifstat(token_t *token)
 {
-    *token = get_token(NOSKIP);
+    *token = get_token(SKIP);
     if(token->type == lbracket)
     {
-        *token = get_token(NOSKIP);
+        *token = get_token(SKIP);
         if(token->type == ID_function)
         {
             DPRINT(("Calling fcall on %s\n", token->value));
-            *token = get_token(NOSKIP);
+            *token = get_token(SKIP);
             if(p_fcall(token))
             {
-                *token = get_token(NOSKIP);
+                *token = get_token(SKIP);
                 DPRINT(("Calling ifbody with %s\n", token->value));
                 return p_ifbody(token);
             }
@@ -649,10 +688,13 @@ bool p_ifstat(token_t *token)
         }
         else
         {
-            if(expr(NULL, token, rbracket, rbracket, 0) == 0)
+            ASSnode_t *exprptr = NULL;
+            exprptr = expr(NULL, token, rbracket, rbracket, 0);
+            if(exprptr != NULL)
+            //if(expr(NULL, token, rbracket, rbracket, 0) == 0)
             {
                 DPRINT(("%s was an expression in if statement\n", token->value));
-                *token = get_token(NOSKIP);
+                *token = get_token(SKIP);
                 DPRINT(("Calling ifbody with %s\n", token->value));
                 return p_ifbody(token);
             }
@@ -674,7 +716,7 @@ bool p_ifbody(token_t *token)
 {
     if(token->type == lsetbracket)
     {
-        *token = get_token(NOSKIP);
+        *token = get_token(SKIP);
         return p_body(token, false) && p_elsebody(token);
     }
     else
@@ -688,10 +730,10 @@ bool p_elsebody(token_t *token)
 {
     if(token->type == funelse)
     {
-        *token = get_token(NOSKIP);
+        *token = get_token(SKIP);
         if(token->type == lsetbracket)
         {
-            *token = get_token(NOSKIP);
+            *token = get_token(SKIP);
             return p_body(token, false);
         }
         else
@@ -709,17 +751,17 @@ bool p_elsebody(token_t *token)
 
 bool p_whilestat(token_t *token)
 {
-    *token = get_token(NOSKIP);
+    *token = get_token(SKIP);
     if(token->type == lbracket)
     {
-        *token = get_token(NOSKIP);
+        *token = get_token(SKIP);
         if(token->type == ID_function)
         {
             DPRINT(("Calling fcall on %s\n", token->value));
-            *token = get_token(NOSKIP);
+            *token = get_token(SKIP);
             if(p_fcall(token))
             {
-                *token = get_token(NOSKIP);
+                *token = get_token(SKIP);
                 DPRINT(("Calling whilebody with %s\n", token->value));
                 return p_whilebody(token);
             }
@@ -732,10 +774,13 @@ bool p_whilestat(token_t *token)
         else
         {
             DPRINT(("TOKEN: %s\n", token->value));
-            if(expr(NULL, token, rbracket, rbracket, 0) == 0)
+            ASSnode_t *exprptr = NULL;
+            exprptr = expr(NULL, token, rbracket, rbracket, 0);
+            if(exprptr != NULL)
+            //if(expr(NULL, token, rbracket, rbracket, 0) == 0)
             {
                 DPRINT(("%s was an expression in if statement\n", token->value));
-                *token = get_token(NOSKIP);
+                *token = get_token(SKIP);
                 DPRINT(("Calling whilebody with %s\n", token->value));
                 return p_whilebody(token);
             }
@@ -757,7 +802,7 @@ bool p_whilebody(token_t * token)
 {
     if(token->type == lsetbracket)
     {
-        *token = get_token(NOSKIP);
+        *token = get_token(SKIP);
         return p_body(token, false);
     }
     else
@@ -771,7 +816,7 @@ bool p_fundec(token_t * token)
 {
     if(token->type == ID_function)
     {
-        *token = get_token(NOSKIP);
+        *token = get_token(SKIP);
         return p_funargs(token) && p_funbody(token);
     }
     else
@@ -786,7 +831,7 @@ bool p_funargs(token_t * token)
 {
     if(token->type == lbracket)
     {
-        *token = get_token(NOSKIP);
+        *token = get_token(SKIP);
         return p_fparams(token);
     }
     else
@@ -800,9 +845,9 @@ bool p_funbody(token_t * token)
 {
     if(token->type == colon)
     {
-        *token = get_token(NOSKIP);
+        *token = get_token(SKIP);
         if(token->type == funvoid || token->type == type)
-            *token = get_token(NOSKIP);
+            *token = get_token(SKIP);
         else
         {
             fprintf(stderr, "Syntax error: Expected return type of function, got '%s'\n", token->value);
@@ -816,7 +861,7 @@ bool p_funbody(token_t * token)
     }
     if(token->type == lsetbracket)
     {
-        *token = get_token(NOSKIP);
+        *token = get_token(SKIP);
         return p_body(token, false);
     }
     else
@@ -831,17 +876,17 @@ bool p_fparams(token_t * token)
 {
     if(token->type == rbracket)
     {
-        *token = get_token(NOSKIP);
+        *token = get_token(SKIP);
         return true;
     }
     else if(token->type == type)
     {
         DPRINT(("%s TYPE IS TYPE \n", token->value));
-        *token = get_token(NOSKIP);
+        *token = get_token(SKIP);
         DPRINT(("%s TYPE IS VAR \n", token->value));
         if(token->type == ID_variable)
         {
-            *token = get_token(NOSKIP);
+            *token = get_token(SKIP);
             return p_nparam(token);
         }
         else
@@ -861,12 +906,12 @@ bool p_nparam(token_t *token)
 {
     if(token->type == rbracket)
     {
-        *token = get_token(NOSKIP);
+        *token = get_token(SKIP);
         return true;
     }
     else if(token->type == comma)
     {
-        *token = get_token(NOSKIP);
+        *token = get_token(SKIP);
         return p_fparams(token);
     }
     else
