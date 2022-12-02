@@ -10,9 +10,9 @@ typedef enum {
     symInt,
     symString,
     symFloat,
-    symQInt,
-    symQString,
-    symQFloat,
+    symQInt, // ?int type -> moze obsahovat null
+    symQString, // ?string type -> moze obsahovat null
+    symQFloat, // ?float type -> moze obsahovat null
     symVoid,
 } symTypes_t;
 
