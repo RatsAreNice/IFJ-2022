@@ -1,75 +1,75 @@
-//Autor : Oliver Nemcek <xnemce08>
+//Autor : Oliver Nemcek <xnemce08> a Jeffrey Epstein <xdite00>
 //parameter funkcie get_token(int skip) udava ci sa preskakuju prazdne znaky. ak skip == 0 nepreskakuje sa nic. ak skip == 1, preskakuju sa iba prazdne znaky, ak skip != 1 && skip != 0, preskakuju sa prazdne znaky a komentare
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 #include <ctype.h>
 #include "scanner.h"
+/*
+typedef enum{
+    ID_function,        //abc
+    ID_variable,        //$abc
+    string,             //"abc"
+    type,               //?abc
+    lbracket,           //(
+    rbracket,           //)
+    lsetbracket,        //{
+    rsetbracket,        //}
+    plus,               //+
+    minus,              //-
+    mul,                //*
+    division,           ///
+    lt,                 //<
+    mt,                 //>
+    lte,                //<=
+    mte,                //>=
+    semicolon,          //;
+    integer,            //56
+    assign,             //=
+    identity,           //===
+    nidentity,          //!==
+    comma,              //,
+    ffloat,              //13.56
+    dot,                //. (retazcovy operator)
+    //klucove slova
+    funreturn,          //return
+    funelse,            //else
+    function,           //function
+    funif,              //if
+    funnull,            //null
+    funvoid,            //void
+    funwhile,           //while
+    prolog1,            //<?php             [VRATANE PRAZDNEHO ZNAKU ZA]
+    prolog2,            //declare(strict_types=1);
+    epilog,             //?>                 [ak je za znackou \n, zozerie ho to. (aby sa dalo potom testovat na EOF)]
+    eof,       
+} token_type;             //typ lexemu
+typedef enum{       //stavy automatu
+    start,
+    IDfunkcie,
+    premenna1,
+    premenna2,
+    string1,
+    string2,
+    type1,
+    INT,
+    identity2,
+    nidentity1,
+    identity1,
+    identity0,
+    nidentity2,
+    nidentity0,
+    ERROR,
+    lt1,
+    lt0,
+    mt0,
+    declare,
+} state; 
 
-//typedef enum{
-//    ID_function,        //abc
-//    ID_variable,        //$abc
-//    string,             //"abc"
-//    type,               //?abc
-//    lbracket,           //(
-//    rbracket,           //)
-//    lsetbracket,        //{
-//    rsetbracket,        //}
-//    plus,               //+
-//    minus,              //-
-//    mul,                //*
-//    division,           ///
-//    lt,                 //<
-//    mt,                 //>
-//    lte,                //<=
-//    mte,                //>=
-//    semicolon,          //;
-//    integer,            //56
-//    assign,             //=
-//    identity,           //===
-//    nidentity,          //!==
-//    comma,              //,
-//    ffloat,              //13.56
-//    dot,                //. (retazcovy operator)
-//    //klucove slova
-//    funreturn,          //return
-//    funelse,            //else
-//    function,           //function
-//    funif,              //if
-//    funnull,            //null
-//    funvoid,            //void
-//    funwhile,           //while
-//    prolog1,            //<?php             [VRATANE PRAZDNEHO ZNAKU ZA]
-//    prolog2,            //declare(strict_types=1);
-//    epilog,             //?>                 [ak je za znackou \n, zozerie ho to. (aby sa dalo potom testovat na EOF)]
-//    eof,       
-//} token_type;             //typ lexemu
-//typedef enum{       //stavy automatu
-//    start,
-//    IDfunkcie,
-//    premenna1,
-//    premenna2,
-//    string1,
-//    string2,
-//    type1,
-//    INT,
-//    identity2,
-//    nidentity1,
-//    identity1,
-//    identity0,
-//    nidentity2,
-//    nidentity0,
-//    ERROR,
-//    lt1,
-//    lt0,
-//    mt0,
-//    declare,
-//} state;
-
-//typedef struct token {
-//  token_type type;
-//  char* value;
-//} token_t;
+typedef struct token {
+  token_type type;
+  char* value;
+} token_t; */
 
 int hextoint(char k){
     int a = k;
@@ -566,15 +566,11 @@ token_t get_token(int skip){
                 str = "?";
                 i=0;
                 a = getchar();
-                if(a == '>'){                   //nasiel sa epilog ?>
+                if(a == '>'){
                     a = getchar();
-                    if(a != '\r'){              
+                    if(a != '\n'){
                         ungetc(a, stdin);
-                    }                           //ak nasledujuci znak je prvy znak windows newlinu, skonzumuje sa
-                    a = getchar();
-                    if(a != '\n'){  
-                        ungetc(a, stdin);
-                    }                           //ak nasledujuci znak je druhy znak windows newlinu/jediny znak linux newlinu, skonzumuje sa
+                    }
                     //*skip=2; // scanner sa prepne do post-epilog modu.
                     return make_token(epilog,"?>");
                     break;
@@ -696,7 +692,7 @@ token_t get_token(int skip){
                     exit(1);
                 }
                 a = getchar();
-                if(a != ' ' && a != '\n' && a != '\t' && a != '\r'){                    //toto by sa nikdy nemalo stat
+                if(a != ' ' && a != '\n' && a != '\t'){
                     fprintf(stderr, "chybna znacka <?php");
                     exit(1);
                 }
@@ -732,4 +728,71 @@ token_t get_token(int skip){
 
     
     
+}
+
+int main (int argc, char *argv[]) {
+    token_t nigger = get_token(0);
+    
+    
+    int ref[118] = {prolog1, prolog2, ID_variable, assign, integer, semicolon, function, ID_function, lbracket, type, ID_variable, 
+    rbracket, colon, funvoid, lsetbracket, ID_variable, assign, string, semicolon, funif, lbracket, integer, identity, integer, rbracket, 
+    lsetbracket, ID_variable, assign, integer, semicolon, ID_function, lbracket, ID_variable, rbracket, semicolon, rsetbracket,
+    funelse, lsetbracket, rsetbracket, ID_function, lbracket, ID_variable, rbracket, semicolon, ID_variable, assign, integer, semicolon, 
+    funwhile, lbracket, ID_variable, lte, integer, rbracket, lsetbracket, ID_variable, assign, integer, semicolon, ID_variable, assign, ID_variable, 
+    plus, integer, semicolon, ID_function, lbracket, ID_variable, rbracket, semicolon, ID_function, lbracket, string, rbracket, semicolon, 
+    ID_variable, assign, ID_function, lbracket, rbracket, semicolon, ID_variable, assign, ID_function, lbracket, ID_variable, rbracket, 
+    semicolon, funif, lbracket, ID_variable, nidentity, integer, rbracket, lsetbracket, ID_function, lbracket, ID_variable, rbracket, 
+    semicolon, funreturn, semicolon, rsetbracket, funelse, lsetbracket, rsetbracket, rsetbracket, rsetbracket, ID_function, lbracket, 
+    integer, rbracket, semicolon, ID_function, lbracket, ID_variable, rbracket, semicolon}; 
+    token_t niggarray[118];
+    int i = 0;
+    do
+    {
+        //printf("milujem kokot");
+        niggarray[i]=nigger;
+        if ((int)niggarray[i].type == ref[i]) printf("dobre %d \n", i);
+        else printf("NAPICU %d \n", i);
+        i++;
+        nigger = get_token(0);
+    } while (nigger.type != eof);
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+   
+    return 0;
 }

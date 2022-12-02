@@ -4,8 +4,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
 #include "scanner.h"
+
+
 
 #define VAR (token_type)-1
 #define bbool (token_type)-2
@@ -41,7 +42,10 @@ typedef enum operand
   IDIV,
   LT,
   GT,
+  LTE,
+  GTE,
   EQ,
+  NEQ,
   AND,
   OR,
   NOT,

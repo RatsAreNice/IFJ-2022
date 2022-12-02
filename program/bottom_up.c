@@ -2,7 +2,6 @@
 #include <string.h>
 #include <stdlib.h>
 #include <ctype.h>
-
 #include "bottom_up.h"
 
 int convert(token_t a){       //konvertuje token na cislo
@@ -110,64 +109,144 @@ unit_t cmp_to_rule(unit_t rs[]){                  //funkcia dostane pravu stranu
     neterminal.vvalue = TESTQ;
     if(rs[0].ttyp == 3){                         // <exp> -> i
         neterminal.ttyp = -3;
-        neterminal.uzol = makeLeaf(&(rs[0].vvalue));
         neterminal.vvalue = rs[0].vvalue;
+        token_t* abc;
+        abc = malloc(sizeof(token_t));
+        *abc = rs[0].vvalue; 
+        neterminal.uzol = makeLeaf(abc);            //vo vytvorenom neterminale bude ukazatel na vytvoreny leaf. v leafe je hodnota terminalu, z ktoreho neterminal vznikol
     }
     else if(rs[0].ttyp == 0){                         //<null> -> null
         neterminal.ttyp = -2;
+        neterminal.vvalue = rs[0].vvalue;
+        token_t* abc;
+        abc = malloc(sizeof(token_t));
+        *abc = rs[0].vvalue; 
+        neterminal.uzol = makeLeaf(abc);
     }
     else if(rs[0].ttyp == 10 && rs[1].ttyp == -2 && rs[2].ttyp == 11){                  //(<nnull>)  -> null
         neterminal.ttyp = -2;
+        neterminal.uzol = rs[1].uzol;
+        neterminal.vvalue = rs[1].vvalue;                                           //zatvorky sa v podstate iba odstrania
     }
     else if(rs[0].ttyp == 10 && rs[1].ttyp == -3 && rs[2].ttyp == 11){                    // <exp> -> (<exp>)
         neterminal.ttyp = -3;
+        neterminal.uzol = rs[1].uzol;
+        neterminal.vvalue = rs[1].vvalue; 
     }
     else if((rs[0].ttyp == -3|| rs[0].ttyp == -2) && rs[1].ttyp == 4 && (rs[2].ttyp == -3 || rs[2].ttyp == -2)){                    // <exp> -> <exp>||<nnull> + <exp>||<nnull>
         neterminal.ttyp = -3;
+        neterminal.uzol = makeTree(ADD,rs[0].uzol,rs[2].uzol);
+        neterminal.vvalue = rs[1].vvalue;
     }
     else if((rs[0].ttyp == -3|| rs[0].ttyp == -2) && rs[1].ttyp == 5 && (rs[2].ttyp == -3 || rs[2].ttyp == -2)){                    // <exp> -> <exp>||<nnull> - <exp>||<nnull>
         neterminal.ttyp = -3;
+        neterminal.uzol = makeTree(SUB,rs[0].uzol,rs[2].uzol);
+        neterminal.vvalue = rs[1].vvalue;
     }
     else if((rs[0].ttyp == -3|| rs[0].ttyp == -2) && rs[1].ttyp == 6 && (rs[2].ttyp == -3 || rs[2].ttyp == -2)){                    // <exp> -> <exp>||<nnull> * <exp>||<nnull>
         neterminal.ttyp = -3;
+        neterminal.uzol = makeTree(MUL,rs[0].uzol,rs[2].uzol);                                      //vytvori strom s operandom *, naviaze uzly operandov
         neterminal.vvalue = rs[1].vvalue;
     }
     else if((rs[0].ttyp == -3|| rs[0].ttyp == -2) && rs[1].ttyp == 7 && (rs[2].ttyp == -3 || rs[2].ttyp == -2)){                    // <exp> -> <exp>||<nnull> / <exp>||<nnull>
         neterminal.ttyp = -3;
+        neterminal.uzol = makeTree(DIV,rs[0].uzol,rs[2].uzol);
+        neterminal.vvalue = rs[1].vvalue;
     }
     else if(rs[0].ttyp == 10 && rs[1].ttyp == -4 && rs[2].ttyp == 11){                    // <strexp> -> (<strexp>)
         neterminal.ttyp = -4;
+        neterminal.uzol = rs[1].uzol;
+        neterminal.vvalue = rs[1].vvalue;
     }
     else if(rs[0].ttyp == 2 && rs[1].ttyp == -1 && rs[2].ttyp == -1){                    // <strexp> -> string
         neterminal.ttyp = -4;
+        neterminal.vvalue = rs[0].vvalue;
+        token_t* abc;
+        abc = malloc(sizeof(token_t));
+        *abc = rs[0].vvalue; 
+        neterminal.uzol = makeLeaf(abc);
     }
     else if((rs[0].ttyp == -4 || rs[0].ttyp == -2) && rs[1].ttyp == 1 && (rs[2].ttyp == -4 || rs[2].ttyp == -2)){                    // <strexp> -> <strexp>||<nnull> dot <strexp>|<nnull>
         neterminal.ttyp = -4;
+        neterminal.uzol = makeTree(CONCAT,rs[0].uzol,rs[2].uzol);
+        neterminal.vvalue = rs[1].vvalue;
     }
     else if(rs[0].ttyp == 10 && rs[1].ttyp == -5 && rs[2].ttyp == 11){                    // S -> (S)
         neterminal.ttyp = -5;
+        neterminal.uzol = rs[1].uzol;
+        neterminal.vvalue = rs[1].vvalue;
     }
     else if((rs[0].ttyp == -3 || rs[0].ttyp == -2) && rs[1].ttyp == 8 && (rs[2].ttyp == -3 || rs[2].ttyp == -2)){                    // S -> <exp>|<nnull> relid <exp>|<nnull>
         neterminal.ttyp = -5;
+        neterminal.vvalue = rs[1].vvalue;
+        if(rs[1].vvalue.type == lt){
+            neterminal.uzol = makeTree(LT,rs[0].uzol,rs[2].uzol);
+        }
+        else if(rs[1].vvalue.type == mt){
+            neterminal.uzol = makeTree(GT,rs[0].uzol,rs[2].uzol);
+        }
+        else if(rs[1].vvalue.type == mte){
+            neterminal.uzol = makeTree(GTE,rs[0].uzol,rs[2].uzol);
+        }
+        else if(rs[1].vvalue.type == lte){
+            neterminal.uzol = makeTree(LTE,rs[0].uzol,rs[2].uzol);
+        }
+        else{
+            printf("chyba vytvarania podstromu");
+        }
     }
     else if((rs[0].ttyp == -3 || rs[0].ttyp == -2) && rs[1].ttyp == 9 && (rs[2].ttyp == -3 || rs[2].ttyp == -2)){                    // S -> <exp>|<nnull> relid <exp>|<nnull>
         neterminal.ttyp = -5;
+        neterminal.vvalue = rs[1].vvalue;
+        if(rs[1].vvalue.type == identity){
+            neterminal.uzol = makeTree(EQ,rs[0].uzol,rs[2].uzol);
+        }
+        else if(rs[1].vvalue.type == nidentity){
+            neterminal.uzol = makeTree(NEQ,rs[0].uzol,rs[2].uzol);
+        }
+        else{
+            printf("chyba vytvarania podstromu");
+        }
     }
-    else if((rs[0].ttyp == -4 || rs[0].ttyp == -2) && rs[1].ttyp == 8 && (rs[2].ttyp == -4 || rs[2].ttyp == -2)){                    // S -> <exp>|<nnull> relid <exp>|<nnull>
+    else if((rs[0].ttyp == -4 || rs[0].ttyp == -2) && rs[1].ttyp == 8 && (rs[2].ttyp == -4 || rs[2].ttyp == -2)){                    // S -> <strexp>|<nnull> relid <strexp>|<nnull>
         neterminal.ttyp = -5;
+        neterminal.vvalue = rs[1].vvalue;
+        if(rs[1].vvalue.type == lt){
+            neterminal.uzol = makeTree(LT,rs[0].uzol,rs[2].uzol);
+        }
+        else if(rs[1].vvalue.type == mt){
+            neterminal.uzol = makeTree(GT,rs[0].uzol,rs[2].uzol);
+        }
+        else if(rs[1].vvalue.type == mte){
+            neterminal.uzol = makeTree(GTE,rs[0].uzol,rs[2].uzol);
+        }
+        else if(rs[1].vvalue.type == lte){
+            neterminal.uzol = makeTree(LTE,rs[0].uzol,rs[2].uzol);
+        }
+        else{
+            printf("chyba vytvarania podstromu");
+        }
     }
     else if((rs[0].ttyp == -4 || rs[0].ttyp == -2) && rs[1].ttyp == 9 && (rs[2].ttyp == -4 || rs[2].ttyp == -2)){                    // S -> <strexp>|<nnull> relid <strexp>|<nnull>
         neterminal.ttyp = -5;
+        neterminal.vvalue = rs[1].vvalue;
+        if(rs[1].vvalue.type == identity){
+            neterminal.uzol = makeTree(EQ,rs[0].uzol,rs[2].uzol);
+        }
+        else if(rs[1].vvalue.type == nidentity){
+            neterminal.uzol = makeTree(NEQ,rs[0].uzol,rs[2].uzol);
+        }
+        else{
+            printf("chyba vytvarania podstromu");
+        }
     }else{
         fprintf(stderr,"redukcia retazca ktory nieje na pravej strane ziadneho pravidla - nespravna syntax retazec = %d : %d : %d",rs[0].ttyp,rs[1].ttyp,rs[2].ttyp);
         exit(2);
     }
-    printf("REE %d : %d : %d\n",rs[0].vvalue.type,rs[1].vvalue.type,rs[2].vvalue.type);
-    printf("redukujem %d : %d : %d  na %d\n",rs[0].ttyp,rs[1].ttyp,rs[2].ttyp,neterminal.ttyp);
     return neterminal;
 }
 
-int expr(token_t* first,token_t* second, token_type end, token_type end2, int skip){
+ASSnode_t* expr(token_t* first,token_t* second, token_type end, token_type end2, int skip){
 
     //tabulka
     char prec_t[13][13];
@@ -376,7 +455,7 @@ int expr(token_t* first,token_t* second, token_type end, token_type end2, int sk
             }
 
             neterminal = cmp_to_rule(rs);       //v premmenej neterminal je neterminal ktory musime vlozit na zasobnik po tom co odstranime symboly medzi <>, vratane '<' '>' samotnych
-
+            //printf("neterminal uzol value : %s",neterminal.uzol->Patrick_Bateman->value);
             DLL_Last(&a);                       
             while(q.ttyp != '<'){
                 DLL_Previous(&a);
@@ -409,7 +488,13 @@ int expr(token_t* first,token_t* second, token_type end, token_type end2, int sk
             DLL_GetValue(&a,&q);
         }                                                           //najpravsi terminal je aktivny
     }
-    //printf("%p and %p", first, second);
-    return 0;
-}
 
+    DLL_Last(&a);
+    DLL_GetValue(&a,&q);
+    
+    // printf("end : %d\n",q.ttyp);
+    // printf("            %s\n",q.uzol->Patrick_Bateman->value);
+
+    //strom = q.uzol
+    return q.uzol;
+}
