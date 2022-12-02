@@ -259,6 +259,17 @@ void GTCOMP(ASSnode_t* node){ // !!! COPYPASTE
   TOK_PATH(node)->type=bbool;
   FREESONS
 }
+void EQCOMP(ASSnode_t* node){
+  char* tempvar = createVar();
+  printf("DEFVAR LF@%s\n", tempvar);
+  GETTHEM
+  printf("EQ LF@%s %s %s\n",tempvar,str1,str2);
+  FREETHEM
+  TOK_PATH(node) = TOK_PATH(node->left);
+  TOK_PATH(node)->value=tempvar;
+  TOK_PATH(node)->type=bbool;
+  FREESONS
+}
 void helpsolve(ASSnode_t* node) {
   switch (node->OP) {
     case ADD:
@@ -399,6 +410,45 @@ void helpsolve(ASSnode_t* node) {
     case EQ:
       LEAFCHECK
       //dodelat
+      if (node->left->leaf == true && node->right->leaf == true) {
+        if (TOK_PATH(node->left)->type == TOK_PATH(node->right)->type) {
+          EQCOMP(node);
+          FREETHEM;
+        } else if (TOK_PATH(node->left)->type == string &&
+                   !(TOK_PATH(node->right)->type == string)) {
+          fprintf(stderr, "Expected a string in the 2nd operand");
+          exit(7);
+        } else if ((TOK_PATH(node->left)->type == integer ||
+                   TOK_PATH(node->left)->type == ffloat)&&
+                   (TOK_PATH(node->right)->type == integer ||
+                   TOK_PATH(node->right)->type == ffloat)) {
+          // conversion
+          char* tempvar= createVar();
+          if(TOK_PATH(node->left)->type==integer){
+            printf("DEFVAR LF@%s\n",tempvar);
+            printf("INT2FLOAT LF@%s %s ",tempvar,str1);
+            TOK_PATH(node->left)->type = ffloat;
+            TOK_PATH(node->left)->value=tempvar;
+            node->right->isvar=true;
+            
+          }else
+          {
+            printf("DEFVAR LF@%s\n",tempvar);
+            printf("INT2FLOAT LF@%s  %s",tempvar,str2);
+            TOK_PATH(node->right)->type = ffloat;
+            TOK_PATH(node->right)->value=tempvar;
+            node->right->isvar=true;
+            // do cmp  
+          }
+          GTCOMP(node);
+          FREETHEM
+        }
+      }
+      else {
+        fprintf(stderr, "SOMETHING WEIRD HAPPENED\n");
+        exit(7);
+      }
+      break;
       break;
     default:
       fprintf(stderr, "UNEXPECTED OPERAND HOW DID THAT HAPPEN\n");
