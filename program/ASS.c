@@ -5,13 +5,12 @@
 
 void ASSinit(ASSnode_t** tree) { *tree = NULL; }
 
-void assprint(ASSnode_t *node)
-{
-  //if(node->OP)
-    printf("[%d,", node->OP);
-  //else
-  //  printf("[-100,");
-  if(node->Patrick_Bateman != NULL)
+void assprint(ASSnode_t* node) {
+  // if(node->OP)
+  printf("[%d,", node->OP);
+  // else
+  //   printf("[-100,");
+  if (node->Patrick_Bateman != NULL)
     printf("%s]", node->Patrick_Bateman->value);
   else
     printf("-100]");
@@ -252,37 +251,37 @@ void ASSIGNVARFloat_Int(ASSnode_t* node) {
   TOK_PATH(node->left)->type = integer;
   ASSIGNVAR(node);
 }
-void LTCOMP(ASSnode_t* node){
+void LTCOMP(ASSnode_t* node) {
   char* tempvar = createVar();
   printf("DEFVAR LF@%s\n", tempvar);
   GETTHEM
-  printf("LT LF@%s %s %s\n",tempvar,str1,str2);
+  printf("LT LF@%s %s %s\n", tempvar, str1, str2);
   FREETHEM
   TOK_PATH(node) = TOK_PATH(node->left);
-  TOK_PATH(node)->value=tempvar;
-  TOK_PATH(node)->type=bbool;
+  TOK_PATH(node)->value = tempvar;
+  TOK_PATH(node)->type = bbool;
   FREESONS
 }
-void GTCOMP(ASSnode_t* node){ // !!! COPYPASTE
+void GTCOMP(ASSnode_t* node) {  // !!! COPYPASTE
   char* tempvar = createVar();
   printf("DEFVAR LF@%s\n", tempvar);
   GETTHEM
-  printf("LT LF@%s %s %s\n",tempvar,str1,str2);
+  printf("LT LF@%s %s %s\n", tempvar, str1, str2);
   FREETHEM
   TOK_PATH(node) = TOK_PATH(node->left);
-  TOK_PATH(node)->value=tempvar;
-  TOK_PATH(node)->type=bbool;
+  TOK_PATH(node)->value = tempvar;
+  TOK_PATH(node)->type = bbool;
   FREESONS
 }
-void EQCOMP(ASSnode_t* node){
+void EQCOMP(ASSnode_t* node) {
   char* tempvar = createVar();
   printf("DEFVAR LF@%s\n", tempvar);
   GETTHEM
-  printf("EQ LF@%s %s %s\n",tempvar,str1,str2);
+  printf("EQ LF@%s %s %s\n", tempvar, str1, str2);
   FREETHEM
   TOK_PATH(node) = TOK_PATH(node->left);
-  TOK_PATH(node)->value=tempvar;
-  TOK_PATH(node)->type=bbool;
+  TOK_PATH(node)->value = tempvar;
+  TOK_PATH(node)->type = bbool;
   FREESONS
 }
 void helpsolve(ASSnode_t* node) {
@@ -347,36 +346,33 @@ void helpsolve(ASSnode_t* node) {
         exit(7);
       }
       break;
-    //case EQ:
+    // case EQ:
     case GT:
     case LT:
       LEAFCHECK  // macro
-      char* tstr1 = CHECKTYPE(node->left);
+          char* tstr1 = CHECKTYPE(node->left);
       char* tstr2 = CHECKTYPE(node->right);
       GETTHEM
-      printf("DEFVAR %s\n",tstr1);
-      printf("DEFVAR %s\n",tstr2);
-      printf("TYPE %s %s\n",tstr1,str1);
-      printf("TYPE %s %s\n",tstr2,str2);
+      printf("DEFVAR %s\n", tstr1);
+      printf("DEFVAR %s\n", tstr2);
+      printf("TYPE %s %s\n", tstr1, str1);
+      printf("TYPE %s %s\n", tstr2, str2);
       char* label = labelgen();
       char* label2 = labelgen();
-      printf("JUMPIFEQ %s %s string@nil\n",label,tstr1);
-      printf("JUMPIFEQ %s %s string@nil\n",label,tstr2);
-      printf("JUMP %s\n",label2);
-      printf("LABEL %s\n",label);
+      printf("JUMPIFEQ %s %s string@nil\n", label, tstr1);
+      printf("JUMPIFEQ %s %s string@nil\n", label, tstr2);
+      printf("JUMP %s\n", label2);
+      printf("LABEL %s\n", label);
       printf("EXIT(7)\n");
-      printf("LABEL %s\n",label2);
+      printf("LABEL %s\n", label2);
       free(label);
       free(label2);
-      
-        if (node->left->leaf == true && node->right->leaf == true) {
+
+      if (node->left->leaf == true && node->right->leaf == true) {
         if (TOK_PATH(node->left)->type == TOK_PATH(node->right)->type) {
-          if(node->OP==LT)
-          {
-          LTCOMP(node);
-          }
-          else
-          { 
+          if (node->OP == LT) {
+            LTCOMP(node);
+          } else {
             GTCOMP(node);
           }
 
@@ -385,46 +381,41 @@ void helpsolve(ASSnode_t* node) {
           fprintf(stderr, "Expected a string in the 2nd operand");
           exit(7);
         } else if ((TOK_PATH(node->left)->type == integer ||
-                   TOK_PATH(node->left)->type == ffloat)&&
+                    TOK_PATH(node->left)->type == ffloat) &&
                    (TOK_PATH(node->right)->type == integer ||
-                   TOK_PATH(node->right)->type == ffloat)) {
+                    TOK_PATH(node->right)->type == ffloat)) {
           // conversion
-          char* tempvar= createVar();
-          if(TOK_PATH(node->left)->type==integer){
-            printf("DEFVAR LF@%s\n",tempvar);
-            printf("INT2FLOAT LF@%s %s ",tempvar,str1);
+          char* tempvar = createVar();
+          if (TOK_PATH(node->left)->type == integer) {
+            printf("DEFVAR LF@%s\n", tempvar);
+            printf("INT2FLOAT LF@%s %s ", tempvar, str1);
             TOK_PATH(node->left)->type = ffloat;
-            TOK_PATH(node->left)->value=tempvar;
-            node->right->isvar=true;
-            
-          }else
-          {
-            printf("DEFVAR LF@%s\n",tempvar);
-            printf("INT2FLOAT LF@%s  %s",tempvar,str2);
+            TOK_PATH(node->left)->value = tempvar;
+            node->right->isvar = true;
+
+          } else {
+            printf("DEFVAR LF@%s\n", tempvar);
+            printf("INT2FLOAT LF@%s  %s", tempvar, str2);
             TOK_PATH(node->right)->type = ffloat;
-            TOK_PATH(node->right)->value=tempvar;
-            node->right->isvar=true;
-            // do cmp  
+            TOK_PATH(node->right)->value = tempvar;
+            node->right->isvar = true;
+            // do cmp
           }
-          if(node->OP==LT)
-          {
-          LTCOMP(node);
-          }
-          else
-          { 
+          if (node->OP == LT) {
+            LTCOMP(node);
+          } else {
             GTCOMP(node);
           }
           FREETHEM
         }
-      }
-      else {
+      } else {
         fprintf(stderr, "SOMETHING WEIRD HAPPENED\n");
         exit(7);
       }
       break;
     case EQ:
       LEAFCHECK
-      //dodelat
+      // dodelat
       if (node->left->leaf == true && node->right->leaf == true) {
         if (TOK_PATH(node->left)->type == TOK_PATH(node->right)->type) {
           EQCOMP(node);
@@ -434,36 +425,36 @@ void helpsolve(ASSnode_t* node) {
           fprintf(stderr, "Expected a string in the 2nd operand");
           exit(7);
         } else if ((TOK_PATH(node->left)->type == integer ||
-                   TOK_PATH(node->left)->type == ffloat)&&
+                    TOK_PATH(node->left)->type == ffloat) &&
                    (TOK_PATH(node->right)->type == integer ||
-                   TOK_PATH(node->right)->type == ffloat)) {
+                    TOK_PATH(node->right)->type == ffloat)) {
           // conversion
-          char* tempvar= createVar();
-          if(TOK_PATH(node->left)->type==integer){
-            printf("DEFVAR LF@%s\n",tempvar);
-            printf("INT2FLOAT LF@%s %s ",tempvar,str1);
+          char* tempvar = createVar();
+          if (TOK_PATH(node->left)->type == integer) {
+            printf("DEFVAR LF@%s\n", tempvar);
+            printf("INT2FLOAT LF@%s %s ", tempvar, str1);
             TOK_PATH(node->left)->type = ffloat;
-            TOK_PATH(node->left)->value=tempvar;
-            node->right->isvar=true;
-            
-          }else
-          {
-            printf("DEFVAR LF@%s\n",tempvar);
-            printf("INT2FLOAT LF@%s  %s",tempvar,str2);
+            TOK_PATH(node->left)->value = tempvar;
+            node->right->isvar = true;
+
+          } else {
+            printf("DEFVAR LF@%s\n", tempvar);
+            printf("INT2FLOAT LF@%s  %s", tempvar, str2);
             TOK_PATH(node->right)->type = ffloat;
-            TOK_PATH(node->right)->value=tempvar;
-            node->right->isvar=true;
-            // do cmp  
+            TOK_PATH(node->right)->value = tempvar;
+            node->right->isvar = true;
+            // do cmp
           }
           GTCOMP(node);
           FREETHEM
         }
-      }
-      else {
+      } else {
         fprintf(stderr, "SOMETHING WEIRD HAPPENED\n");
         exit(7);
       }
       break;
+    case FUNCTIONCALL:
+
       break;
     default:
       fprintf(stderr, "UNEXPECTED OPERAND HOW DID THAT HAPPEN\n");
@@ -475,23 +466,23 @@ void floatify(token_t* Patrick_Bateman) {
   sprintf(Patrick_Bateman->value, "%a", strtof(Patrick_Bateman->value, NULL));
 }
 
-char* CHECKTYPE(ASSnode_t* node){
-  static unsigned int typevarcount; // LF@tempvar + uint + \0
-  char* str = malloc(sizeof(char)*21);
+char* CHECKTYPE(ASSnode_t* node) {
+  static unsigned int typevarcount;  // LF@tempvar + uint + \0
+  char* str = malloc(sizeof(char) * 21);
   sprintf(str, "LF@tempvar%d", typevarcount);
   typevarcount++;
   return str;
 }
-char* labelgen(){
+char* labelgen() {
   static unsigned int labelcount;
-  char* str = malloc(sizeof(char)*16);  // label + uint + \0
+  char* str = malloc(sizeof(char) * 16);  // label + uint + \0
   sprintf(str, "label%d", labelcount);
   labelcount++;
   return str;
 }
 
 char* checkvar(ASSnode_t* node) {
-  char* strptr = malloc(sizeof(char) * 20); // string@ + uint + \0 idk
+  char* strptr = malloc(sizeof(char) * 20);  // string@ + uint + \0 idk
   if (node->isvar) {
     sprintf(strptr, "LF@%s", TOK_PATH(node)->value);
     return strptr;
@@ -517,7 +508,7 @@ char* checkvar(ASSnode_t* node) {
 
 char* createVar() {
   static unsigned int varcount;
-  char* str = malloc(sizeof(char) * 14);  // var + maxuint length(10) + \0 asi 
+  char* str = malloc(sizeof(char) * 14);  // var + maxuint length(10) + \0 asi
   sprintf(str, "var%d", varcount);
   varcount++;
   return str;
