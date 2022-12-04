@@ -5,6 +5,18 @@
 
 void ASSinit(ASSnode_t** tree) { *tree = NULL; }
 
+void assprint(ASSnode_t *node)
+{
+  //if(node->OP)
+    printf("[%d,", node->OP);
+  //else
+  //  printf("[-100,");
+  if(node->Patrick_Bateman != NULL)
+    printf("%s]", node->Patrick_Bateman->value);
+  else
+    printf("-100]");
+}
+
 ASSnode_t* makeTree(operand_t OP, ASSnode_t* left, ASSnode_t* right) {
   ASSnode_t* temp = malloc(sizeof(struct ASSnode));
   if (temp == NULL) {
@@ -23,7 +35,8 @@ ASSnode_t* makeTree(operand_t OP, ASSnode_t* left, ASSnode_t* right) {
 
 ASSnode_t* makeLeaf(token_t* Patrick_Bateman) {
   ASSnode_t* temp = malloc(sizeof(struct ASSnode));
-  if (temp == NULL) {
+  token_t* temp2 = malloc(sizeof(struct token));
+  if (temp == NULL || temp2 == NULL) {
     exit(99);
   }
   temp->isvar = false;
@@ -32,7 +45,9 @@ ASSnode_t* makeLeaf(token_t* Patrick_Bateman) {
   temp->right = NULL;
   temp->parent = NULL;
   temp->OP = LEAF;
-  temp->Patrick_Bateman = Patrick_Bateman;
+  temp2->type = Patrick_Bateman->type;
+  temp2->value = Patrick_Bateman->value;
+  temp->Patrick_Bateman = temp2;
 
   return temp;
 }

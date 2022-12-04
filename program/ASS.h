@@ -54,6 +54,7 @@ typedef enum operand
   LEAF,
   FUNCTIONCALL,
   ARGS,
+  RETURN,
   RYAN_GOSLING
 
 } operand_t;
@@ -103,5 +104,7 @@ void NILCHECK(ASSnode_t *node);
 char *CHECKTYPE(ASSnode_t *node);
 void LTCOMP(ASSnode_t *node);
 void GTCOMP(ASSnode_t *node);
+
+void assprint(ASSnode_t *node);
 
 #endif

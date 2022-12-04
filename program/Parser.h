@@ -12,7 +12,7 @@ bool p_prolog(token_t * token);
 bool p_prolog_sub1(token_t * token);
 bool p_prolog_sub2(token_t * token);
 
-bool p_body(token_t * token, bool defallowed);
+bool p_body(token_t * token, bool defallowed, ASSnode_t *astree);
 
 bool p_fundec(token_t * token);
 bool p_funargs(token_t * token);

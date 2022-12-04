@@ -34,6 +34,7 @@ parser 'states'?
 #include "symtable.h"
 #include "Parser.h"
 #include "symdll.h"
+#include "test.h"
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -47,7 +48,7 @@ bool p_prolog(token_t * token);
 bool p_prolog_sub1(token_t * token);
 bool p_prolog_sub2(token_t * token);
 
-bool p_body(token_t * token, bool defallowed);
+bool p_body(token_t * token, bool defallowed, ASSnode_t *astree);
 
 bool p_fundec(token_t * token);
 bool p_fparams(token_t * token);
@@ -222,18 +223,19 @@ bool parse()
     ASSnode_t *root;
     ASSinit(&root);
     //*root = makeTree(RYAN_GOSLING, NULL, NULL);
-    if ( p_start(&token, root) == false )
+    if ( p_start(&token, &root) == false )
     {
         fprintf(stderr, "Unknown syntax error.\n");
         exit(2);
     }
-
+    PRINTTREEFAST(root);
     return true;
 }
 
-bool p_start(token_t * token, ASSnode_t *astree)
+bool p_start(token_t * token, ASSnode_t **astree)
 {
-    return p_prolog(token) && p_body(token, true, astree);
+    (*astree) = makeTree(RYAN_GOSLING, NULL, NULL);
+    return p_prolog(token) && p_body(token, true, *astree);
 }
 
 bool p_prolog(token_t * token)
@@ -283,29 +285,37 @@ bool p_prolog_sub2(token_t * token)
 bool p_body(token_t * token, bool defallowed, ASSnode_t *astree)
 {
     token_t oldtoken;
+    if(astree != NULL) // DEBUG ONLY
+        true;//astree->right = makeTree(RYAN_GOSLING, NULL, NULL); // DEBUG ONLY
+    else // DEBUG ONLY
+        astree = makeTree(RYAN_GOSLING, NULL, makeTree(RYAN_GOSLING, NULL, NULL)); // DEBUG ONLY
     DPRINT(("Got to body with token %s of type %d\n", token->value, token->type));
     switch(token->type)
     {
         case funreturn:
             *token = get_token(SKIP);
+            astree->left = makeTree(RETURN, NULL, NULL);
             if(token->type == semicolon)
             {
                 *token = get_token(SKIP);
-                return p_body(token, defallowed);
+                //astree->right = makeTree(RYAN_GOSLING, NULL, NULL);
+                return p_body(token, defallowed, astree->right);
             }
             else if(token->type == ID_function)
             {
                 *token = get_token(SKIP);
-                if(p_fcall(token))
+                astree->left->left = makeTree(FUNCTIONCALL, NULL, makeLeaf(token));
+                if(p_fcall(token, astree->left->left))
                 {
                     if(token->type == semicolon)
                     {
                         *token = get_token(SKIP);
-                        return p_body(token,defallowed);
+                        //astree->right = makeTree(RYAN_GOSLING, NULL, NULL);
+                        return p_body(token,defallowed, astree->right);
                     }
                     else
                     {
-                        fprintf(stderr, "Syntax Error: Expected ';' after function.\n");
+                        fprintf(stderr, "Syntax Error: Expected ';' after return.\n");
                         exit(2);
                     }
                     
@@ -322,10 +332,11 @@ bool p_body(token_t * token, bool defallowed, ASSnode_t *astree)
                 exprptr = expr(NULL, token, semicolon, semicolon, 0);
                 if(exprptr != NULL)
                 {
-                    //DPRINT(("SECOND: %s was an expression in if statement\n", token.value));
+                    astree->left->left = exprptr;
                     *token = get_token(SKIP);
                     DPRINT(("%s\n", token->value));
-                    return p_body(token, defallowed);
+                    //astree->right = makeTree(RYAN_GOSLING, NULL, NULL);
+                    return p_body(token, defallowed,astree->right);
                 }
                 else
                 {
@@ -349,14 +360,15 @@ bool p_body(token_t * token, bool defallowed, ASSnode_t *astree)
 
         case ID_function:
             DPRINT(("ID FUNCTION %s of type %d\n", token->value, token->type));
-            tree
+            astree->left = makeTree(FUNCTIONCALL, NULL, makeLeaf(token));
             *token = get_token(SKIP);
-            if(p_fcall(token))
+            if(p_fcall(token, astree->left))
             {
                 if(token->type == semicolon)
                 {
                     *token = get_token(SKIP);
-                    return p_body(token,defallowed);
+                    //astree->right = makeTree(RYAN_GOSLING, NULL, NULL);
+                    return p_body(token,defallowed, astree->right);
                 }
                 else
                 {
@@ -376,7 +388,8 @@ bool p_body(token_t * token, bool defallowed, ASSnode_t *astree)
             if(p_const(token, semicolon, semicolon))
             {
                 *token = get_token(SKIP);
-                return true && p_body(token, defallowed);
+                //astree->right = makeTree(RYAN_GOSLING, NULL, NULL);
+                return true && p_body(token, defallowed, astree->right);
             }
             else
             {
@@ -393,8 +406,10 @@ bool p_body(token_t * token, bool defallowed, ASSnode_t *astree)
                 if(exprptr != NULL)
                 //if (expr(&oldtoken, token, semicolon, semicolon, 0) == 0)
                 {   
+                    //astree->left = exprptr;
                     *token = get_token(SKIP);
-                    return true && p_body(token, defallowed);
+                    //astree->right = makeTree(RYAN_GOSLING, NULL, NULL);
+                    return true && p_body(token, defallowed, astree->right);
                 }
                 else
                 {
@@ -404,14 +419,15 @@ bool p_body(token_t * token, bool defallowed, ASSnode_t *astree)
             }
             else
             {
-                ASSnode_t* assignment = makeTree(ASSIGN, NULL, makeLeaf(token));
+                astree->left = makeTree(ASSIGN, NULL, makeLeaf(&oldtoken));
+                //ASSnode_t* assignment = makeTree(ASSIGN, NULL, makeLeaf(token));
                 //ASSnode_t** assignmentptr = &assignment;
                 *token = get_token(SKIP);
-                if(p_assigned(token, assignment))
+                if(p_assigned(token, astree->left))
                 {
                     *token = get_token(SKIP);
-
-                    return true && p_body(token, defallowed);
+                    //astree->right = makeTree(RYAN_GOSLING, NULL, NULL);
+                    return true && p_body(token, defallowed, astree->right);
                 }
                 else
                 {
@@ -428,7 +444,7 @@ bool p_body(token_t * token, bool defallowed, ASSnode_t *astree)
             else
             {
                 *token = get_token(SKIP);
-                return p_fundec(token) && p_body(token, defallowed);
+                return p_fundec(token) && p_body(token, defallowed, astree->right);
             }
         case epilog:
             if(!defallowed)
@@ -448,9 +464,9 @@ bool p_body(token_t * token, bool defallowed, ASSnode_t *astree)
                     return true;
             }
         case funif:
-            return p_ifstat(token) && p_body(token, defallowed);
+            return p_ifstat(token) && p_body(token, defallowed, astree->right);
         case funwhile:
-            return p_whilestat(token) && p_body(token, defallowed);
+            return p_whilestat(token) && p_body(token, defallowed, astree->right);
         case rsetbracket:
             if(!defallowed)
             {
@@ -523,6 +539,7 @@ bool p_assigned(token_t *token, ASSnode_t *astree)
         if(exprptr != NULL)
         {
             DPRINT(("%s was an expression.\n", oldtoken.value));
+            astree->left = exprptr;
             //*token = get_token(SKIP);
             return true;
         }
@@ -546,6 +563,8 @@ bool p_assigned(token_t *token, ASSnode_t *astree)
 
 bool p_fcall(token_t *token, ASSnode_t *astree)
 {
+    if(astree == NULL) // DEBUG ONLY
+        astree = makeTree(FUNCTIONCALL, NULL, NULL); // DEBUG ONLY
     if(token->type == lbracket)
     {
         *token = get_token(SKIP);
@@ -643,7 +662,6 @@ bool p_vals(token_t *token, ASSnode_t* astree)
         {
             //fprintf(stderr, "Syntax error: Unexpected symbol in fcall: %s.\n", token->value);
             //exit(2);
-            // TOTO JE FUNEXP WTF
             ASSnode_t *exprptr = NULL;
             exprptr = expr(&oldtoken, token, comma, rbracket, 0);
             if(exprptr != NULL)
@@ -674,7 +692,7 @@ bool p_ifstat(token_t *token)
         {
             DPRINT(("Calling fcall on %s\n", token->value));
             *token = get_token(SKIP);
-            if(p_fcall(token))
+            if(p_fcall(token, NULL))
             {
                 *token = get_token(SKIP);
                 DPRINT(("Calling ifbody with %s\n", token->value));
@@ -717,7 +735,7 @@ bool p_ifbody(token_t *token)
     if(token->type == lsetbracket)
     {
         *token = get_token(SKIP);
-        return p_body(token, false) && p_elsebody(token);
+        return p_body(token, false, NULL) && p_elsebody(token);
     }
     else
     {
@@ -734,7 +752,7 @@ bool p_elsebody(token_t *token)
         if(token->type == lsetbracket)
         {
             *token = get_token(SKIP);
-            return p_body(token, false);
+            return p_body(token, false, NULL);
         }
         else
         {
@@ -759,7 +777,7 @@ bool p_whilestat(token_t *token)
         {
             DPRINT(("Calling fcall on %s\n", token->value));
             *token = get_token(SKIP);
-            if(p_fcall(token))
+            if(p_fcall(token, NULL))
             {
                 *token = get_token(SKIP);
                 DPRINT(("Calling whilebody with %s\n", token->value));
@@ -803,7 +821,7 @@ bool p_whilebody(token_t * token)
     if(token->type == lsetbracket)
     {
         *token = get_token(SKIP);
-        return p_body(token, false);
+        return p_body(token, false, NULL);
     }
     else
     {
@@ -862,7 +880,7 @@ bool p_funbody(token_t * token)
     if(token->type == lsetbracket)
     {
         *token = get_token(SKIP);
-        return p_body(token, false);
+        return p_body(token, false, NULL);
     }
     else
     {
