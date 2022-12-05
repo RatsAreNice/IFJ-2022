@@ -863,16 +863,3 @@ token_t get_token(int skip){
     
     
 }
-
-int main(){
-    printf("cock\n");
-    token_t groid;
-    groid = get_token(0);
-    printf("%s\n",groid.value);
-    groid = get_token(0);
-    printf("%s\n",groid.value);
-    groid = get_token(0);
-    printf("%s\n",groid.value);
-    groid = get_token(0);
-    printf("%s\n",groid.value);
-}
