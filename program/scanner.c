@@ -455,10 +455,12 @@ token_t get_token(int skip){
                             a = getchar();
                             i++;
                         }
+                        ungetc(a,stdin);
                         return make_token(ffloat,str);
 
                     }
                     else{
+                        ungetc(a,stdin);
                         return make_token(ffloat,str);                                              
                     }
                 }
@@ -505,6 +507,7 @@ token_t get_token(int skip){
                             a = getchar();
                             i++;
                         }
+                        ungetc(a,stdin);
                         return make_token(ffloat,str);
                 }
             break;
