@@ -48,6 +48,7 @@ typedef enum{       //stavy automatu
     string2,
     type1,
     INT,
+    floating,
     identity2,
     nidentity1,
     identity1,

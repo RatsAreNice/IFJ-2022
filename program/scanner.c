@@ -353,10 +353,7 @@ token_t get_token(int skip){
                 str = "";
                 i = 0;
                 z = 0;
-                while((a >= 48 && a <=  57) || (a == '.' && z == 0)){
-                    if(a == '.'){
-                        z++;                            //z znaci ci uz bola v cisle desatina ciarka
-                    }                      
+                while((a >= 48 && a <=  57) || a == '.' || a == 'e' || a == 'E'){
                     size_t len = strlen(str);
                     char *str2 = malloc(len + 1 + 1);
                     strcpy(str2, str);
@@ -368,17 +365,150 @@ token_t get_token(int skip){
                     str = str2;
                     a = getchar();
                     i++;
+                    if(a == '.' || a == 'e' || a == 'E'){
+                        state = floating;
+                        break;     
+                    }
                 }
-                if(i>0){
+                if(i>0 && state != floating){
                     ungetc(a, stdin);
                 }
-                if(z == 0){
-                    return make_token(integer, str);
+                if(state == floating){
+                    break;
                 }
-                else{
-                    return make_token(ffloat, str);
-                }
+                return make_token(integer, str);
                 break;
+
+            case floating:
+                if(a == '.'){
+                    a = getchar();
+                    if(!(a >= 48 && a <=  57)){                                         //zisti ci dalsi znak je cislovka
+                        fprintf(stderr,"chybajuca cislovka za desatinnou bodkou");
+                        exit(1);
+                    }
+
+                    size_t len = strlen(str);
+                    char *str2 = malloc(len + 1 + 1);
+                    strcpy(str2, str);
+                    if(i>0){
+                        free(str);
+                    }
+                    str2[len] = '.';
+                    str2[len + 1] = '\0';
+                    str = str2;                                                             //pridaj do stringu '.'
+
+                    while((a >= 48 && a <=  57)){                                           //pridavaj do stringu vsetky cisla ktore nasleduju
+                        size_t len = strlen(str);
+                        char *str2 = malloc(len + 1 + 1);
+                        strcpy(str2, str);
+                        if(i>0){
+                            free(str);
+                        }
+                        str2[len] = a;
+                        str2[len + 1] = '\0';
+                        str = str2;
+                        a = getchar();
+                        i++;
+                    }
+
+
+                    if(a == 'e' || a == 'E'){                                               //zisti ci za cislami je este 'e'/'E'
+                        a = getchar();
+                        if(a == '+' || a == '-'){
+                            size_t len = strlen(str);
+                            char *str2 = malloc(len + 1 + 2);
+                            strcpy(str2, str);
+                            if(i>0){
+                                free(str);
+                            }
+                            str2[len] = 'e';
+                            str2[len + 1] = a;                                              
+                            str2[len + 2] = '\0';
+                            str = str2;
+                            a = getchar();
+                        }
+                        else{
+                            size_t len = strlen(str);
+                            char *str2 = malloc(len + 1 + 1);
+                            strcpy(str2, str);
+                            if(i>0){
+                                free(str);
+                            }
+                            str2[len] = 'e';
+                            str2[len + 1] = '\0';                                                       //pridaj do stringu 'e' a pripadne znamienko
+                            str = str2;
+                        }
+                        if(!(a >= 48 && a <=  57)){
+                            fprintf(stderr,"chybajuca cislovka za e");
+                            exit(1);
+                        }
+                        while((a >= 48 && a <=  57)){           //nacitaju sa cislovky za e
+                            size_t len = strlen(str);
+                            char *str2 = malloc(len + 1 + 1);
+                            strcpy(str2, str);
+                            if(i>0){
+                                free(str);
+                            }
+                            str2[len] = a;
+                            str2[len + 1] = '\0';
+                            str = str2;
+                            a = getchar();
+                            i++;
+                        }
+                        return make_token(ffloat,str);
+
+                    }
+                    else{
+                        return make_token(ffloat,str);                                              
+                    }
+                }
+                else{                                                               //za celym cislom ide priamo e
+                    a = getchar();
+                        if(a == '+' || a == '-'){
+                            size_t len = strlen(str);
+                            char *str2 = malloc(len + 1 + 2);
+                            strcpy(str2, str);
+                            if(i>0){
+                                free(str);
+                            }
+                            str2[len] = 'e';
+                            str2[len + 1] = a;
+                            str2[len + 2] = '\0';
+                            str = str2;
+                            a = getchar();
+                        }
+                        else{
+                            size_t len = strlen(str);
+                            char *str2 = malloc(len + 1 + 1);   
+                            strcpy(str2, str);
+                            if(i>0){
+                                free(str);
+                            }
+                            str2[len] = 'e';
+                            str2[len + 1] = '\0';                                       //pridaj do stringu e a pripadne znamienko
+                            str = str2;
+                        }
+                        if(!(a >= 48 && a <=  57)){                                     //otestuj ci za e je nejaka cislovka
+                            fprintf(stderr,"chybajuca cislovka za e");
+                            exit(1);
+                        }
+                        while((a >= 48 && a <=  57)){           //nacitaju sa cislovky za e
+                            size_t len = strlen(str);
+                            char *str2 = malloc(len + 1 + 1);
+                            strcpy(str2, str);
+                            if(i>0){
+                                free(str);
+                            }
+                            str2[len] = a;
+                            str2[len + 1] = '\0';
+                            str = str2;
+                            a = getchar();
+                            i++;
+                        }
+                        return make_token(ffloat,str);
+                }
+            break;
+
 
             case string1:
                 z = 0;
@@ -732,4 +862,17 @@ token_t get_token(int skip){
 
     
     
+}
+
+int main(){
+    printf("cock\n");
+    token_t groid;
+    groid = get_token(0);
+    printf("%s\n",groid.value);
+    groid = get_token(0);
+    printf("%s\n",groid.value);
+    groid = get_token(0);
+    printf("%s\n",groid.value);
+    groid = get_token(0);
+    printf("%s\n",groid.value);
 }
