@@ -1,0 +1,43 @@
+.IFJcode22
+CREATEFRAME
+PUSHFRAME
+CREATEFRAME
+JUMP main
+
+
+LABEL floatval
+DEFVAR TF@TYPESTR
+TYPE TF@TYPESTR TF@param1
+JUMPIFEQ %fvalfail TF@TYPESTR string@string
+JUMPIFEQ %fvalbool TF@TYPESTR string@bool
+JUMPIFEQ %fvalnil TF@TYPESTR string@nil
+JUMPIFEQ %fvalfloat TF@TYPESTR string@float
+INT2FLOAT TF@param1 TF@param1
+LABEL %fvalfloat
+MOVE LF@%fval TF@param1
+CREATEFRAME
+RETURN
+LABEL %fvalfail
+DPRINT string@LOLEC
+EXIT int@7
+LABEL %fvalbool
+MOVE LF@%fval float@0x0p+0
+JUMPIFEQ %fvalfalse TF@param1 bool@false 
+MOVE LF@%fval float@0x1p+0
+LABEL %fvalfalse
+CREATEFRAME
+RETURN
+LABEL %fvalnil
+MOVE LF@%fval float@0x0p+0
+CREATEFRAME
+RETURN
+
+
+LABEL main
+DEFVAR LF@%fval
+DEFVAR TF@param1
+MOVE TF@param1 int@184
+CALL floatval
+WRITE LF@%fval
+
+EXIT int@0

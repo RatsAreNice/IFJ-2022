@@ -3,8 +3,9 @@ CREATEFRAME
 PUSHFRAME
 CREATEFRAME
 JUMP main
+
 LABEL substring
-MOVE LF@%STR1 string@a
+MOVE LF@%STR1 nil@nil
 DEFVAR TF@lolec
 STRLEN TF@lolec TF@param1
 DEFVAR TF@zerocheck
@@ -12,6 +13,7 @@ DEFVAR TF@zerocheck2
 DEFVAR TF@ltcheck
 DEFVAR TF@lencheck1
 DEFVAR TF@lencheck2
+DEFVAR TF@loopcheck
 DEFVAR TF@i
 DEFVAR TF@L1b
 LT TF@zerocheck TF@param2 int@0
@@ -24,19 +26,21 @@ JUMPIFEQ %substrfail bool@true TF@zerocheck2
 JUMPIFEQ %substrfail bool@true TF@ltcheck
 JUMPIFEQ %substrfail bool@true TF@lencheck1
 JUMPIFEQ %substrfail bool@true TF@lencheck2
+# get to param3
+JUMPIFEQ %substrdone TF@param2 TF@param3
 GETCHAR LF@%STR1 TF@param1 TF@param2
 ADD TF@param2 TF@param2 int@1
-# get to param3
-JUMPIFEQ %substrfail TF@param2 TF@param3
+JUMPIFEQ %substrdone TF@param2 TF@param3
 LABEL %substrL1
 GETCHAR TF@i TF@param1 TF@param2
 CONCAT LF@%STR1 LF@%STR1 TF@i 
 ADD TF@param2 TF@param2 int@1
-JUMPIFNEQ %substrL1 TF@param2 TF@param3
+LT TF@loopcheck TF@param2 TF@param3
+JUMPIFNEQ %substrL1 TF@loopcheck bool@false
+LABEL %substrdone
 CREATEFRAME
 RETURN
 LABEL %substrfail
-MOVE LF@%STR1 nil@nil
 CREATEFRAME
 RETURN
 
@@ -51,9 +55,9 @@ DEFVAR TF@param1 #victim string
 DEFVAR TF@param2 #zaciatok
 DEFVAR TF@param3 #konec
 
-MOVE TF@param1 string@FilipLesnar
-MOVE TF@param2 int@5
-MOVE TF@param3 int@8
+READ TF@param1 string
+READ TF@param2 int
+READ TF@param3 int
 CALL substring
 
 

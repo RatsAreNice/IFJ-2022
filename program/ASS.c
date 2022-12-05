@@ -343,7 +343,7 @@ void helpsolve(ASSnode_t* node) {
         if (TOK_PATH(node->left)->type == ID_variable) {
           ASSIGNVAR(node);
           break;
-        }
+        }  // DUMMY EXPERIMENT AAAA /// remove later
         if (TOK_PATH(node) == NULL) {
           token_t* dummy = malloc(sizeof(token_t));
           dummy->type = TOK_PATH(node->left)->type;
@@ -477,7 +477,7 @@ void helpsolve(ASSnode_t* node) {
     case CONCAT:
       LEAFCHECK
       if (TOK_PATH(node->left)->type != string ||
-          TOK_PATH(node->right) != string) {
+          TOK_PATH(node->right)->type != string) {
         fprintf(stderr, "CONCATENATION OF NON-STRING OPERANDS\n");
         exit(7);
       }
@@ -572,13 +572,14 @@ void readf() {
 }
 void phpsubstring() {
   printf("LABEL substring");
-  printf("\nMOVE LF@\%%STR1 string@a\nDEFVAR TF@lolec");
+  printf("\nMOVE LF@%%STR1 nil@nil\nDEFVAR TF@lolec");
   printf("\nSTRLEN TF@lolec TF@param1");
   printf("\nDEFVAR TF@zerocheck");
   printf("\nDEFVAR TF@zerocheck2");
   printf("\nDEFVAR TF@ltcheck");
   printf("\nDEFVAR TF@lencheck1");
   printf("\nDEFVAR TF@lencheck2");
+  printf("\nDEFVAR TF@loopcheck");
   printf("\nDEFVAR TF@i");
   printf("\nDEFVAR TF@L1b");
   printf("\nLT TF@zerocheck TF@param2 int@0");
@@ -586,24 +587,88 @@ void phpsubstring() {
   printf("\nLT TF@ltcheck TF@param3 TF@param2");
   printf("\nLT TF@lencheck1 TF@lolec TF@param2");
   printf("\nGT TF@lencheck2 TF@param3 TF@lolec");
-  printf("\nJUMPIFEQ \%%substrfail bool@true TF@zerocheck");
-  printf("\nJUMPIFEQ \%%substrfail bool@true TF@zerocheck2");
-  printf("\nJUMPIFEQ \%%substrfail bool@true TF@ltcheck");
-  printf("\nJUMPIFEQ \%%substrfail bool@true TF@lencheck1");
-  printf("\nJUMPIFEQ \%%substrfail bool@true TF@lencheck2");
-  printf("\nGETCHAR LF@\%%STR1 TF@param1 TF@param2");
+  printf("\nJUMPIFEQ %%substrfail bool@true TF@zerocheck");
+  printf("\nJUMPIFEQ %%substrfail bool@true TF@zerocheck2");
+  printf("\nJUMPIFEQ %%substrfail bool@true TF@ltcheck");
+  printf("\nJUMPIFEQ %%substrfail bool@true TF@lencheck1");
+  printf("\nJUMPIFEQ %%substrfail bool@true TF@lencheck2");
+  printf("\nJUMPIFEQ %%substrdone TF@param2 TF@param3");
+  printf("\nGETCHAR LF@%%STR1 TF@param1 TF@param2");
   printf("\nADD TF@param2 TF@param2 int@1");
-  printf("\nJUMPIFEQ \%%substrfail TF@param2 TF@param3");
-  printf("\nLABEL \%%substrL1");
+  printf("\nJUMPIFEQ %%substrdone TF@param2 TF@param3");
+  printf("\nLABEL %%substrL1");
   printf("\nGETCHAR TF@i TF@param1 TF@param2");
-  printf("\nCONCAT LF@\%%STR1 LF@\%%STR1 TF@i");
+  printf("\nCONCAT LF@%%STR1 LF@%%STR1 TF@i");
   printf("\nADD TF@param2 TF@param2 int@1");
-  printf("\nJUMPIFNEQ \%%substrL1 TF@param2 TF@param3");
+  printf("\nLT TF@loopcheck TF@param2 TF@param3");
+  printf("\nJUMPIFNEQ %%substrL1 TF@loopcheck bool@false");
+  printf("\nLABEL %%substrdone");
   printf("\nCREATEFRAME");
   printf("\nRETURN");
-  printf("\nLABEL \%%substrfail");
-  printf("\nMOVE LF@\%%STR1 nil@nil");
+  printf("\nLABEL %%substrfail");
   printf("\nCREATEFRAME\nRETURN\n");
+}
+void phpstrlen() {
+  printf("LABEL %%strlen\n");
+  printf("DEFVAR TF@retval\n");
+  printf("STRLEN TF@retval TF@param1\n");
+  printf("MOVE LF@%%slen TF@retval\n");
+  printf("CREATEFRAME\nRETURN\n");
+}
+void phpfloatval() {
+  printf("\nLABEL floatval");
+  printf("\nDEFVAR TF@TYPESTR");
+  printf("\nTYPE TF@TYPESTR TF@param1");
+  printf("\nJUMPIFEQ %%fvalfail TF@TYPESTR string@string");
+  printf("\nJUMPIFEQ %%fvalbool TF@TYPESTR string@bool");
+  printf("\nJUMPIFEQ %%fvalnil TF@TYPESTR string@nil");
+  printf("\nJUMPIFEQ %%fvalfloat TF@TYPESTR string@float");
+  printf("\nINT2FLOAT TF@param1 TF@param1");
+  printf("\nLABEL %%fvalfloat");
+  printf("\nMOVE LF@%%fval TF@param1");
+  printf("\nCREATEFRAME");
+  printf("\nRETURN");
+  printf("\nLABEL %%fvalfail");
+  printf("\nEXIT int@7");
+  printf("\nLABEL %%fvalbool");
+  printf("\nMOVE LF@%%fval float@0x0p+0");
+  printf("\nJUMPIFEQ %%fvalfalse TF@param1 bool@false");
+  printf("\nMOVE LF@%%fval float@0x1p+0");
+  printf("\nLABEL %%fvalfalse");
+  printf("\nCREATEFRAME");
+  printf("\nRETURN");
+  printf("\nLABEL %%fvalnil");
+  printf("\nMOVE LF@%%fval float@0x0p+0");
+  printf("\nCREATEFRAME");
+  printf("\nRETURN\n");
+}
+void phpintval() {
+  printf("\nLABEL intval");
+  printf("\nDEFVAR TF@TYPESTR");
+  printf("\nTYPE TF@TYPESTR TF@param1");
+  printf("\nJUMPIFEQ %%ivalfail TF@TYPESTR string@string");
+  printf("\nJUMPIFEQ %%ivalbool TF@TYPESTR string@bool");
+  printf("\nJUMPIFEQ %%ivalnil TF@TYPESTR string@nil");
+  printf("\nJUMPIFEQ %%ivalint TF@TYPESTR string@int");
+  printf("\nFLOAT2INT TF@param1 TF@param1");
+  printf("\nLABEL %%ivalint");
+  printf("\nMOVE LF@%%ival TF@param1");
+  printf("\nCREATEFRAME");
+  printf("\nRETURN");
+  printf("\nLABEL %%ivalfail");
+  printf("\nDPRINT string@LOLEC");
+  printf("\nEXIT int@7");
+  printf("\nLABEL %%ivalbool");
+  printf("\nMOVE LF@%%ival int@0");
+  printf("\nJUMPIFEQ %%ivalfalse TF@param1 bool@false ");
+  printf("\nMOVE LF@%%ival int@1");
+  printf("\nLABEL %%ivalfalse");
+  printf("\nCREATEFRAME");
+  printf("\nRETURN");
+  printf("\nLABEL %%ivalnil");
+  printf("\nMOVE LF@%%ival int@0");
+  printf("\nCREATEFRAME");
+  printf("\nRETURN\n");
 }
 void print_builtins() {
   printf("JUMP main\n");
@@ -611,5 +676,8 @@ void print_builtins() {
   readi();
   readf();
   phpsubstring();
+  phpstrlen();
+  phpfloatval();
+  phpintval();
   printf("LABEL main\n");
 }
