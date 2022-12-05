@@ -4,19 +4,19 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
 #include "scanner.h"
 
-#define VAR (token_type)-1
-#define bbool (token_type)-2
+extern FILE *allahprint;
+#define VAR (token_type) - 1
+#define bbool (token_type) - 2
 #define TOK_PATH(x) x->Patrick_Bateman
-#define LEAFCHECK                 \
-  if (node->left->leaf == false)  \
-  {                               \
-    helpsolve(node->left);        \
-  }                               \
-  if (node->right->leaf == false) \
-  {                               \
-    helpsolve(node->right);       \
+#define LEAFCHECK                   \
+  if (node->left->leaf == false) {  \
+    helpsolve(node->left);          \
+  }                                 \
+  if (node->right->leaf == false) { \
+    helpsolve(node->right);         \
   }
 // ZISK RELEVANTNYCH POINTEROV
 #define GETTHEM                      \
@@ -31,8 +31,7 @@
   delete_node(node->left); \
   delete_node(node->right);
 
-typedef enum operand
-{
+typedef enum operand {
   ADD,
   SUB,
   MUL,
@@ -59,16 +58,15 @@ typedef enum operand
 
 } operand_t;
 
-typedef struct ASSnode
-{
+typedef struct ASSnode {
   bool leaf;
   bool isvar;
   operand_t OP;
   token_t *Patrick_Bateman;
   struct ASSnode *parent;
-  struct ASSnode *left;  // left foot
-  struct ASSnode *right; // right foot
-                         //                                          levitating
+  struct ASSnode *left;   // left foot
+  struct ASSnode *right;  // right foot
+                          //                                          levitating
 } ASSnode_t;
 
 void ASSinit(ASSnode_t **tree);
@@ -77,12 +75,16 @@ ASSnode_t *makeLeaf(token_t *Patrick_Bateman);
 void delete_node(ASSnode_t *node);
 
 // non-operand functions
-char* labelgen();
+char *labelgen();
 char *checkvar(ASSnode_t *node);
 void floatify(token_t *);
 void helpsolve(ASSnode_t *node);
 void print_code(ASSnode_t **tree);
 char *createVar();
+void print_builtins();
+void reads();
+void readi();
+void readf();
 
 // ADD
 void ADDInt_Int(ASSnode_t *node);
@@ -104,6 +106,9 @@ void NILCHECK(ASSnode_t *node);
 char *CHECKTYPE(ASSnode_t *node);
 void LTCOMP(ASSnode_t *node);
 void GTCOMP(ASSnode_t *node);
+
+// CONCAT
+void CONCATSTR(ASSnode_t *node);
 
 void assprint(ASSnode_t *node);
 

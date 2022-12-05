@@ -2,18 +2,19 @@
 // autor: Matus Dobias
 
 #include "ASS.h"
+FILE* allahprint;
 
 void ASSinit(ASSnode_t** tree) { *tree = NULL; }
 
 void assprint(ASSnode_t* node) {
   // if(node->OP)
-  printf("[%d,", node->OP);
+  fprintf(allahprint, "[%d,", node->OP);
   // else
   //   printf("[-100,");
   if (node->Patrick_Bateman != NULL)
-    printf("%s]", node->Patrick_Bateman->value);
+    fprintf(allahprint, "%s]", node->Patrick_Bateman->value);
   else
-    printf("-100]");
+    fprintf(allahprint, "-100]");
 }
 
 ASSnode_t* makeTree(operand_t OP, ASSnode_t* left, ASSnode_t* right) {
@@ -55,12 +56,13 @@ void delete_node(ASSnode_t* node) { free(node); }
 
 void print_code(ASSnode_t** tree) {
   printf(".IFJcode22\n");
-  printf("CREATEFRAME\nPUSHFRAME\n");
+  printf("CREATEFRAME\nPUSHFRAME\nCREATEFRAME\n");
+  print_builtins();
   helpsolve(*tree);
   if ((*tree)->isvar == true) {
     free(TOK_PATH((*tree))->value);
   }
-
+  printf("EXIT int@0\n");
   free(*tree);
 }
 
@@ -282,8 +284,21 @@ void EQCOMP(ASSnode_t* node) {
   TOK_PATH(node) = TOK_PATH(node->left);
   TOK_PATH(node)->value = tempvar;
   TOK_PATH(node)->type = bbool;
+  node->isvar = true;
   FREESONS
 }
+void CONCATSTR(ASSnode_t* node) {
+  char* tempvar = createVar();
+  printf("DEFVAR LF@%s\n", tempvar);
+  GETTHEM
+  printf("CONCAT LF@%s %s %s\n", tempvar, str1, str2);
+  FREETHEM
+  if (node->left->isvar) free(TOK_PATH(node->left)->value);
+  TOK_PATH(node) = TOK_PATH(node->left);
+  TOK_PATH(node)->value = tempvar;
+  node->isvar = true;
+}
+
 void helpsolve(ASSnode_t* node) {
   switch (node->OP) {
     case ADD:
@@ -329,6 +344,12 @@ void helpsolve(ASSnode_t* node) {
           ASSIGNVAR(node);
           break;
         }
+        if (TOK_PATH(node) == NULL) {
+          token_t* dummy = malloc(sizeof(token_t));
+          dummy->type = TOK_PATH(node->left)->type;
+          TOK_PATH(node) = dummy;
+        }
+
         if (TOK_PATH(node->left)->type == TOK_PATH(node)->type) {
           ASSIGNVAR(node);
           break;
@@ -453,11 +474,24 @@ void helpsolve(ASSnode_t* node) {
         exit(7);
       }
       break;
+    case CONCAT:
+      LEAFCHECK
+      if (TOK_PATH(node->left)->type != string ||
+          TOK_PATH(node->right) != string) {
+        fprintf(stderr, "CONCATENATION OF NON-STRING OPERANDS\n");
+        exit(7);
+      }
+      CONCATSTR(node);
+      break;
     case FUNCTIONCALL:
-
+      LEAFCHECK
+      break;
+    case RYAN_GOSLING:
+      LEAFCHECK
       break;
     default:
-      fprintf(stderr, "UNEXPECTED OPERAND HOW DID THAT HAPPEN\n");
+      fprintf(stderr, "UNEXPECTED OPERAND (%d) HOW DID THAT HAPPEN\n",
+              node->OP);
       exit(7);
   }
 }
@@ -469,6 +503,7 @@ void floatify(token_t* Patrick_Bateman) {
 char* CHECKTYPE(ASSnode_t* node) {
   static unsigned int typevarcount;  // LF@tempvar + uint + \0
   char* str = malloc(sizeof(char) * 21);
+  if (str == NULL) exit(99);
   sprintf(str, "LF@tempvar%d", typevarcount);
   typevarcount++;
   return str;
@@ -476,6 +511,7 @@ char* CHECKTYPE(ASSnode_t* node) {
 char* labelgen() {
   static unsigned int labelcount;
   char* str = malloc(sizeof(char) * 16);  // label + uint + \0
+  if (str == NULL) exit(99);
   sprintf(str, "label%d", labelcount);
   labelcount++;
   return str;
@@ -483,6 +519,8 @@ char* labelgen() {
 
 char* checkvar(ASSnode_t* node) {
   char* strptr = malloc(sizeof(char) * 20);  // string@ + uint + \0 idk
+  if (strptr == NULL) exit(99);
+
   if (node->isvar) {
     sprintf(strptr, "LF@%s", TOK_PATH(node)->value);
     return strptr;
@@ -509,7 +547,69 @@ char* checkvar(ASSnode_t* node) {
 char* createVar() {
   static unsigned int varcount;
   char* str = malloc(sizeof(char) * 14);  // var + maxuint length(10) + \0 asi
+  if (str == NULL) exit(99);
   sprintf(str, "var%d", varcount);
   varcount++;
   return str;
+}
+void reads() {
+  printf("LABEL reads\n");
+  printf("DEFVAR TF@%%STRING\n");
+  printf("READ TF@%%STRING string\n");
+  printf("RETURN\n");
+}
+void readi() {
+  printf("LABEL readi\n");
+  printf("DEFVAR TF@%%INT\n");
+  printf("READ TF@%%INT int\n");
+  printf("RETURN\n");
+}
+void readf() {
+  printf("LABEL readf\n");
+  printf("DEFVAR TF@%%FLOAT\n");
+  printf("READ TF@%%FLOAT float\n");
+  printf("RETURN\n");
+}
+void phpsubstring() {
+  printf("LABEL substring");
+  printf("\nMOVE LF@\%%STR1 string@a\nDEFVAR TF@lolec");
+  printf("\nSTRLEN TF@lolec TF@param1");
+  printf("\nDEFVAR TF@zerocheck");
+  printf("\nDEFVAR TF@zerocheck2");
+  printf("\nDEFVAR TF@ltcheck");
+  printf("\nDEFVAR TF@lencheck1");
+  printf("\nDEFVAR TF@lencheck2");
+  printf("\nDEFVAR TF@i");
+  printf("\nDEFVAR TF@L1b");
+  printf("\nLT TF@zerocheck TF@param2 int@0");
+  printf("\nLT TF@zerocheck2 TF@param3 int@0");
+  printf("\nLT TF@ltcheck TF@param3 TF@param2");
+  printf("\nLT TF@lencheck1 TF@lolec TF@param2");
+  printf("\nGT TF@lencheck2 TF@param3 TF@lolec");
+  printf("\nJUMPIFEQ \%%substrfail bool@true TF@zerocheck");
+  printf("\nJUMPIFEQ \%%substrfail bool@true TF@zerocheck2");
+  printf("\nJUMPIFEQ \%%substrfail bool@true TF@ltcheck");
+  printf("\nJUMPIFEQ \%%substrfail bool@true TF@lencheck1");
+  printf("\nJUMPIFEQ \%%substrfail bool@true TF@lencheck2");
+  printf("\nGETCHAR LF@\%%STR1 TF@param1 TF@param2");
+  printf("\nADD TF@param2 TF@param2 int@1");
+  printf("\nJUMPIFEQ \%%substrfail TF@param2 TF@param3");
+  printf("\nLABEL \%%substrL1");
+  printf("\nGETCHAR TF@i TF@param1 TF@param2");
+  printf("\nCONCAT LF@\%%STR1 LF@\%%STR1 TF@i");
+  printf("\nADD TF@param2 TF@param2 int@1");
+  printf("\nJUMPIFNEQ \%%substrL1 TF@param2 TF@param3");
+  printf("\nCREATEFRAME");
+  printf("\nRETURN");
+  printf("\nLABEL \%%substrfail");
+  printf("\nMOVE LF@\%%STR1 nil@nil");
+  printf("\nCREATEFRAME\nRETURN\n");
+}
+void print_builtins() {
+  printf("JUMP main\n");
+  reads();
+  readi();
+  readf();
+  phpsubstring();
+  printf("LABEL main\n");
 }

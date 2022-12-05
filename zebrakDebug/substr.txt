@@ -3,18 +3,6 @@ CREATEFRAME
 PUSHFRAME
 CREATEFRAME
 JUMP main
-LABEL reads
-DEFVAR TF@%STRING
-READ TF@%STRING string
-RETURN
-LABEL readi
-DEFVAR TF@%INT
-READ TF@%INT int
-RETURN
-LABEL readf
-DEFVAR TF@%FLOAT
-READ TF@%FLOAT float
-RETURN
 LABEL substring
 MOVE LF@%STR1 string@a
 DEFVAR TF@lolec
@@ -38,10 +26,11 @@ JUMPIFEQ %substrfail bool@true TF@lencheck1
 JUMPIFEQ %substrfail bool@true TF@lencheck2
 GETCHAR LF@%STR1 TF@param1 TF@param2
 ADD TF@param2 TF@param2 int@1
+# get to param3
 JUMPIFEQ %substrfail TF@param2 TF@param3
 LABEL %substrL1
 GETCHAR TF@i TF@param1 TF@param2
-CONCAT LF@%STR1 LF@%STR1 TF@i
+CONCAT LF@%STR1 LF@%STR1 TF@i 
 ADD TF@param2 TF@param2 int@1
 JUMPIFNEQ %substrL1 TF@param2 TF@param3
 CREATEFRAME
@@ -50,17 +39,27 @@ LABEL %substrfail
 MOVE LF@%STR1 nil@nil
 CREATEFRAME
 RETURN
+
+
+
 LABEL main
-DEFVAR LF@var0
-ADD LF@var0 int@5 int@7
-DEFVAR LF@var1
-SUB LF@var1 LF@var0 int@3
-DEFVAR LF@var2
-SUB LF@var2 LF@var1 int@4
-DEFVAR LF@var3
-ADD LF@var3 LF@var2 int@2
-DEFVAR LF@var4
-INT2FLOAT LF@var4 LF@var3
-DEFVAR LF@kredenc
-MOVE LF@kredenc LF@var4
+#call substring("FilipLesnar",5,8)
+
+CREATEFRAME
+DEFVAR LF@%STR1 #cielovy string #bude stat za to to dat do hlavicky
+DEFVAR TF@param1 #victim string 
+DEFVAR TF@param2 #zaciatok
+DEFVAR TF@param3 #konec
+
+MOVE TF@param1 string@FilipLesnar
+MOVE TF@param2 int@5
+MOVE TF@param3 int@8
+CALL substring
+
+
+DEFVAR LF@opica
+MOVE LF@opica LF@%STR1
+WRITE LF@opica
+
+
 EXIT int@0
