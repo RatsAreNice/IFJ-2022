@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include "bottom_up.h"
+#include "semantic.h"
 
 int convert(token_t a){       //konvertuje token na cislo
     //printf("Converting %s with type %d\n", a.value, a.type);
@@ -64,6 +65,10 @@ unit_t get_input(token_type ** first,char* firstv, token_type ** second,char* se
     }
     else{                           //first aj second su NULL
         input = get_token(skip);
+    }
+
+    if(input.type == ID_variable){
+        checkDefined(&input,symtablelist.activeElement->symtable);
     }
 
     if(input.type == end || input.type == end2){
