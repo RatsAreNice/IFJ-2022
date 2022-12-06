@@ -50,11 +50,17 @@ typedef enum operand
   CONCAT,
   ASSIGN,
   IF,
+  WHILE,
   THEN,
   LEAF,
   FUNCTIONCALL,
   ARGS,
   RETURN,
+  FDEC,
+  FDEC_DATA,
+  FDEC_DATA_INF,
+  FDEC_PARAMS,
+  FDEC_NPARAM,
   RYAN_GOSLING
 
 } operand_t;

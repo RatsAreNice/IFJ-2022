@@ -26,13 +26,14 @@ void symDLL_Dispose( symDLList_t *list ) {
 	list->lastElement = NULL;
 }
 
-void symDLL_InsertLast( symDLList_t *list, bst_node_t* symtable ) {
+void symDLL_InsertLast( symDLList_t *list, bst_node_t* symtable, funData_t* fundata ) {
 	symDLLElementPtr new = malloc(sizeof(struct symDLLElement));
 	if(new == NULL)
 	{
 		fprintf(stderr, "Malloc failed.\n");
         exit(99);
 	}
+	new->fundata = fundata;
 	new->symtable = symtable;
 	new->nextElement = NULL;
 	new->previousElement = list->lastElement;
@@ -71,16 +72,17 @@ void symDLL_DeleteLast( symDLList_t *list ) {
 		list->lastElement = list->lastElement->previousElement;
 		list->lastElement->nextElement = NULL;
 	}
+	bst_dispose(&(temp->symtable));
 	free(temp);
 }
 
-void symDLL_GetFirst( symDLList_t *list, bst_node_t **dataPtr ) {
+bst_node_t * symDLL_GetFirst( symDLList_t *list) {
 	if (list->firstElement == NULL)
 	{
 		fprintf(stderr, "DLL empty.\n");
         exit(99);
 	}
-	*dataPtr = list->firstElement->symtable;
+	return list->firstElement->symtable;
 }
 
 void symDLL_GetValue( symDLList_t *list, bst_node_t **dataPtr ) {

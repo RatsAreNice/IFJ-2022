@@ -110,6 +110,25 @@ int bst_insert(bst_node_t **tree, char* key, int type, funData_t* funData) {
 
 }
 
+returnType_t translate(char* tokenvalue)
+{
+
+  if(strcmp(tokenvalue, "int") == 0)
+      return symInt;
+  else if(strcmp(tokenvalue, "float") == 0)
+      return symFloat;
+  else if(strcmp(tokenvalue, "string") == 0)
+      return symString;
+  else if(strcmp(tokenvalue, "?float") == 0)
+      return symQFloat;
+  else if(strcmp(tokenvalue, "?int") == 0)
+      return symQInt;
+  else if(strcmp(tokenvalue, "?string") == 0)
+      return symQString;
+  else
+      return symVoid;
+}
+
 void bst_replace_by_rightmost(bst_node_t *target, bst_node_t **tree) {
   if ((*tree)->right->right!=NULL)
   {

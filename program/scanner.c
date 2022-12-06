@@ -97,6 +97,7 @@ token_t make_token(token_type typ, char* hodnota){
     token_t lexem;
     lexem.type = typ;
     lexem.value = hodnota;
+    printf("Vytvoreny lexem: %d:%s\n",lexem.type,lexem.value);
     return lexem;
 }
 
@@ -190,7 +191,6 @@ token_t get_token(int skip){
                         a = getchar();
                     }
                 }
-
                 if((a >= 97 && a <= 122) || a == '_' || (a >= 65 && a <= 90)){              //male pismeno / velke pismeno / _
                     state = IDfunkcie;
                 }

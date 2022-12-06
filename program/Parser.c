@@ -18,7 +18,6 @@ parser 'states'?
 <fcall>
 <callargs>
 <ncallargs>
-<retval>
 <vals>
 */
 #define DEBUG
@@ -35,6 +34,7 @@ parser 'states'?
 #include "Parser.h"
 #include "symdll.h"
 #include "test.h"
+#include "semantic.h"
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -48,33 +48,25 @@ bool p_prolog(token_t * token);
 bool p_prolog_sub1(token_t * token);
 bool p_prolog_sub2(token_t * token);
 
-bool p_body(token_t * token, bool defallowed, ASSnode_t *astree);
+bool p_body(token_t * token, bool defallowed, ASSnode_t *astree, bool mainreturn, returnType_t rettyp);
 
-bool p_fundec(token_t * token);
-bool p_fparams(token_t * token);
-bool p_nparam(token_t * token);
+bool p_fundec(token_t * token, ASSnode_t *astree);
+bool p_fparams(token_t * token, ASSnode_t *astree, funData_t* newfunc);
+bool p_nparam(token_t *token, ASSnode_t *astree, funData_t* newfunc);
 
 //bool p_expr(token_t * token);
 
 bool p_rettype(token_t * token);
 bool p_type(token_t * token);
 
-bool p_nodefbody(token_t * token);
-
-bool p_ifstat(token_t * token);
-bool p_ifbody(token_t *token);
-bool p_elsebody(token_t *token);
-
-bool p_whilestat(token_t * token);
-bool p_whilebody(token_t * token);
-
 bool p_assigned(token_t *token, ASSnode_t *astree);
 bool p_const(token_t * token, token_type expect1, token_type expect2);
 bool p_fcall(token_t *token, ASSnode_t *astree);
-bool p_callargs(token_t * token, ASSnode_t *astree);
-bool p_ncallargs(token_t *token, ASSnode_t *astree);
-bool p_retval(token_t * token);
-bool p_vals(token_t *token, ASSnode_t* astree);
+bool p_callargs(token_t *token, ASSnode_t *astree, bst_node_t *symtableentry, int* paramcount);
+bool p_ncallargs(token_t *token, ASSnode_t *astree, bst_node_t *symtableentry, int* paramcount);
+bool p_vals(token_t *token, ASSnode_t* astree, bst_node_t *symtableentry, int* paramcount);
+
+symDLList_t symtablelist;
 
 typedef enum
 {
@@ -214,9 +206,9 @@ bool parse()
 
     bst_init(&mainsymtable);
     addDefaults(&mainsymtable);
-    symDLList_t symtablelist;
+    //symDLList_t symtablelist;
     symDLL_Init(&symtablelist);
-    symDLL_InsertLast(&symtablelist, mainsymtable);
+    symDLL_InsertLast(&symtablelist, mainsymtable, NULL);
     symDLL_First(&symtablelist);
 
     token_t token = get_token(NOSKIP);
@@ -235,7 +227,7 @@ bool parse()
 bool p_start(token_t * token, ASSnode_t **astree)
 {
     (*astree) = makeTree(RYAN_GOSLING, NULL, NULL);
-    return p_prolog(token) && p_body(token, true, *astree);
+    return p_prolog(token) && p_body(token, true, *astree, true, symInt);
 }
 
 bool p_prolog(token_t * token)
@@ -282,36 +274,43 @@ bool p_prolog_sub2(token_t * token)
     return false;
 }
 
-bool p_body(token_t * token, bool defallowed, ASSnode_t *astree)
+bool p_body(token_t * token, bool defallowed, ASSnode_t *astree, bool mainreturn, returnType_t rettyp)
 {
     token_t oldtoken;
-    if(astree != NULL) // DEBUG ONLY
-        true;//astree->right = makeTree(RYAN_GOSLING, NULL, NULL); // DEBUG ONLY
-    else // DEBUG ONLY
-        astree = makeTree(RYAN_GOSLING, NULL, makeTree(RYAN_GOSLING, NULL, NULL)); // DEBUG ONLY
     DPRINT(("Got to body with token %s of type %d\n", token->value, token->type));
     switch(token->type)
     {
         case funreturn:
             *token = get_token(SKIP);
             astree->left = makeTree(RETURN, NULL, NULL);
-            if(token->type == semicolon)
+            if(token->type == semicolon) // RETURN NOTHING, ONLY USABLE FOR VOID -> "RETURN;" 
             {
+                // Ak nie je v "main" tele programu, a return type nematchuje, chyba
+                if(!mainreturn && rettyp != symVoid)
+                {
+                    fprintf(stderr, "Semantic error: Attempted to return nothing in a non-void function.");
+                    exit(4);
+                }
                 *token = get_token(SKIP);
-                //astree->right = makeTree(RYAN_GOSLING, NULL, NULL);
-                return p_body(token, defallowed, astree->right);
+                astree->right = makeTree(RYAN_GOSLING, NULL, NULL);
+                return p_body(token, defallowed, astree->right, mainreturn, rettyp);
             }
-            else if(token->type == ID_function)
+            else if(token->type == ID_function) // RETURN CALLS ANOTHER FUNCTION -> "RETURN readi();" 
             {
-                *token = get_token(SKIP);
+                bst_node_t* symtableptr = isDefined(token, symDLL_GetFirst(&symtablelist)); // Pozrie, ci funkcie je deklarovana v symtabli a vrati ukazatel na nu.
+                if(!mainreturn && rettyp != symtableptr->funData->returnType) // Ak sme mimo hlavneho tela programu a navratovy typ sa nezhoduje s ocakavanym -> error.
+                {
+                    fprintf(stderr, "Semantic error: Wrong return type.");
+                    exit(4);
+                }
                 astree->left->left = makeTree(FUNCTIONCALL, NULL, makeLeaf(token));
                 if(p_fcall(token, astree->left->left))
                 {
                     if(token->type == semicolon)
                     {
                         *token = get_token(SKIP);
-                        //astree->right = makeTree(RYAN_GOSLING, NULL, NULL);
-                        return p_body(token,defallowed, astree->right);
+                        astree->right = makeTree(RYAN_GOSLING, NULL, NULL);
+                        return p_body(token, defallowed, astree->right, mainreturn, rettyp);
                     }
                     else
                     {
@@ -326,49 +325,37 @@ bool p_body(token_t * token, bool defallowed, ASSnode_t *astree)
                     exit(2);
                 }
             }
-            else
+            else // RETURN <EXPRESSION>;
             {
                 ASSnode_t *exprptr = NULL;
                 exprptr = expr(NULL, token, semicolon, semicolon, 0);
                 if(exprptr != NULL)
-                {
+                {   
                     astree->left->left = exprptr;
-                    *token = get_token(SKIP);
                     DPRINT(("%s\n", token->value));
-                    //astree->right = makeTree(RYAN_GOSLING, NULL, NULL);
-                    return p_body(token, defallowed,astree->right);
+                    *token = get_token(SKIP);
+                    //DPRINT(("%s\n", token->value));
+                    astree->right = makeTree(RYAN_GOSLING, NULL, NULL);
+                    return p_body(token, defallowed,astree->right, mainreturn, rettyp);
                 }
                 else
                 {
                     fprintf(stderr, "Syntax error: Failed to handle expression.\n");
                     exit(2);
                 }
-                //if(expr(NULL, token, semicolon, semicolon, 0) == 0)
-                //{
-                //    //DPRINT(("SECOND: %s was an expression in if statement\n", token.value));
-                //    *token = get_token(SKIP);
-                //    DPRINT(("%s\n", token->value));
-                //    return p_body(token, defallowed);
-                //}
-                //else
-                //{
-                //    fprintf(stderr, "Syntax error: Failed to handle expression.\n");
-                //    exit(2);
-                //}
             }
             return false;
 
         case ID_function:
             DPRINT(("ID FUNCTION %s of type %d\n", token->value, token->type));
             astree->left = makeTree(FUNCTIONCALL, NULL, makeLeaf(token));
-            *token = get_token(SKIP);
             if(p_fcall(token, astree->left))
             {
                 if(token->type == semicolon)
                 {
                     *token = get_token(SKIP);
-                    //astree->right = makeTree(RYAN_GOSLING, NULL, NULL);
-                    return p_body(token,defallowed, astree->right);
+                    astree->right = makeTree(RYAN_GOSLING, NULL, NULL);
+                    return p_body(token,defallowed, astree->right, mainreturn, rettyp);
                 }
                 else
                 {
@@ -388,8 +375,8 @@ bool p_body(token_t * token, bool defallowed, ASSnode_t *astree)
             if(p_const(token, semicolon, semicolon))
             {
                 *token = get_token(SKIP);
-                //astree->right = makeTree(RYAN_GOSLING, NULL, NULL);
-                return true && p_body(token, defallowed, astree->right);
+                astree->right = makeTree(RYAN_GOSLING, NULL, NULL);
+                return true && p_body(token, defallowed, astree->right, mainreturn, rettyp);
             }
             else
             {
@@ -401,15 +388,18 @@ bool p_body(token_t * token, bool defallowed, ASSnode_t *astree)
             *token = get_token(SKIP);
             if(token->type != assign)
             {
+                if(isDefined(&oldtoken, symtablelist.activeElement->symtable) == NULL)
+                {
+                    fprintf(stderr,"Semantic analysis error: Variable %s is not defined.\n", oldtoken.value);
+                    exit(5);
+                }
                 ASSnode_t* exprptr = NULL;
                 exprptr = expr(&oldtoken, token, semicolon, semicolon, 0);
                 if(exprptr != NULL)
-                //if (expr(&oldtoken, token, semicolon, semicolon, 0) == 0)
                 {   
-                    //astree->left = exprptr;
                     *token = get_token(SKIP);
-                    //astree->right = makeTree(RYAN_GOSLING, NULL, NULL);
-                    return true && p_body(token, defallowed, astree->right);
+                    astree->right = makeTree(RYAN_GOSLING, NULL, NULL);
+                    return true && p_body(token, defallowed, astree->right, mainreturn, rettyp);
                 }
                 else
                 {
@@ -419,15 +409,14 @@ bool p_body(token_t * token, bool defallowed, ASSnode_t *astree)
             }
             else
             {
+                bst_insert(&(symtablelist.activeElement->symtable),oldtoken.value,token->type, NULL);
                 astree->left = makeTree(ASSIGN, NULL, makeLeaf(&oldtoken));
-                //ASSnode_t* assignment = makeTree(ASSIGN, NULL, makeLeaf(token));
-                //ASSnode_t** assignmentptr = &assignment;
                 *token = get_token(SKIP);
                 if(p_assigned(token, astree->left))
                 {
                     *token = get_token(SKIP);
-                    //astree->right = makeTree(RYAN_GOSLING, NULL, NULL);
-                    return true && p_body(token, defallowed, astree->right);
+                    astree->right = makeTree(RYAN_GOSLING, NULL, NULL);
+                    return true && p_body(token, defallowed, astree->right, mainreturn, rettyp);
                 }
                 else
                 {
@@ -443,8 +432,18 @@ bool p_body(token_t * token, bool defallowed, ASSnode_t *astree)
             }
             else
             {
+                astree->left = makeTree(FDEC, NULL, makeTree(RYAN_GOSLING, NULL, NULL));
                 *token = get_token(SKIP);
-                return p_fundec(token) && p_body(token, defallowed, astree->right);
+                if(p_fundec(token, astree->left))
+                {
+                    astree->right = makeTree(RYAN_GOSLING, NULL, NULL);
+                    return p_body(token, defallowed, astree->right, mainreturn, rettyp);
+                }
+                else
+                {
+                    fprintf(stderr, "Syntax error: Unknown error in function declaration.\n");
+                    exit(2);
+                }
             }
         case epilog:
             if(!defallowed)
@@ -464,34 +463,55 @@ bool p_body(token_t * token, bool defallowed, ASSnode_t *astree)
                     return true;
             }
         case funif:
-            return p_ifstat(token) && p_body(token, defallowed, astree->right);
+            astree->left = makeTree(IF, NULL, NULL);
+            if(p_ifstat(token, astree->left, mainreturn, rettyp))
+            {
+                astree->right = makeTree(RYAN_GOSLING, NULL, NULL);
+                return p_body(token, defallowed, astree->right, mainreturn, rettyp);
+            }
+            else
+            {
+                fprintf(stderr, "Syntax error: Unknown error in if statement\n");
+                exit(2);
+            }
+            
         case funwhile:
-            return p_whilestat(token) && p_body(token, defallowed, astree->right);
+            astree->left = makeTree(WHILE, NULL, NULL);
+            if(p_whilestat(token, astree->left, mainreturn, rettyp))
+            {
+                astree->right = makeTree(RYAN_GOSLING, NULL, NULL);
+                return p_body(token, defallowed, astree->right, mainreturn, rettyp);
+            }
+            else
+            {
+                fprintf(stderr, "Syntax error: Unknown error in while statement\n");
+                exit(2);
+            }
         case rsetbracket:
             if(!defallowed)
             {
+                //if(!mainreturn)
+                //{
+                //    symDLL_Previous(&symtablelist);
+                //    symDLL_DeleteLast(&symtablelist);
+                //}
                 *token = get_token(SKIP);
                 return true;
             }
             else
             {
-                fprintf(stderr, "Syntax error: Didn't get what expected :(");
+                fprintf(stderr, "Syntax error: Unexpected token '}'.\n");
                 exit(2);
             }
         case eof:
             if(defallowed)
                 return true;
         default:
-            fprintf(stderr, "Syntax error: Didn't get what expected :(");
+            fprintf(stderr, "Syntax error: Didn't get what expected :(\n");
             exit(2);
     }
     exit(0);
 }
-
-//bool p_expr(token_t * oldtoken, token_t * token)
-//{
-//
-//}
 
 bool p_const(token_t * token, token_type expect1, token_type expect2)
 {
@@ -525,22 +545,18 @@ bool p_assigned(token_t *token, ASSnode_t *astree)
     if(token->type == ID_function)
     {
         astree->left = makeTree(FUNCTIONCALL, NULL, makeLeaf(token));
-        *token = get_token(SKIP);
         return p_fcall(token, astree->left);
     }
-    else //if(token->type == ID_variable)
+    else
     {
         token_t oldtoken = *token;
         *token = get_token(SKIP);
-        //if(token->type != semicolon)
-        //{
         ASSnode_t* exprptr = NULL;
         exprptr = expr(&oldtoken, token, semicolon, semicolon, 0);
         if(exprptr != NULL)
         {
             DPRINT(("%s was an expression.\n", oldtoken.value));
             astree->left = exprptr;
-            //*token = get_token(SKIP);
             return true;
         }
         else
@@ -548,27 +564,35 @@ bool p_assigned(token_t *token, ASSnode_t *astree)
             fprintf(stderr, "Syntax error: Failed to handle expression.\n");
             exit(2);
         }
-        //}
-        //else
-        //    return true;
     }
-    //else if(token->type == ffloat || token->type == integer || token->type == string)
-    //    return p_const(token);
-    //else
-    //{
-    //    fprintf(stderr, "Syntax error: Expected a value, a function or variable, got %s\n", token->value);
-    //    exit(2);
-    //}
 }
 
 bool p_fcall(token_t *token, ASSnode_t *astree)
 {
-    if(astree == NULL) // DEBUG ONLY
-        astree = makeTree(FUNCTIONCALL, NULL, NULL); // DEBUG ONLY
+    //if(symtablelist.activeElement->fundata != NULL)
+    //{
+    //    //bool found = false;
+    //    //for(int i = 0; i < symtablelist.activeElement->fundata->ParamCount; i++)
+    //    //{
+    //    //    if(strcmp(symtablelist.activeElement->fundata->dependencies[i], token->value) == 0)
+    //    //    {
+    //    //        found = true;
+    //    //        break;
+    //    //    }
+    //    //}
+    //    //if(!found)
+    //    //{
+    //    //    symtablelist.activeElement->fundata->ParamCount += 1;
+    //    //    symtablelist.activeElement->fundata->dependencies = realloc(symtablelist.activeElement->fundata->dependencies, sizeof(char*))
+    //    //}
+    //}
+    bst_node_t* symtableptr = isDefined(token, symDLL_GetFirst(&symtablelist));
+    *token = get_token(SKIP);
     if(token->type == lbracket)
     {
+        int paramcount = 0;
         *token = get_token(SKIP);
-        if(p_callargs(token, astree))
+        if(p_callargs(token, astree, symtableptr, &paramcount))
         {
             DPRINT(("RETURNED WITH: %s\n",token->value));
             return true;
@@ -586,24 +610,35 @@ bool p_fcall(token_t *token, ASSnode_t *astree)
     }
 }
 
-bool p_callargs(token_t *token, ASSnode_t *astree)
+bool p_callargs(token_t *token, ASSnode_t *astree, bst_node_t *symtableentry, int* paramcount)
 {
     if(token->type == rbracket)
     {
+        if(symtableentry->funData->ParamCount != *paramcount)
+        {
+            fprintf(stderr, "Semantic error: Argument count mismatch for %s, expected: %d, got %d.\n", symtableentry->key, symtableentry->funData->ParamCount, *paramcount);
+            exit(4);
+        }
         *token = get_token(SKIP);
         return true;
     }
     else
     {
+        *paramcount += 1;
         astree->left = makeTree(ARGS, NULL, NULL);
-        return p_vals(token, astree->left) && p_ncallargs(token, astree->left);
+        return p_vals(token, astree->left, symtableentry, paramcount) && p_ncallargs(token, astree->left, symtableentry, paramcount);
     }
 }
 
-bool p_ncallargs(token_t *token, ASSnode_t *astree)
+bool p_ncallargs(token_t *token, ASSnode_t *astree, bst_node_t *symtableentry, int* paramcount)
 {
     if(token->type == rbracket)
     {
+        if(symtableentry->funData->ParamCount != -1 && symtableentry->funData->ParamCount != *paramcount)
+        {
+            fprintf(stderr, "ASSSSSSSemantic error: Argument count mismatch for %s, expected: %d, got %d.\n", symtableentry->key, symtableentry->funData->ParamCount, *paramcount);
+            exit(4);
+        }
         *token = get_token(SKIP);
         return true;
     }
@@ -611,7 +646,8 @@ bool p_ncallargs(token_t *token, ASSnode_t *astree)
     {
         astree->right = makeTree(ARGS, NULL, NULL);
         *token = get_token(SKIP);
-        return p_vals(token, astree->right) && p_ncallargs(token, astree->right);
+        *paramcount += 1;
+        return p_vals(token, astree->right, symtableentry, paramcount) && p_ncallargs(token, astree->right, symtableentry, paramcount);
     }
     else
     {
@@ -620,13 +656,27 @@ bool p_ncallargs(token_t *token, ASSnode_t *astree)
     }
 }
 
-bool p_vals(token_t *token, ASSnode_t* astree)
+bool p_vals(token_t *token, ASSnode_t* astree, bst_node_t *symtableentry, int* paramcount)
 {
     DPRINT(("Called p_vals with %s\n", token->value));
     if(token->type == ID_function)
     {
+        bst_node_t* symtableptr = isDefined(token, symDLL_GetFirst(&symtablelist));
+        if(symtableentry->funData->ParamCount != -1)
+        {
+            if(symtableentry->funData->ParamCount < *paramcount)
+            {
+                fprintf(stderr, "Semantic error: Argument count mismatch for %s, expected: %d, got %d.\n", symtableentry->key, symtableentry->funData->ParamCount, *paramcount);
+                exit(4);
+            }
+            if (symtableentry->funData->paramTypes[(*paramcount)-1] != symtableptr->funData->returnType)
+            {
+                fprintf(stderr, "Semantic error: Argument type %d number %d doesn't match return type %d of function %s\n",
+                        symtableentry->funData->paramTypes[(*paramcount)-1], *paramcount, symtableptr->funData->returnType, symtableptr->key);
+                exit(4);
+            }
+        }
         astree->left = makeTree(FUNCTIONCALL, NULL, makeLeaf(token));
-        *token = get_token(SKIP);
         return p_fcall(token, astree->left);
     }
     else
@@ -637,6 +687,20 @@ bool p_vals(token_t *token, ASSnode_t* astree)
             {
                 if(oldtoken.type == ID_variable || oldtoken.type == ffloat || oldtoken.type == integer || oldtoken.type == string)
                 {
+                    if(symtableentry->funData->ParamCount != -1)
+                    {   
+                        if(symtableentry->funData->ParamCount < *paramcount)
+                        {
+                            fprintf(stderr, "Semantic error: Argument count mismatch for %s, expected: %d, got %d.\n", symtableentry->key, symtableentry->funData->ParamCount, *paramcount);
+                            exit(4);
+                        }
+                        else if(oldtoken.type != ID_variable && oldtoken.type != symtableentry->funData->paramTypes[(*paramcount)-1])
+                        {
+                            fprintf(stderr, "Semantic error: Argument type %d number %d doesn't match type %d of literal %s\n",
+                            symtableentry->funData->paramTypes[(*paramcount)-1], *paramcount, oldtoken.type, oldtoken.value);
+                            exit(4);
+                        }
+                    }
                     astree->left = makeLeaf(&oldtoken);
                     return true;
                 }
@@ -645,31 +709,15 @@ bool p_vals(token_t *token, ASSnode_t* astree)
                     fprintf(stderr, "Syntax error: Expected fID, vID or constant in function arg, got %s.\n", token->value);
                     exit(2);
                 }
-                //if(expr(&oldtoken, token, comma, rbracket, 0) == 0)
-                //{
-                //    DPRINT(("FIRST: %s was an expression in if statement\n", token->value));
-                //    //*token = get_token(SKIP);
-                //    DPRINT(("%s\n", token->value));
-                //    return true;
-                //}
-                //else
-                //{
-                //    fprintf(stderr, "Syntax error: Failed to handle expression.\n");
-                //    exit(2);
-                //}
             }
         else
         {
-            //fprintf(stderr, "Syntax error: Unexpected symbol in fcall: %s.\n", token->value);
-            //exit(2);
             ASSnode_t *exprptr = NULL;
             exprptr = expr(&oldtoken, token, comma, rbracket, 0);
             if(exprptr != NULL)
-            //if(expr(&oldtoken, token, comma, rbracket, 0) == 0)
             {
                 DPRINT(("SECOND: %s was an expression in if statement\n", oldtoken.value));
                 astree->left = exprptr;
-                //*token = get_token(SKIP);
                 DPRINT(("%s\n", token->value));
                 return true;
             }
@@ -682,7 +730,7 @@ bool p_vals(token_t *token, ASSnode_t* astree)
     }
 }
 
-bool p_ifstat(token_t *token)
+bool p_ifstat(token_t * token, ASSnode_t *astree, bool mainreturn, returnType_t rettyp)
 {
     *token = get_token(SKIP);
     if(token->type == lbracket)
@@ -691,12 +739,13 @@ bool p_ifstat(token_t *token)
         if(token->type == ID_function)
         {
             DPRINT(("Calling fcall on %s\n", token->value));
-            *token = get_token(SKIP);
-            if(p_fcall(token, NULL))
+            astree->left = makeTree(FUNCTIONCALL, NULL, makeLeaf(token));
+            if(p_fcall(token, astree->left))
             {
                 *token = get_token(SKIP);
+                astree->right = makeTree(THEN, NULL, NULL);
                 DPRINT(("Calling ifbody with %s\n", token->value));
-                return p_ifbody(token);
+                return p_ifbody(token, astree->right, mainreturn, rettyp);
             }
             else
             {
@@ -709,12 +758,12 @@ bool p_ifstat(token_t *token)
             ASSnode_t *exprptr = NULL;
             exprptr = expr(NULL, token, rbracket, rbracket, 0);
             if(exprptr != NULL)
-            //if(expr(NULL, token, rbracket, rbracket, 0) == 0)
             {
-                DPRINT(("%s was an expression in if statement\n", token->value));
+                astree->left = exprptr;
+                astree->right = makeTree(THEN, NULL, NULL);
                 *token = get_token(SKIP);
                 DPRINT(("Calling ifbody with %s\n", token->value));
-                return p_ifbody(token);
+                return p_ifbody(token, astree->right, mainreturn, rettyp);
             }
             else
             {
@@ -730,12 +779,14 @@ bool p_ifstat(token_t *token)
     }
 }
 
-bool p_ifbody(token_t *token)
+bool p_ifbody(token_t *token, ASSnode_t *astree, bool mainreturn, returnType_t rettyp)
 {
     if(token->type == lsetbracket)
     {
         *token = get_token(SKIP);
-        return p_body(token, false, NULL) && p_elsebody(token);
+        astree->left = makeTree(RYAN_GOSLING, NULL, NULL);
+        astree->right = makeTree(RYAN_GOSLING, NULL, NULL);
+        return p_body(token, false, astree->left, mainreturn, rettyp) && p_elsebody(token, astree->right, mainreturn, rettyp);
     }
     else
     {
@@ -744,7 +795,7 @@ bool p_ifbody(token_t *token)
     }
 }
 
-bool p_elsebody(token_t *token)
+bool p_elsebody(token_t *token, ASSnode_t *astree, bool mainreturn, returnType_t rettyp)
 {
     if(token->type == funelse)
     {
@@ -752,7 +803,7 @@ bool p_elsebody(token_t *token)
         if(token->type == lsetbracket)
         {
             *token = get_token(SKIP);
-            return p_body(token, false, NULL);
+            return p_body(token, false, astree, mainreturn, rettyp);
         }
         else
         {
@@ -767,7 +818,7 @@ bool p_elsebody(token_t *token)
     }
 }
 
-bool p_whilestat(token_t *token)
+bool p_whilestat(token_t * token, ASSnode_t *astree, bool mainreturn, returnType_t rettyp)
 {
     *token = get_token(SKIP);
     if(token->type == lbracket)
@@ -776,12 +827,13 @@ bool p_whilestat(token_t *token)
         if(token->type == ID_function)
         {
             DPRINT(("Calling fcall on %s\n", token->value));
-            *token = get_token(SKIP);
-            if(p_fcall(token, NULL))
+            astree->left = makeTree(FUNCTIONCALL, NULL, makeLeaf(token));
+            if(p_fcall(token, astree->left))
             {
                 *token = get_token(SKIP);
+                astree->right = makeTree(RYAN_GOSLING, NULL, NULL);
                 DPRINT(("Calling whilebody with %s\n", token->value));
-                return p_whilebody(token);
+                return p_whilebody(token, astree->right, mainreturn, rettyp);
             }
             else
             {
@@ -795,12 +847,13 @@ bool p_whilestat(token_t *token)
             ASSnode_t *exprptr = NULL;
             exprptr = expr(NULL, token, rbracket, rbracket, 0);
             if(exprptr != NULL)
-            //if(expr(NULL, token, rbracket, rbracket, 0) == 0)
             {
+                astree->left = exprptr;
                 DPRINT(("%s was an expression in if statement\n", token->value));
                 *token = get_token(SKIP);
+                astree->right = makeTree(RYAN_GOSLING, NULL, NULL);
                 DPRINT(("Calling whilebody with %s\n", token->value));
-                return p_whilebody(token);
+                return p_whilebody(token, astree->right,mainreturn, rettyp);
             }
             else
             {
@@ -816,12 +869,12 @@ bool p_whilestat(token_t *token)
     }
 }
 
-bool p_whilebody(token_t * token)
+bool p_whilebody(token_t * token, ASSnode_t *astree, bool mainreturn, returnType_t rettyp)
 {
     if(token->type == lsetbracket)
     {
         *token = get_token(SKIP);
-        return p_body(token, false, NULL);
+        return p_body(token, false, astree, mainreturn, rettyp);
     }
     else
     {
@@ -830,12 +883,27 @@ bool p_whilebody(token_t * token)
     }
 }
 
-bool p_fundec(token_t * token)
+bool p_fundec(token_t * token, ASSnode_t *astree)
 {
     if(token->type == ID_function)
     {
+        funData_t* newfunc = safeMalloc(sizeof(struct funData));
+        newfunc->defined = true;
+        newfunc->ParamCount = 0;
+        newfunc->depCount = 0;
+        newfunc->dependencies = NULL;
+        newfunc->paramTypes = NULL;
+
+        astree->left = makeTree(FDEC_DATA, makeTree(FDEC_DATA_INF, makeLeaf(token), NULL), NULL);
+
         *token = get_token(SKIP);
-        return p_funargs(token) && p_funbody(token);
+
+        bst_node_t *newscope;
+        bst_init(&newscope);
+        symDLL_InsertLast(&symtablelist, newscope, newfunc);
+        symDLL_Next(&symtablelist);
+
+        return p_funargs(token, astree->left, newfunc) && p_funbody(token, astree, newfunc);
     }
     else
     {
@@ -845,12 +913,13 @@ bool p_fundec(token_t * token)
     return true;
 }
 
-bool p_funargs(token_t * token)
+bool p_funargs(token_t * token, ASSnode_t *astree, funData_t* newfunc)
 {
     if(token->type == lbracket)
     {
         *token = get_token(SKIP);
-        return p_fparams(token);
+        astree->right = makeTree(FDEC_PARAMS, NULL, NULL);
+        return p_fparams(token, astree->right, newfunc);
     }
     else
     {
@@ -859,13 +928,19 @@ bool p_funargs(token_t * token)
     }
 }
 
-bool p_funbody(token_t * token)
+bool p_funbody(token_t * token, ASSnode_t *astree, funData_t* newfunc)
 {
     if(token->type == colon)
     {
         *token = get_token(SKIP);
         if(token->type == funvoid || token->type == type)
+        {
+            astree->left->left->right = makeLeaf(token);
+            newfunc->returnType = translate(token->value);
+            bst_node_t* topsymtable = symDLL_GetFirst(&symtablelist);
+            bst_insert(&topsymtable, astree->left->left->left->Patrick_Bateman->value,ID_function,newfunc);
             *token = get_token(SKIP);
+        }
         else
         {
             fprintf(stderr, "Syntax error: Expected return type of function, got '%s'\n", token->value);
@@ -879,8 +954,35 @@ bool p_funbody(token_t * token)
     }
     if(token->type == lsetbracket)
     {
+        //returnType_t rettype;
         *token = get_token(SKIP);
-        return p_body(token, false, NULL);
+        // Preložiť typ na returntyp_t
+        //if(strcmp(astree->left->left->right->Patrick_Bateman->value, "int") == 0)
+        //    rettype = symInt;
+        //else if(strcmp(astree->left->left->right->Patrick_Bateman->value, "float") == 0)
+        //    rettype = symFloat;
+        //else if(strcmp(astree->left->left->right->Patrick_Bateman->value, "string") == 0)
+        //    rettype = symString;
+        //else if(strcmp(astree->left->left->right->Patrick_Bateman->value, "?float") == 0)
+        //    rettype = symQFloat;
+        //else if(strcmp(astree->left->left->right->Patrick_Bateman->value, "?int") == 0)
+        //    rettype = symQInt;
+        //else if(strcmp(astree->left->left->right->Patrick_Bateman->value, "?string") == 0)
+        //    rettype = symQString;
+        //else
+        //    rettype = astree->left->left->right->Patrick_Bateman->type;
+        if(p_body(token, false, astree->right, false, translate(astree->left->left->right->Patrick_Bateman->value)))
+        {
+            symDLL_Previous(&symtablelist);
+            symDLL_DeleteLast(&symtablelist);
+            return true;
+        }
+        else
+        {
+            fprintf(stderr, "Unknown error in function declaration\n");
+            exit(2);
+        }
+        //return p_body(token, false, astree->right, false, translate(astree->left->left->right->Patrick_Bateman->value));
     }
     else
     {
@@ -890,7 +992,7 @@ bool p_funbody(token_t * token)
     return true;
 }
 
-bool p_fparams(token_t * token)
+bool p_fparams(token_t * token, ASSnode_t *astree, funData_t* newfunc)
 {
     if(token->type == rbracket)
     {
@@ -899,13 +1001,18 @@ bool p_fparams(token_t * token)
     }
     else if(token->type == type)
     {
+        newfunc->ParamCount += 1;
+        newfunc->paramTypes = realloc(newfunc->paramTypes, (newfunc->ParamCount)*sizeof(int));
+        newfunc->paramTypes[newfunc->ParamCount-1] = translate(token->value);
+        astree->left = makeTree(FDEC_NPARAM, makeLeaf(token), NULL);
         DPRINT(("%s TYPE IS TYPE \n", token->value));
         *token = get_token(SKIP);
-        DPRINT(("%s TYPE IS VAR \n", token->value));
         if(token->type == ID_variable)
         {
+            astree->left->right = makeLeaf(token);
+            DPRINT(("%s TYPE IS VAR \n", token->value));
             *token = get_token(SKIP);
-            return p_nparam(token);
+            return p_nparam(token, astree, newfunc);
         }
         else
         {
@@ -920,7 +1027,7 @@ bool p_fparams(token_t * token)
     }
 }
 
-bool p_nparam(token_t *token)
+bool p_nparam(token_t *token, ASSnode_t *astree, funData_t* newfunc)
 {
     if(token->type == rbracket)
     {
@@ -930,7 +1037,8 @@ bool p_nparam(token_t *token)
     else if(token->type == comma)
     {
         *token = get_token(SKIP);
-        return p_fparams(token);
+        astree->right = makeTree(FDEC_PARAMS, NULL, NULL);
+        return p_fparams(token, astree->right, newfunc);
     }
     else
     {
