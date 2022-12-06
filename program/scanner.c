@@ -97,7 +97,7 @@ token_t make_token(token_type typ, char* hodnota){
     token_t lexem;
     lexem.type = typ;
     lexem.value = hodnota;
-    printf("Vytvoreny lexem: %d:%s\n",lexem.type,lexem.value);
+    fprintf(stderr,"Vytvoreny lexem: %d:%s\n",lexem.type,lexem.value);
     return lexem;
 }
 

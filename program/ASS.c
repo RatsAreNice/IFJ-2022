@@ -262,6 +262,7 @@ void LTCOMP(ASSnode_t* node) {
   TOK_PATH(node) = TOK_PATH(node->left);
   TOK_PATH(node)->value = tempvar;
   TOK_PATH(node)->type = bbool;
+  node->leaf = true;
   FREESONS
 }
 void GTCOMP(ASSnode_t* node) {  // !!! COPYPASTE
@@ -273,6 +274,8 @@ void GTCOMP(ASSnode_t* node) {  // !!! COPYPASTE
   TOK_PATH(node) = TOK_PATH(node->left);
   TOK_PATH(node)->value = tempvar;
   TOK_PATH(node)->type = bbool;
+  node->isvar = true;
+  node->leaf = true;
   FREESONS
 }
 void EQCOMP(ASSnode_t* node) {
@@ -285,6 +288,7 @@ void EQCOMP(ASSnode_t* node) {
   TOK_PATH(node)->value = tempvar;
   TOK_PATH(node)->type = bbool;
   node->isvar = true;
+  node->leaf = true;
   FREESONS
 }
 void CONCATSTR(ASSnode_t* node) {
@@ -296,7 +300,48 @@ void CONCATSTR(ASSnode_t* node) {
   if (node->left->isvar) free(TOK_PATH(node->left)->value);
   TOK_PATH(node) = TOK_PATH(node->left);
   TOK_PATH(node)->value = tempvar;
+  node->leaf=true;
   node->isvar = true;
+}
+
+void generateif(ASSnode_t* node) {
+static unsigned int ifcount;
+
+printf("\nDEFVAR TF@var%d\n",++ifcount);
+printf("DEFVAR TF@JMPCOND%d\n",ifcount);
+printf("DEFVAR TF@VARTYPE%d\n",ifcount);
+// generate expression
+printf("MOVE TF@var%d %s\n",ifcount,checkvar(node->left));
+
+printf("TYPE TF@VARTYPE%d TF@var%d\n",ifcount,ifcount);
+printf("JUMPIFNEQ %%skipstrcheck%d TF@VARTYPE%d string@string\n",ifcount,ifcount);
+printf("EQ TF@JMPCOND%d TF@var%d string@\n",ifcount,ifcount);
+printf("JUMP %%IFBODY%d\n",ifcount);
+printf("LABEL %%skipstrcheck%d\n",ifcount);
+printf("JUMPIFNEQ %%skipintcheck%d TF@VARTYPE%d string@int\n",ifcount,ifcount);
+printf("EQ TF@JMPCOND1 TF@var%d int@0\n",ifcount);
+printf("JUMP %%IFBODY%d\n",ifcount);
+printf("LABEL %%skipintcheck%d\n",ifcount);
+printf("JUMPIFNEQ %%skipfloatcheck%d TF@VARTYPE%d string@float\n",ifcount,ifcount);
+printf("EQ TF@JMPCOND%d TF@var%d float@0x0p+0\n",ifcount,ifcount);
+printf("JUMP %%IFBODY%d\n",ifcount);
+printf("LABEL %%skipfloatcheck%d\n",ifcount);
+printf("MOVE TF@JMPCOND%d bool@true\n",ifcount);
+printf("JUMP %%IFBODY%d\n",ifcount);
+
+printf("LABEL %%IFBODY%d\n",ifcount);
+printf("JUMPIFNEQ %%IFTHEN%d TF@JMPCOND%d bool@true\n",ifcount,ifcount);
+//else
+
+
+printf("JUMP %%ENDIF%d\n",ifcount);
+printf("LABEL %%IFTHEN%d\n",ifcount);
+//then
+
+
+printf("LABEL %%ENDIF%d\n",ifcount);
+
+node->leaf=true;
 }
 
 void helpsolve(ASSnode_t* node) {
@@ -483,6 +528,10 @@ void helpsolve(ASSnode_t* node) {
       }
       CONCATSTR(node);
       break;
+    case IF:
+      if (node->left->leaf==false) helpsolve(node->left);
+      generateif(node);
+      break;
     case FUNCTIONCALL:
       LEAFCHECK
       break;
@@ -535,6 +584,9 @@ char* checkvar(ASSnode_t* node) {
         return strptr;
       case string:
         sprintf(strptr, "string@%s", TOK_PATH(node)->value);
+        return strptr;
+      case funnull:
+        sprintf(strptr, "nil@nil");
         return strptr;
 
       default:
