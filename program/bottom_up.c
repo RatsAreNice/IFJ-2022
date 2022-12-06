@@ -239,9 +239,23 @@ unit_t cmp_to_rule(unit_t rs[]){                  //funkcia dostane pravu stranu
         else{
             printf("chyba vytvarania podstromu");
         }
-    }else{
+    }
+    else if((rs[0].ttyp == -3 || rs[0].ttyp == -4) && rs[1].ttyp == 9 && (rs[2].ttyp == -3 || rs[2].ttyp == -4)){                    // S -> <strexp>|<exp> relid <strexp>|<exp>
+        neterminal.ttyp = -5;
+        neterminal.vvalue = rs[1].vvalue;
+        if(rs[1].vvalue.type == identity){
+            neterminal.uzol = makeTree(EQ,rs[0].uzol,rs[2].uzol);
+        }
+        else if(rs[1].vvalue.type == nidentity){
+            neterminal.uzol = makeTree(NEQ,rs[0].uzol,rs[2].uzol);
+        }
+        else{
+            printf("chyba vytvarania podstromu");
+        }
+    }
+    else{
         fprintf(stderr,"redukcia retazca ktory nieje na pravej strane ziadneho pravidla - nespravna syntax retazec = %d : %d : %d",rs[0].ttyp,rs[1].ttyp,rs[2].ttyp);
-        exit(2);
+        exit(7);
     }
     return neterminal;
 }
