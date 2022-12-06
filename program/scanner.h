@@ -3,7 +3,6 @@
 typedef enum{
     ID_function,        //abc
     ID_variable,        //$abc
-    string,             //"abc"
     type,               //?abc
     lbracket,           //(
     rbracket,           //)
@@ -18,12 +17,14 @@ typedef enum{
     lte,                //<=
     mte,                //>=
     semicolon,          //;
-    integer,            //56
     assign,             //=
     identity,           //===
     nidentity,          //!==
     comma,              //,
-    ffloat,              //13.56
+    integer,            //56
+    string,             //"abc"
+    ffloat,             //13.56
+    funnull,            //null
     dot,                //. (retazcovy operator)
     colon,              //:
     //klucove slova
@@ -31,7 +32,6 @@ typedef enum{
     funelse,            //else
     function,           //function
     funif,              //if
-    funnull,            //null
     funvoid,            //void
     funwhile,           //while
     prolog1,            //<?php             [VRATANE PRAZDNEHO ZNAKU ZA]

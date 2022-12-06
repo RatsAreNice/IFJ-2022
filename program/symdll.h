@@ -9,6 +9,7 @@
 
 typedef struct symDLLElement {
     bst_node_t* symtable;
+	funData_t* fundata;
 	struct symDLLElement *previousElement;
 	struct symDLLElement *nextElement;
 } *symDLLElementPtr;
@@ -25,13 +26,13 @@ void symDLL_Init( symDLList_t * );
 
 void symDLL_Dispose( symDLList_t * );
 
-void symDLL_InsertLast( symDLList_t *, bst_node_t *);
+void symDLL_InsertLast( symDLList_t *, bst_node_t* , funData_t* );
 
 void symDLL_First( symDLList_t * );
 
 void symDLL_Last( symDLList_t * );
 
-void symDLL_GetFirst( symDLList_t *, bst_node_t ** );
+bst_node_t * symDLL_GetFirst( symDLList_t *list);
 
 void symDLL_DeleteLast( symDLList_t * );
 

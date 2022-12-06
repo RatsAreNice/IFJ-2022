@@ -1,29 +1,34 @@
 #ifndef SYMTABLE_H
 #define SYMTABLE_H
 #include <stdbool.h>
+#include "scanner.h"
+
 typedef struct funData funData_t;
 typedef struct bst_node bst_node_t;
 
 void bst_init(bst_node_t **tree);
 
-typedef enum {
-    symInt,
-    symString,
-    symFloat,
+typedef enum returnType{
+    symInt = integer,
+    symString = string,
+    symFloat = ffloat,
     symQInt, // ?int type -> moze obsahovat null
     symQString, // ?string type -> moze obsahovat null
     symQFloat, // ?float type -> moze obsahovat null
-    symVoid,
-} symTypes_t;
+    symVoid = funvoid // nic nevracia
+} returnType_t;
 
 typedef struct funData
 {
   int ParamCount;
   int* paramTypes;
   int returnType;
+  int depCount;
+  char** dependencies;
   bool defined;
 
 } funData_t;
+
 // Uzol stromu
 typedef struct bst_node {
   char* key;               
@@ -33,6 +38,8 @@ typedef struct bst_node {
   struct bst_node *left;  
   struct bst_node *right; 
 } bst_node_t;
+
+returnType_t translate(char* tokenvalue);
 
 bst_node_t* bst_search(bst_node_t *tree, char* key);
 
