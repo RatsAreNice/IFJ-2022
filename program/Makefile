@@ -5,9 +5,15 @@ FILES= bottom_up.c Parser.c scanner.c symtable.c ASS.c ifj.c c206.c symdll.c tes
 
 all: compile 
 
-cleanpile: compile
+testlolec: compile jihad
+
+seg: compile valgrin
 
 compile:
 	$(CC) $(CFLAGS) $(FILES) -o ifj 
 
+jihad:
+	./ifj < testy/testassign.php > out.txt
 
+valgrin: 
+	valgrind ./ifj < testy/testassign.php > out.txt

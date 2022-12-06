@@ -1,16 +1,1 @@
-Token <?php  matches prolog_sub_1!
-Token declare(strict_types=1); matches prolog_sub_2!
-Got to body with token $XDEKE of type 1
-vytrolil som no was an expression.
-Got to body with token (null) of type 35
-Binary tree structure:
 
-  +-[22,-100]
-     |
-     |  +-[18,$XDEKE]
-     |  |
-     +-[15,-100]
-        |
-        +-[18,vytrolil som no]
-
-Parse result: 1

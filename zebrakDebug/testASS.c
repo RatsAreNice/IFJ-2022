@@ -45,7 +45,6 @@ int main() {
 
   root = &golec;
   print_code(root);
-  printf("WRITE LF@kredenc\n");
 
   return 0;
 }

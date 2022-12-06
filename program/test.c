@@ -1,7 +1,9 @@
 #include "test.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
 
 // Z test util druheho projektu IAL2. Autor: Michal Koutensky
 
@@ -21,23 +23,23 @@ void bst_print_subtree(ASSnode_t *tree, char *prefix, direction_t from) {
     char *current_space_prefix = make_prefix(prefix, space_prefix);
 
     if (from == left) {
-      printf("%s\n", current_subtree_prefix);
+      fprintf(allahprint, "%s\n", current_subtree_prefix);
     }
 
     bst_print_subtree(
         tree->right,
         from == left ? current_subtree_prefix : current_space_prefix, right);
 
-    printf("%s  +-", prefix);
+    fprintf(allahprint, "%s  +-", prefix);
     assprint(tree);
-    printf("\n");
+    fprintf(allahprint, "\n");
 
     bst_print_subtree(
         tree->left,
         from == right ? current_subtree_prefix : current_space_prefix, left);
 
     if (from == right) {
-      printf("%s\n", current_subtree_prefix);
+      fprintf(allahprint, "%s\n", current_subtree_prefix);
     }
 
     free(current_space_prefix);
@@ -46,12 +48,12 @@ void bst_print_subtree(ASSnode_t *tree, char *prefix, direction_t from) {
 }
 
 void PRINTTREEFAST(ASSnode_t *tree) {
-  printf("Binary tree structure:\n");
-  printf("\n");
+  fprintf(allahprint, "Binary tree structure:\n");
+  fprintf(allahprint, "\n");
   if (tree != NULL) {
     bst_print_subtree(tree, "", none);
   } else {
-    printf("Tree is empty\n");
+    fprintf(allahprint, "Tree is empty\n");
   }
   printf("\n");
 }
