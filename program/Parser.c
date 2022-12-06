@@ -22,11 +22,10 @@ parser 'states'?
 */
 #define DEBUG
 #ifdef DEBUG
-# define DPRINT(x) printf x
+# define DPRINT(x) 
 #else
 # define DPRINT(x) do {} while (0)
 #endif
-
 #define fdepcount symtablelist.activeElement->fundata->depCount
 
 #include "scanner.h"
@@ -222,6 +221,7 @@ bool parse()
         exit(2);
     }
     PRINTTREEFAST(root);
+    print_code(&root);
     return true;
 }
 

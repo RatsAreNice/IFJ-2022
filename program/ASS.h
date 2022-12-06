@@ -11,13 +11,17 @@ extern FILE *allahprint;
 #define VAR (token_type) - 1
 #define bbool (token_type) - 2
 #define TOK_PATH(x) x->Patrick_Bateman
-#define LEAFCHECK                   \
-  if (node->left->leaf == false) {  \
-    helpsolve(node->left);          \
-  }                                 \
-  if (node->right->leaf == false) { \
-    helpsolve(node->right);         \
-  }
+#define LEAFCHECK                     \
+  if (node->left != NULL){             \
+    if (node->left->leaf == false) {  \
+      helpsolve(node->left);          \
+    }                                 \
+  }                                   \
+  if(node->right != NULL) {         \
+    if (node->right->leaf == false) { \
+      helpsolve(node->right);         \
+    }                                 \
+    }
 // ZISK RELEVANTNYCH POINTEROV
 #define GETTHEM                      \
   char *str1 = checkvar(node->left); \

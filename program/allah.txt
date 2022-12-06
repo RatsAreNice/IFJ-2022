@@ -1,19 +1,38 @@
-Token <?php  matches prolog_sub_1!
-Token declare(strict_types=1); matches prolog_sub_2!
-Got to body with token $XDEKE of type 1
-vytrolil som no was an expression.
-Got to body with token $lolec of type 1
-$trollec was an expression.
-Got to body with token $lolec of type 1
-47 was an expression.
-Got to body with token (null) of type 35
 Binary tree structure:
 
-  +-[22,-100]
+     +-[28,-100]
      |
-     |  +-[18,$XDEKE]
+  +-[28,-100]
+     |
+     |        +-[28,-100]
+     |        |
+     |     +-[28,-100]
+     |     |  |
+     |     |  |  +-[19,write]
+     |     |  |  |
+     |     |  +-[20,-100]
+     |     |     |
+     |     |     +-[21,-100]
+     |     |        |
+     |     |        +-[19,GOOD
+]
+     |     |
+     |  +-[18,-100]
+     |  |  |
+     |  |  |  +-[28,-100]
+     |  |  |  |
+     |  |  +-[28,-100]
+     |  |     |
+     |  |     |  +-[19,write]
+     |  |     |  |
+     |  |     +-[20,-100]
+     |  |        |
+     |  |        +-[21,-100]
+     |  |           |
+     |  |           +-[19,BAD
+]
      |  |
-     +-[15,-100]
+     +-[16,-100]
         |
-        +-[18,vytrolil som no]
+        +-[19,null]
 Parse result: 1
