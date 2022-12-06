@@ -14,7 +14,7 @@ bool p_prolog_sub1(token_t * token);
 bool p_prolog_sub2(token_t * token);
 
 bool p_body(token_t * token, bool defallowed, ASSnode_t *astree, bool mainreturn, returnType_t rettyp);
-
+symDLList_t symtablelist;
 
 bool p_fundec(token_t * token, ASSnode_t *astree);
 bool p_funargs(token_t * token, ASSnode_t *astree, funData_t* newfunc);

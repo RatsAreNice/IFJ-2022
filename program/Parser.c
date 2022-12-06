@@ -66,7 +66,7 @@ bool p_callargs(token_t *token, ASSnode_t *astree, bst_node_t *symtableentry, in
 bool p_ncallargs(token_t *token, ASSnode_t *astree, bst_node_t *symtableentry, int* paramcount);
 bool p_vals(token_t *token, ASSnode_t* astree, bst_node_t *symtableentry, int* paramcount);
 
-symDLList_t symtablelist;
+//symDLList_t symtablelist;
 
 typedef enum
 {
@@ -95,6 +95,8 @@ void addDefaults(bst_node_t **symtable)
     new->returnType = symQString;
     new->ParamCount = 0;
     new->paramTypes = NULL;
+    new->depCount = 0;
+    new->dependencies = NULL;
     bst_insert(symtable, "reads", ID_function, new);
     
     //readi
@@ -104,6 +106,8 @@ void addDefaults(bst_node_t **symtable)
     new->returnType = symQInt;
     new->ParamCount = 0;
     new->paramTypes = NULL;
+    new->depCount = 0;
+    new->dependencies = NULL;
     bst_insert(symtable, "readi", ID_function, new);
 
     //readf
@@ -113,6 +117,8 @@ void addDefaults(bst_node_t **symtable)
     new->returnType = symQFloat;
     new->ParamCount = 0;
     new->paramTypes = NULL;
+    new->depCount = 0;
+    new->dependencies = NULL;
     bst_insert(symtable, "readf", ID_function, new);
 
     //write
@@ -122,6 +128,8 @@ void addDefaults(bst_node_t **symtable)
     new->returnType = symVoid;
     new->ParamCount = -1;
     new->paramTypes = NULL;
+    new->depCount = 0;
+    new->dependencies = NULL;
     bst_insert(symtable, "write", ID_function, new);
 
     //floatval
@@ -131,6 +139,8 @@ void addDefaults(bst_node_t **symtable)
     new->returnType = symFloat;
     new->ParamCount = 1;
     new->paramTypes = NULL;
+    new->depCount = 0;
+    new->dependencies = NULL;
     bst_insert(symtable, "floatval", ID_function, new);
 
     //intval
@@ -140,6 +150,8 @@ void addDefaults(bst_node_t **symtable)
     new->returnType = symInt;
     new->ParamCount = 1;
     new->paramTypes = NULL;
+    new->depCount = 0;
+    new->dependencies = NULL;
     bst_insert(symtable, "intval", ID_function, new);
 
     //strval
@@ -149,6 +161,8 @@ void addDefaults(bst_node_t **symtable)
     new->returnType = symString;
     new->ParamCount = 1;
     new->paramTypes = NULL;
+    new->depCount = 0;
+    new->dependencies = NULL;
     bst_insert(symtable, "strval", ID_function, new);
 
     //strlen
@@ -160,6 +174,8 @@ void addDefaults(bst_node_t **symtable)
     int* newparamtable = safeMalloc(sizeof(int)*new->ParamCount);
     newparamtable[0] = symString;
     new->paramTypes = newparamtable;
+    new->depCount = 0;
+    new->dependencies = NULL;
     bst_insert(symtable, "strlen", ID_function, new);
 
     //substring
@@ -173,6 +189,8 @@ void addDefaults(bst_node_t **symtable)
     newparamtable[1] = symInt;
     newparamtable[2] = symInt;
     new->paramTypes = newparamtable;
+    new->depCount = 0;
+    new->dependencies = NULL;
     bst_insert(symtable, "substring", ID_function, new);
 
     //ord
@@ -184,6 +202,8 @@ void addDefaults(bst_node_t **symtable)
     newparamtable = safeMalloc(sizeof(int)*new->ParamCount);
     newparamtable[0] = symString;
     new->paramTypes = newparamtable;
+    new->depCount = 0;
+    new->dependencies = NULL;
     bst_insert(symtable, "ord", ID_function, new);
 
     //chr
@@ -195,6 +215,8 @@ void addDefaults(bst_node_t **symtable)
     newparamtable = safeMalloc(sizeof(int)*new->ParamCount);
     newparamtable[0] = symInt;
     new->paramTypes = newparamtable;
+    new->depCount = 0;
+    new->dependencies = NULL;
     bst_insert(symtable, "chr", ID_function, new);
 
 }
