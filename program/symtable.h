@@ -12,7 +12,7 @@ typedef enum returnType{
     symInt = integer,
     symString = string,
     symFloat = ffloat,
-    symQInt = 0, // ?int type -> moze obsahovat null
+    symQInt, // ?int type -> moze obsahovat null
     symQString, // ?string type -> moze obsahovat null
     symQFloat, // ?float type -> moze obsahovat null
     symVoid = funvoid // nic nevracia

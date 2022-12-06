@@ -27,6 +27,7 @@ parser 'states'?
 # define DPRINT(x) do {} while (0)
 #endif
 
+#define fdepcount symtablelist.activeElement->fundata->depCount
 
 #include "scanner.h"
 #include "bottom_up.h"
@@ -289,7 +290,7 @@ bool p_body(token_t * token, bool defallowed, ASSnode_t *astree, bool mainreturn
                 if(!mainreturn && rettyp != symVoid)
                 {
                     fprintf(stderr, "Semantic error: Attempted to return nothing in a non-void function.");
-                    exit(4);
+                    exit(6);
                 }
                 *token = get_token(SKIP);
                 astree->right = makeTree(RYAN_GOSLING, NULL, NULL);
@@ -297,7 +298,7 @@ bool p_body(token_t * token, bool defallowed, ASSnode_t *astree, bool mainreturn
             }
             else if(token->type == ID_function) // RETURN CALLS ANOTHER FUNCTION -> "RETURN readi();" 
             {
-                bst_node_t* symtableptr = isDefined(token, symDLL_GetFirst(&symtablelist)); // Pozrie, ci funkcie je deklarovana v symtabli a vrati ukazatel na nu.
+                bst_node_t* symtableptr = checkDefined(token, symDLL_GetFirst(&symtablelist)); // Pozrie, ci funkcie je deklarovana v symtabli a vrati ukazatel na nu.
                 if(!mainreturn && rettyp != symtableptr->funData->returnType) // Ak sme mimo hlavneho tela programu a navratovy typ sa nezhoduje s ocakavanym -> error.
                 {
                     fprintf(stderr, "Semantic error: Wrong return type.");
@@ -388,7 +389,7 @@ bool p_body(token_t * token, bool defallowed, ASSnode_t *astree, bool mainreturn
             *token = get_token(SKIP);
             if(token->type != assign)
             {
-                if(isDefined(&oldtoken, symtablelist.activeElement->symtable) == NULL)
+                if(checkDefined(&oldtoken, symtablelist.activeElement->symtable) == NULL)
                 {
                     fprintf(stderr,"Semantic analysis error: Variable %s is not defined.\n", oldtoken.value);
                     exit(5);
@@ -569,24 +570,40 @@ bool p_assigned(token_t *token, ASSnode_t *astree)
 
 bool p_fcall(token_t *token, ASSnode_t *astree)
 {
-    //if(symtablelist.activeElement->fundata != NULL)
-    //{
-    //    //bool found = false;
-    //    //for(int i = 0; i < symtablelist.activeElement->fundata->ParamCount; i++)
-    //    //{
-    //    //    if(strcmp(symtablelist.activeElement->fundata->dependencies[i], token->value) == 0)
-    //    //    {
-    //    //        found = true;
-    //    //        break;
-    //    //    }
-    //    //}
-    //    //if(!found)
-    //    //{
-    //    //    symtablelist.activeElement->fundata->ParamCount += 1;
-    //    //    symtablelist.activeElement->fundata->dependencies = realloc(symtablelist.activeElement->fundata->dependencies, sizeof(char*))
-    //    //}
-    //}
-    bst_node_t* symtableptr = isDefined(token, symDLL_GetFirst(&symtablelist));
+    bst_node_t* symtableptr = NULL;
+    if(symtablelist.activeElement->fundata != NULL)
+    {
+        bool found = false;
+        for(int i = 0; i < symtablelist.activeElement->fundata->depCount; i++)
+        {
+            if(strcmp(symtablelist.activeElement->fundata->dependencies[i], token->value) == 0)
+            {
+                found = true;
+                break;
+            }
+        }
+        if(!found)
+        {
+            fdepcount += 1;
+            symtablelist.activeElement->fundata->dependencies = realloc(symtablelist.activeElement->fundata->dependencies, fdepcount * sizeof(char*));
+            symtablelist.activeElement->fundata->dependencies[fdepcount-1] = calloc(strlen(token->value)+1,1);
+            DPRINT(("%s added to dependency list at index %d \n", token->value, fdepcount-1));
+            strcpy(symtablelist.activeElement->fundata->dependencies[fdepcount-1], token->value);
+        }
+    }
+    else
+    {
+        symtableptr = checkDefined(token, symDLL_GetFirst(&symtablelist));
+        for(int i = 0; i < symtableptr->funData->depCount; i++)
+        {
+            if(bst_search(symDLL_GetFirst(&symtablelist),symtableptr->funData->dependencies[i]) == NULL)
+            {
+                fprintf(stderr, "Semantic error: Function %s, dependency of %s not defined.\n", symtableptr->funData->dependencies[i], token->value);
+                exit(3);
+            }
+        }
+    }
+    //bst_node_t* symtableptr = checkDefined(token, symDLL_GetFirst(&symtablelist));
     *token = get_token(SKIP);
     if(token->type == lbracket)
     {
@@ -614,7 +631,7 @@ bool p_callargs(token_t *token, ASSnode_t *astree, bst_node_t *symtableentry, in
 {
     if(token->type == rbracket)
     {
-        if(symtableentry->funData->ParamCount != *paramcount)
+        if(symtableentry != NULL && symtableentry->funData->ParamCount != -1 && symtableentry->funData->ParamCount != *paramcount)
         {
             fprintf(stderr, "Semantic error: Argument count mismatch for %s, expected: %d, got %d.\n", symtableentry->key, symtableentry->funData->ParamCount, *paramcount);
             exit(4);
@@ -634,9 +651,9 @@ bool p_ncallargs(token_t *token, ASSnode_t *astree, bst_node_t *symtableentry, i
 {
     if(token->type == rbracket)
     {
-        if(symtableentry->funData->ParamCount != -1 && symtableentry->funData->ParamCount != *paramcount)
+        if(symtableentry != NULL && symtableentry->funData->ParamCount != -1 && symtableentry->funData->ParamCount != *paramcount)
         {
-            fprintf(stderr, "ASSSSSSSemantic error: Argument count mismatch for %s, expected: %d, got %d.\n", symtableentry->key, symtableentry->funData->ParamCount, *paramcount);
+            fprintf(stderr, "Semantic error: Argument count mismatch for %s, expected: %d, got %d.\n", symtableentry->key, symtableentry->funData->ParamCount, *paramcount);
             exit(4);
         }
         *token = get_token(SKIP);
@@ -661,15 +678,22 @@ bool p_vals(token_t *token, ASSnode_t* astree, bst_node_t *symtableentry, int* p
     DPRINT(("Called p_vals with %s\n", token->value));
     if(token->type == ID_function)
     {
-        bst_node_t* symtableptr = isDefined(token, symDLL_GetFirst(&symtablelist));
-        if(symtableentry->funData->ParamCount != -1)
+        bst_node_t* symtableptr = checkDefined(token, symDLL_GetFirst(&symtablelist));
+        if(symtableentry != NULL && symtableentry->funData->ParamCount != -1)
         {
             if(symtableentry->funData->ParamCount < *paramcount)
             {
                 fprintf(stderr, "Semantic error: Argument count mismatch for %s, expected: %d, got %d.\n", symtableentry->key, symtableentry->funData->ParamCount, *paramcount);
                 exit(4);
             }
-            if (symtableentry->funData->paramTypes[(*paramcount)-1] != symtableptr->funData->returnType)
+            if(symtableentry->funData->paramTypes == NULL && symtableentry->funData->ParamCount > 0)
+            {
+
+            }
+            // checkParam(fundata, paramcount, typ)
+            //checkParam(symtableentry->funData, *paramcount, symtableptr->funData->returnType);
+            //else if (symtableentry->funData->paramTypes[(*paramcount)-1] != symtableptr->funData->returnType)
+            else if(!checkParam(symtableentry->funData, *paramcount, symtableptr->funData->returnType))
             {
                 fprintf(stderr, "Semantic error: Argument type %d number %d doesn't match return type %d of function %s\n",
                         symtableentry->funData->paramTypes[(*paramcount)-1], *paramcount, symtableptr->funData->returnType, symtableptr->key);
@@ -685,16 +709,23 @@ bool p_vals(token_t *token, ASSnode_t* astree, bst_node_t *symtableentry, int* p
         *token = get_token(SKIP);
         if(token->type == comma || token->type == rbracket || token->type == semicolon)
             {
-                if(oldtoken.type == ID_variable || oldtoken.type == ffloat || oldtoken.type == integer || oldtoken.type == string)
+                if(oldtoken.type == ID_variable || oldtoken.type == ffloat || oldtoken.type == integer || oldtoken.type == string || oldtoken.type == funnull)
                 {
-                    if(symtableentry->funData->ParamCount != -1)
+                    if(oldtoken.type == ID_variable)
+                        checkDefined(&oldtoken,symtablelist.activeElement->symtable);
+                    if(symtableentry != NULL && symtableentry->funData->ParamCount != -1)
                     {   
                         if(symtableentry->funData->ParamCount < *paramcount)
                         {
                             fprintf(stderr, "Semantic error: Argument count mismatch for %s, expected: %d, got %d.\n", symtableentry->key, symtableentry->funData->ParamCount, *paramcount);
                             exit(4);
                         }
-                        else if(oldtoken.type != ID_variable && oldtoken.type != symtableentry->funData->paramTypes[(*paramcount)-1])
+                        if(symtableentry->funData->paramTypes == NULL && symtableentry->funData->ParamCount > 0)
+                        {
+
+                        }
+                        else if(oldtoken.type != ID_variable && !checkParam(symtableentry->funData, *paramcount, oldtoken.type)
+                        /*oldtoken.type != symtableentry->funData->paramTypes[(*paramcount)-1]*/)
                         {
                             fprintf(stderr, "Semantic error: Argument type %d number %d doesn't match type %d of literal %s\n",
                             symtableentry->funData->paramTypes[(*paramcount)-1], *paramcount, oldtoken.type, oldtoken.value);
@@ -887,6 +918,11 @@ bool p_fundec(token_t * token, ASSnode_t *astree)
 {
     if(token->type == ID_function)
     {
+        if(bst_search(symDLL_GetFirst(&symtablelist), token->value) != NULL)
+        {
+            fprintf(stderr, "Semantic error: Function %s redefinition.\n", token->value);
+            exit(3);
+        }
         funData_t* newfunc = safeMalloc(sizeof(struct funData));
         newfunc->defined = true;
         newfunc->ParamCount = 0;
@@ -954,23 +990,7 @@ bool p_funbody(token_t * token, ASSnode_t *astree, funData_t* newfunc)
     }
     if(token->type == lsetbracket)
     {
-        //returnType_t rettype;
         *token = get_token(SKIP);
-        // Preložiť typ na returntyp_t
-        //if(strcmp(astree->left->left->right->Patrick_Bateman->value, "int") == 0)
-        //    rettype = symInt;
-        //else if(strcmp(astree->left->left->right->Patrick_Bateman->value, "float") == 0)
-        //    rettype = symFloat;
-        //else if(strcmp(astree->left->left->right->Patrick_Bateman->value, "string") == 0)
-        //    rettype = symString;
-        //else if(strcmp(astree->left->left->right->Patrick_Bateman->value, "?float") == 0)
-        //    rettype = symQFloat;
-        //else if(strcmp(astree->left->left->right->Patrick_Bateman->value, "?int") == 0)
-        //    rettype = symQInt;
-        //else if(strcmp(astree->left->left->right->Patrick_Bateman->value, "?string") == 0)
-        //    rettype = symQString;
-        //else
-        //    rettype = astree->left->left->right->Patrick_Bateman->type;
         if(p_body(token, false, astree->right, false, translate(astree->left->left->right->Patrick_Bateman->value)))
         {
             symDLL_Previous(&symtablelist);
@@ -1009,6 +1029,15 @@ bool p_fparams(token_t * token, ASSnode_t *astree, funData_t* newfunc)
         *token = get_token(SKIP);
         if(token->type == ID_variable)
         {
+            if(isDefined(token, symtablelist.activeElement->symtable))
+            {
+                fprintf(stderr, "Semantic error: Function parameter %s redefinition.\n", token->value);
+                exit(4);
+            }
+            else
+            {
+                bst_insert(&(symtablelist.activeElement->symtable), token->value, token->type, NULL);
+            }
             astree->left->right = makeLeaf(token);
             DPRINT(("%s TYPE IS VAR \n", token->value));
             *token = get_token(SKIP);
