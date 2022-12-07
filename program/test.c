@@ -23,23 +23,23 @@ void bst_print_subtree(ASSnode_t *tree, char *prefix, direction_t from) {
     char *current_space_prefix = make_prefix(prefix, space_prefix);
 
     if (from == left) {
-      fprintf(allahprint, "%s\n", current_subtree_prefix);
+      //fprintf(allahprint, "%s\n", current_subtree_prefix);
     }
 
     bst_print_subtree(
         tree->right,
         from == left ? current_subtree_prefix : current_space_prefix, right);
 
-    fprintf(allahprint, "%s  +-", prefix);
+    //fprintf(allahprint, "%s  +-", prefix);
     assprint(tree);
-    fprintf(allahprint, "\n");
+    //fprintf(allahprint, "\n");
 
     bst_print_subtree(
         tree->left,
         from == right ? current_subtree_prefix : current_space_prefix, left);
 
     if (from == right) {
-      fprintf(allahprint, "%s\n", current_subtree_prefix);
+      //fprintf(allahprint, "%s\n", current_subtree_prefix);
     }
 
     free(current_space_prefix);
@@ -48,12 +48,12 @@ void bst_print_subtree(ASSnode_t *tree, char *prefix, direction_t from) {
 }
 
 void PRINTTREEFAST(ASSnode_t *tree) {
-  fprintf(allahprint, "Binary tree structure:\n");
-  fprintf(allahprint, "\n");
+  //fprintf(allahprint, "Binary tree structure:\n");
+  //fprintf(allahprint, "\n");
   if (tree != NULL) {
     bst_print_subtree(tree, "", none);
   } else {
-    fprintf(allahprint, "Tree is empty\n");
+    //fprintf(allahprint, "Tree is empty\n");
   }
   printf("\n");
 }

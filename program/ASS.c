@@ -11,13 +11,13 @@ void ASSinit(ASSnode_t** tree) { *tree = NULL; }
 /// @param node node k printnutiu
 void assprint(ASSnode_t* node) {
   // if(node->OP)
-  fprintf(allahprint, "[%d,", node->OP);
+  //fprintf(allahprint, "[%d,", node->OP);
   // else
   //   printf("[-100,");
-  if (node->Patrick_Bateman != NULL)
-    fprintf(allahprint, "%s]", node->Patrick_Bateman->value);
-  else
-    fprintf(allahprint, "-100]");
+  //if (node->Patrick_Bateman != NULL)
+    //fprintf(allahprint, "%s]", node->Patrick_Bateman->value);
+  //else
+    //fprintf(allahprint, "-100]");
 }
 
 /// @brief Funkcia na tvorba uzlu
