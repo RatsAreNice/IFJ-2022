@@ -435,7 +435,7 @@ void generatedec(ASSnode_t* node){
   printf("JUMP %%skipdec%d\n",++deccount);
   // BODY OF FUN
   printf("LABEL %s\n",fid);
-  while (node->left->right!=NULL)
+  while (node->left->right->left!=NULL)
   {
     nparam = node->left->right->left;
     printf("DEFVAR LF@%s",TOK_PATH(nparam->right)->value);

@@ -3,8 +3,6 @@
 CREATEFRAME
 PUSHFRAME
 CREATEFRAME
-DEFVAR LF@$str1
-DEFVAR LF@$str2
 DEFVAR LF@%retintval
 DEFVAR LF@%retfloatval
 DEFVAR LF@%retsubstring
@@ -120,66 +118,22 @@ MOVE LF@%retintval int@0
 CREATEFRAME
 RETURN
 LABEL main
-MOVE LF@$str1 string@Toto je nejaky text v programu jazyka IFJ22
-DEFVAR LF@var0
-CONCAT LF@var0 LF@$str1 string@, ktery jeste trochu obohatime
-MOVE LF@$str2 LF@var0
-WRITE LF@$str1
-WRITE string@
-
-WRITE LF@$str2
-WRITE string@
-
-WRITE string@Pozice retezce "text" v $str2: 
-WRITE int@15
-WRITE string@
-
-WRITE string@Zadejte serazenou posloupnost vsech malych pismen a-h, 
+JUMP %skipdec1
+LABEL f
+DEFVAR TF@%rettype
+TYPE TF@%rettype LF@%retf
+JUMPIFNEQ %fEXIT4 TF@%rettype string@void
+RETURN
+LABEL %fEXIT4
+EXIT int@4LABEL %skipdec1JUMP %skipdec2
+LABEL g
+DEFVAR TF@%rettype
+TYPE TF@%rettype LF@%retg
+JUMPIFNEQ %gEXIT4 TF@%rettype string@int
+RETURN
+LABEL %gEXIT4
+EXIT int@4LABEL %skipdec2CREATEFRAME
+CALL f
 CREATEFRAME
-CALL reads
-MOVE LF@$str1 LF@%retreads
-
-DEFVAR TF@var1
-DEFVAR TF@var2
-TYPE TF@var1 LF@$str1
-TYPE TF@var2 LF@$str1
-JUMPIFEQ label0 TF@var1 TF@var2
-EXIT int@7
-LABEL label0
-DEFVAR LF@var3
-EQ LF@var3 LF@$str1 nil@nil
-NOT LF@var3 LF@var3
-
-DEFVAR TF@var1
-DEFVAR TF@JMPCOND1
-DEFVAR TF@VARTYPE1
-MOVE TF@var1 LF@var3
-TYPE TF@VARTYPE1 TF@var1
-JUMPIFNEQ %skipboolcheck1 TF@VARTYPE1 string@bool
-MOVE TF@JMPCOND1 TF@var1
-JUMP %IFBODY1
-LABEL %skipboolcheck1
-JUMPIFNEQ %skipstrcheck1 TF@VARTYPE1 string@string
-JUMPIFEQ %ELSE1 TF@var1 string@
-MOVE TF@JMPCOND1 bool@true
-JUMP %IFBODY1
-LABEL %skipstrcheck1
-JUMPIFNEQ %skipintcheck1 TF@VARTYPE1 string@int
-JUMPIFEQ %ELSE1 TF@var1 int@0
-MOVE TF@JMPCOND1 bool@true
-JUMP %IFBODY1
-LABEL %skipintcheck1
-JUMPIFNEQ %skipfloatcheck1 TF@VARTYPE1 string@float
-JUMPIFEQ %ELSE1 TF@var1 float@0x0p+0
-MOVE TF@JMPCOND1 bool@true
-JUMP %IFBODY1
-LABEL %skipfloatcheck1
-MOVE TF@JMPCOND1 bool@false
-JUMP %IFBODY1
-LABEL %IFBODY1
-JUMPIFEQ %IFTHEN1 TF@JMPCOND1 bool@true
-LABEL %ELSE1
-JUMP %ENDIF1
-LABEL %IFTHEN1
-LABEL %ENDIF1
+CALL g
 EXIT int@0
