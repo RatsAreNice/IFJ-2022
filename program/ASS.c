@@ -4,21 +4,21 @@
 
 #include "ASS.h"
 #include "Parser.h"
-//FILE* allahprint; debugovac print stromu
+FILE* allahprint; 
 
 void ASSinit(ASSnode_t** tree) { *tree = NULL; }
 
 /// @brief Debugovaci print stromu
 /// @param node node k printnutiu
 void assprint(ASSnode_t* node) {
-  // if(node->OP)
-  //fprintf(allahprint, "[%d,", node->OP);
-  // else
-  //   printf("[-100,");
-  //if (node->Patrick_Bateman != NULL)
-    //fprintf(allahprint, "%s]", node->Patrick_Bateman->value);
-  //else
-    //fprintf(allahprint, "-100]");
+   if(node->OP)
+  fprintf(allahprint, "[%d,", node->OP);
+   else
+     printf("[-100,");
+  if (node->Patrick_Bateman != NULL)
+    fprintf(allahprint, "%s]", node->Patrick_Bateman->value);
+  else
+    fprintf(allahprint, "-100]");
 }
 
 /// @brief Funkcia na tvorba uzlu
@@ -274,11 +274,16 @@ void GTCOMP(ASSnode_t* node) {  // !!! COPYPASTE
 }
 /// @brief pomocna funkcia na generaciu kodu
 /// @param node uzol premienaný na kód
-void EQCOMP(ASSnode_t* node) {
+void EQCOMP(ASSnode_t* node, bool neg) {
   char* tempvar = createVar();
   printf("DEFVAR LF@%s\n", tempvar);
   GETTHEM
   printf("EQ LF@%s %s %s\n", tempvar, str1, str2);
+  if (neg)
+  {
+    printf("NOT LF@%s LF@%s\n",tempvar,tempvar);
+  }
+  
   FREETHEM
   TOK_PATH(node) = TOK_PATH(node->left);
   TOK_PATH(node)->value = tempvar;
@@ -318,13 +323,21 @@ void MULTIPLY(ASSnode_t* node) {
 /// @brief pomocna funkcia na generaciu kodu
 /// @param node uzol premienaný na kód
 void generateif(ASSnode_t* node) {
+if (node->left->leaf==false)
+{
+  helpsolve(node->left);
+}
 static unsigned int ifcount;
 
 printf("\nDEFVAR TF@var%d\n",++ifcount);
 printf("DEFVAR TF@JMPCOND%d\n",ifcount);
 printf("DEFVAR TF@VARTYPE%d\n",ifcount);
 // generate expression
+
+fprintf(stderr,"OP: %d \n",node->OP);
 printf("MOVE TF@var%d %s\n",ifcount,checkvar(node->left));
+
+
 printf("TYPE TF@VARTYPE%d TF@var%d\n",ifcount,ifcount);
 printf("JUMPIFNEQ %%skipboolcheck%d TF@VARTYPE%d string@bool\n",ifcount,ifcount);
 printf("MOVE TF@JMPCOND%d TF@var%d\n",ifcount,ifcount);
@@ -352,11 +365,17 @@ printf("LABEL %%IFBODY%d\n",ifcount);
 printf("JUMPIFEQ %%IFTHEN%d TF@JMPCOND%d bool@true\n",ifcount,ifcount);
 printf("LABEL %%ELSE%d\n",ifcount);
 //else
-helpsolve(node->right->right);
+if (node->right->right!=NULL)
+{
+  helpsolve(node->right->right);
+}
 printf("JUMP %%ENDIF%d\n",ifcount);
 printf("LABEL %%IFTHEN%d\n",ifcount);
 //then
-helpsolve(node->right->left);
+if (node->right->right!=NULL)
+{
+  helpsolve(node->right->left);
+}
 printf("LABEL %%ENDIF%d\n",ifcount);
 node->right->leaf=true;
 node->leaf=true;
@@ -588,13 +607,20 @@ void helpsolve(ASSnode_t* node) {
         exit(7);
       }
       break;
+    case NEQ:
     case EQ:
       LEAFCHECK
-      // dodelat
       if (node->left->leaf == true && node->right->leaf == true) {
         if (TOK_PATH(node->left)->type == TOK_PATH(node->right)->type) {
-          EQCOMP(node);
-          FREETHEM;
+          if (node->OP==EQ)
+          {
+            EQCOMP(node,false);
+          }else{
+            EQCOMP(node,true);
+          }
+          
+          
+          
         } else if (TOK_PATH(node->left)->type == string &&
                    !(TOK_PATH(node->right)->type == string)) {
           fprintf(stderr, "Expected a string in the 2nd operand");
@@ -604,6 +630,7 @@ void helpsolve(ASSnode_t* node) {
                    (TOK_PATH(node->right)->type == integer ||
                     TOK_PATH(node->right)->type == ffloat)) {
           // conversion
+          GETTHEM
           char* tempvar = createVar();
           if (TOK_PATH(node->left)->type == integer) {
             printf("DEFVAR LF@%s\n", tempvar);
@@ -620,8 +647,35 @@ void helpsolve(ASSnode_t* node) {
             node->right->isvar = true;
             // do cmp
           }
-          GTCOMP(node);
+          if (node->OP==EQ)
+          {
+            EQCOMP(node,false);
+          }else{
+            EQCOMP(node,true);
+          }
           FREETHEM
+        }else{
+          char* var1type = createVar();
+          char* var2type = createVar();
+          char* tmplabel = labelgen();
+          printf("DEFVAR TF@%s\n",var1type);
+          printf("DEFVAR TF@%s\n",var2type);
+          GETTHEM
+          printf("TYPE TF@%s %s\n",var1type,str1);
+          printf("TYPE TF@%s %s\n",var2type,str1);
+          printf("JUMPIFEQ %s TF@%s TF@%s\n",tmplabel,var1type,var2type);
+          printf("EXIT int@7\n");
+          printf("LABEL %s\n",tmplabel);
+          if (node->OP==EQ)
+          {
+            EQCOMP(node,false);
+          }else{
+            EQCOMP(node,true);
+          }
+          FREETHEM
+          free(var1type);
+          free(var2type);
+          free(tmplabel);
         }
       } else {
         fprintf(stderr, "SOMETHING WEIRD HAPPENED IN EQ\n");
@@ -631,9 +685,10 @@ void helpsolve(ASSnode_t* node) {
     
     case CONCAT:
       LEAFCHECK
-      if (TOK_PATH(node->left)->type != string ||
-          TOK_PATH(node->right)->type != string) {
-        fprintf(stderr, "CONCATENATION OF NON-STRING OPERANDS\n");
+      if ((TOK_PATH(node->left)->type != string && node->left->isvar==false && TOK_PATH(node->left)->type != ID_variable)||(
+          TOK_PATH(node->right)->type != string && node->right->isvar==false && TOK_PATH(node->right)->type != ID_variable)) {
+        
+        fprintf(stderr, "CONCATENATION OF NON-STRING OPERANDS %d %d\n",TOK_PATH(node->left)->type,TOK_PATH(node->right)->type);
        // exit(7);
       }
       CONCATSTR(node);
@@ -730,8 +785,20 @@ char* labelgen() {
 /// @param node uzol obsahujuci premennu/konstantu
 /// @return vracia formatovany string pre pracu s premennou alebo konstantou 
 char* checkvar(ASSnode_t* node) {
-  char* strptr = malloc(sizeof(char) * 20);  // string@ + uint + \0 idk
+  if (TOK_PATH(node)==NULL)
+  {
+    fprintf(stderr,"co?\n");
+    exit(1);
+  }else if (TOK_PATH(node)->value==NULL)
+  {
+    fprintf(stderr,"STO?!\n");
+  }
+  char* strptr = malloc(sizeof(char)*(22+strlen(TOK_PATH(node)->value)));  // 
   if (strptr == NULL) exit(99);
+
+  
+  
+  
   if (TOK_PATH(node)->type==ID_variable)
   {
     sprintf(strptr, "LF@%s", TOK_PATH(node)->value);

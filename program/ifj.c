@@ -5,9 +5,9 @@
 #include "Parser.h"
 
 int main(int argc, char const *argv[]) {
-  //allahprint = fopen("allah.txt", "w");
+  allahprint = fopen("allah.txt", "w");
   parse();
-  //fprintf(allahprint, "Parse result: %d", parse());
-  //fclose(allahprint);
+  fprintf(allahprint, "Parse result: %d", parse());
+  fclose(allahprint);
   return 0;
 }

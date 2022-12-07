@@ -215,7 +215,7 @@ bool parse()
         exit(2);
     }
     PRINTTREEFAST(root);
-    //print_code(&root);
+    print_code(&root);
     return true;
 }
 
