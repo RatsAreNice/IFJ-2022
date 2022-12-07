@@ -18,13 +18,20 @@ typedef enum returnType{
     symVoid = funvoid // nic nevracia
 } returnType_t;
 
+typedef struct dependencyPair
+{
+  char* functionid;
+  int paramCount;
+
+} dependencyPair_t;
+
 typedef struct funData
 {
   int ParamCount;
   int* paramTypes;
   int returnType;
   int depCount;
-  char** dependencies;
+  dependencyPair_t** dependencies;
   bool defined;
 
 } funData_t;

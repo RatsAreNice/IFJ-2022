@@ -26,7 +26,10 @@ parser 'states'?
 #else
 # define DPRINT(x) do {} while (0)
 #endif
+
+// Makra pre kvalitu zivota
 #define fdepcount symtablelist.activeElement->fundata->depCount
+#define fdeplist symtablelist.activeElement->fundata->dependencies
 
 #include "scanner.h"
 #include "bottom_up.h"
@@ -40,39 +43,37 @@ parser 'states'?
 #include <stdlib.h>
 //#include "symtable.c"
 
-bool parse();
+//bool parse();
+//
+//bool p_start(token_t * token, ASSnode_t **astree);
+//
+//bool p_prolog(token_t * token);
+//bool p_prolog_sub1(token_t * token);
+//bool p_prolog_sub2(token_t * token);
+//
+//bool p_body(token_t * token, bool defallowed, ASSnode_t *astree, bool mainreturn, returnType_t rettyp);
+//
+//bool p_fundec(token_t * token, ASSnode_t *astree);
+//bool p_fparams(token_t * token, ASSnode_t *astree, funData_t* newfunc);
+//bool p_nparam(token_t *token, ASSnode_t *astree, funData_t* newfunc);
+//
+////bool p_expr(token_t * token);
+//
+//bool p_rettype(token_t * token);
+//bool p_type(token_t * token);
+//
+//bool p_assigned(token_t *token, ASSnode_t *astree);
+//bool p_const(token_t * token, token_type expect1, token_type expect2);
+//
+//bool p_callargs(token_t *token, ASSnode_t *astree, bst_node_t *symtableentry, int* paramcount);
+//bool p_ncallargs(token_t *token, ASSnode_t *astree, bst_node_t *symtableentry, int* paramcount);
+//bool p_vals(token_t *token, ASSnode_t* astree, bst_node_t *symtableentry, int* paramcount);
+//
+//bool p_fcall(token_t *token, ASSnode_t *astree);
 
-bool p_start(token_t * token, ASSnode_t **astree);
 
-bool p_prolog(token_t * token);
-bool p_prolog_sub1(token_t * token);
-bool p_prolog_sub2(token_t * token);
-
-bool p_body(token_t * token, bool defallowed, ASSnode_t *astree, bool mainreturn, returnType_t rettyp);
-
-bool p_fundec(token_t * token, ASSnode_t *astree);
-bool p_fparams(token_t * token, ASSnode_t *astree, funData_t* newfunc);
-bool p_nparam(token_t *token, ASSnode_t *astree, funData_t* newfunc);
-
-//bool p_expr(token_t * token);
-
-bool p_rettype(token_t * token);
-bool p_type(token_t * token);
-
-bool p_assigned(token_t *token, ASSnode_t *astree);
-bool p_const(token_t * token, token_type expect1, token_type expect2);
-bool p_fcall(token_t *token, ASSnode_t *astree);
-bool p_callargs(token_t *token, ASSnode_t *astree, bst_node_t *symtableentry, int* paramcount);
-bool p_ncallargs(token_t *token, ASSnode_t *astree, bst_node_t *symtableentry, int* paramcount);
-bool p_vals(token_t *token, ASSnode_t* astree, bst_node_t *symtableentry, int* paramcount);
-
+// Globálna premenná na uloženie dvojitého zviazaného zoznamu na ukladanie tabuliek
 symDLList_t symtablelist;
-
-typedef enum
-{
-    SKIP,
-    NOSKIP
-} scannermode;
 
 void* safeMalloc(size_t size)
 {
@@ -243,7 +244,7 @@ bool parse()
         exit(2);
     }
     PRINTTREEFAST(root);
-    print_code(&root);
+    //print_code(&root);
     return true;
 }
 
@@ -593,34 +594,47 @@ bool p_assigned(token_t *token, ASSnode_t *astree)
 bool p_fcall(token_t *token, ASSnode_t *astree)
 {
     bst_node_t* symtableptr = NULL;
-    if(symtablelist.activeElement->fundata != NULL)
+    int fundataindex = -1;
+    if(symtablelist.activeElement->fundata != NULL && !isDefined(token, symDLL_GetFirst(&symtablelist)))
     {
-        bool found = false;
         for(int i = 0; i < symtablelist.activeElement->fundata->depCount; i++)
         {
-            if(strcmp(symtablelist.activeElement->fundata->dependencies[i], token->value) == 0)
+            if(strcmp(symtablelist.activeElement->fundata->dependencies[i]->functionid, token->value) == 0)
             {
-                found = true;
+                fundataindex = i;
                 break;
             }
         }
-        if(!found)
+        if(fundataindex == -1)
         {
             fdepcount += 1;
-            symtablelist.activeElement->fundata->dependencies = realloc(symtablelist.activeElement->fundata->dependencies, fdepcount * sizeof(char*));
-            symtablelist.activeElement->fundata->dependencies[fdepcount-1] = calloc(strlen(token->value)+1,1);
+            fdeplist = realloc(symtablelist.activeElement->fundata->dependencies, fdepcount * sizeof(struct dependencyPair*));
+            fdeplist[fdepcount-1] = malloc(sizeof(struct dependencyPair));
+            fdeplist[fdepcount-1]->functionid = calloc(strlen(token->value)+1,1);
+            fdeplist[fdepcount-1]->paramCount = 0;
             DPRINT(("%s added to dependency list at index %d \n", token->value, fdepcount-1));
-            strcpy(symtablelist.activeElement->fundata->dependencies[fdepcount-1], token->value);
+            strcpy(symtablelist.activeElement->fundata->dependencies[fdepcount-1]->functionid, token->value);
+            fundataindex = fdepcount - 1;
         }
+        
     }
     else
     {
         symtableptr = checkDefined(token, symDLL_GetFirst(&symtablelist));
         for(int i = 0; i < symtableptr->funData->depCount; i++)
         {
-            if(bst_search(symDLL_GetFirst(&symtablelist),symtableptr->funData->dependencies[i]) == NULL)
+            bst_node_t* dependency = bst_search(symDLL_GetFirst(&symtablelist),symtableptr->funData->dependencies[i]->functionid);
+            if(dependency != NULL)
             {
-                fprintf(stderr, "Semantic error: Function %s, dependency of %s not defined.\n", symtableptr->funData->dependencies[i], token->value);
+                if(dependency->funData->ParamCount != symtableptr->funData->dependencies[i]->paramCount)
+                {
+                    fprintf(stderr, "Semantic error: Function %s, dependency of %s, previously called with invalid number of arguments.\n", symtableptr->funData->dependencies[i]->functionid, token->value);
+                    exit(3);
+                }
+            }
+            else
+            {
+                fprintf(stderr, "Semantic error: Function %s, dependency of %s not defined.\n", symtableptr->funData->dependencies[i]->functionid, token->value);
                 exit(3);
             }
         }
@@ -633,6 +647,10 @@ bool p_fcall(token_t *token, ASSnode_t *astree)
         *token = get_token(SKIP);
         if(p_callargs(token, astree, symtableptr, &paramcount))
         {
+            if(symtablelist.activeElement->fundata != NULL && fundataindex != -1) // Keď sa parser nachádza v tele funkcie.
+            {
+                fdeplist[fundataindex]->paramCount = paramcount;
+            }
             DPRINT(("RETURNED WITH: %s\n",token->value));
             return true;
         }
