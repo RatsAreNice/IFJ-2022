@@ -1,3 +1,4 @@
+//Autor: Oliver Nemcek <xnemce08>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -6,7 +7,6 @@
 #include "semantic.h"
 
 int convert(token_t a){       //konvertuje token na cislo
-    //printf("Converting %s with type %d\n", a.value, a.type);
     switch(a.type){
         case funnull:
             return 0;
@@ -75,7 +75,6 @@ unit_t get_input(token_type ** first,char* firstv, token_type ** second,char* se
         if(input.type == rbracket){                              //sme na zatvorke a jeden z konecnych symbolov je zatvorka
             if(*bracketcount == 0){
                 (*token)->type = input.type;
-                //(*token)->value = input.value;
                 b = 12;
             }
             else{
@@ -485,7 +484,6 @@ ASSnode_t* expr(token_t* first,token_t* second, token_type end, token_type end2,
             DLL_InsertLast(&a,neterminal);      //vlozenie neterminalu namiesto <...>
         }
         else if(akcia == 'e'){
-            //printf("zasobnik = %d,input = %d",q,b);
             fprintf(stderr, "pre kombinaciu zasobnik / vstup nieje v precedencnej tabulke symbol - chybna syntax");
             exit(2);
         }
@@ -511,8 +509,6 @@ ASSnode_t* expr(token_t* first,token_t* second, token_type end, token_type end2,
     DLL_Last(&a);
     DLL_GetValue(&a,&q);
     
-    // printf("end : %d\n",q.ttyp);
-    // printf("            %s\n",q.uzol->Patrick_Bateman->value);
 
     //strom = q.uzol
     return q.uzol;

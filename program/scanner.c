@@ -1,75 +1,9 @@
-//Autor : Oliver Nemcek <xnemce08>
-//parameter funkcie get_token(int skip) udava ci sa preskakuju prazdne znaky. ak skip == 0 nepreskakuje sa nic. ak skip == 1, preskakuju sa iba prazdne znaky, ak skip != 1 && skip != 0, preskakuju sa prazdne znaky a komentare
+//Autor : Oliver Nemcek <xnemce08> , Martin Packa <xpacka00>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 #include <ctype.h>
 #include "scanner.h"
-
-//typedef enum{
-//    ID_function,        //abc
-//    ID_variable,        //$abc
-//    string,             //"abc"
-//    type,               //?abc
-//    lbracket,           //(
-//    rbracket,           //)
-//    lsetbracket,        //{
-//    rsetbracket,        //}
-//    plus,               //+
-//    minus,              //-
-//    mul,                //*
-//    division,           ///
-//    lt,                 //<
-//    mt,                 //>
-//    lte,                //<=
-//    mte,                //>=
-//    semicolon,          //;
-//    integer,            //56
-//    assign,             //=
-//    identity,           //===
-//    nidentity,          //!==
-//    comma,              //,
-//    ffloat,              //13.56
-//    dot,                //. (retazcovy operator)
-//    //klucove slova
-//    funreturn,          //return
-//    funelse,            //else
-//    function,           //function
-//    funif,              //if
-//    funnull,            //null
-//    funvoid,            //void
-//    funwhile,           //while
-//    prolog1,            //<?php             [VRATANE PRAZDNEHO ZNAKU ZA]
-//    prolog2,            //declare(strict_types=1);
-//    epilog,             //?>                 [ak je za znackou \n, zozerie ho to. (aby sa dalo potom testovat na EOF)]
-//    eof,       
-//} token_type;             //typ lexemu
-//typedef enum{       //stavy automatu
-//    start,
-//    IDfunkcie,
-//    premenna1,
-//    premenna2,
-//    string1,
-//    string2,
-//    type1,
-//    INT,
-//    identity2,
-//    nidentity1,
-//    identity1,
-//    identity0,
-//    nidentity2,
-//    nidentity0,
-//    ERROR,
-//    lt1,
-//    lt0,
-//    mt0,
-//    declare,
-//} state;
-
-//typedef struct token {
-//  token_type type;
-//  char* value;
-//} token_t;
 
 int hextoint(char k){
     int a = k;
@@ -97,7 +31,6 @@ token_t make_token(token_type typ, char* hodnota){
     token_t lexem;
     lexem.type = typ;
     lexem.value = hodnota;
-    //fprintf(stderr,"Vytvoreny lexem: %d:%s\n",lexem.type,lexem.value);
     return lexem;
 }
 
@@ -207,7 +140,7 @@ token_t get_token(int skip){
                     return make_token(lbracket, "(");          //preslo by sa do stavu "(" kde by sa iba vytvoril token lbracket. pre zjednodusenie sa do stavu neprechadza a token sa vytvori priamo
                 }
                 else if(a == ':'){
-                    return make_token(colon, ":");          //preslo by sa do stavu "(" kde by sa iba vytvoril token lbracket. pre zjednodusenie sa do stavu neprechadza a token sa vytvori priamo
+                    return make_token(colon, ":");
                 }
                 else if(a == ')'){
                     return make_token(rbracket, ")");
@@ -518,7 +451,7 @@ token_t get_token(int skip){
                 str = "";
                 i = 0;
                 a=getchar();
-                while(a != '"' && a > 31 && a != '$'){      //osetrit skoncenie dolarom / <31 a to ze druhy znak nieje ani jeden esc. sequence / esc seq na oktalove
+                while(a != '"' && a > 31 && a != '$'){
                     int cflag = 0;
                     z = 0;
 
@@ -829,11 +762,11 @@ token_t get_token(int skip){
                     exit(1);
                 }
                 a = getchar();
-                if(a != ' ' && a != '\n' && a != '\t' && a != '\r'){                    //toto by sa nikdy nemalo stat
+                if(a != ' ' && a != '\n' && a != '\t' && a != '\r'){                 
                     fprintf(stderr, "chybna znacka <?php");
                     exit(1);
                 }
-                return make_token(prolog1,"<?php "); // ak sa nahodou vyskytne druhy prolog v kode ten uz vyriesi syntakticka analyza :D
+                return make_token(prolog1,"<?php ");
                 break;
             case declare:
                 str = "";
