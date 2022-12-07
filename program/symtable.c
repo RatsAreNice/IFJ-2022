@@ -12,33 +12,10 @@ JADRO PREBRANE Z VYPRACOVANIA 2. DOMACEJ ULOHY PREDMETU IAL MATUSA DOBIASA
 #include <string.h>
 #include "symtable.h"
 
-//typedef struct funData
-//{
-//  int ParamCount;
-//  int* paramTypes;
-//  int returnType;
-//  bool defined;
-//
-//} funData_t;
-//// Uzol stromu
-//typedef struct bst_node {
-//  char* key;               
-//  int type;              
-//  funData_t* funData; // data funkcie
-//  //labelData_t* labelData;
-//  struct bst_node *left;  
-//  struct bst_node *right; 
-//} bst_node_t;
 
-// data
 
-/*typedef struct labelData
-{
-  bool declared;
-} labelData_t;*/
-
-// functions
-
+/// @brief Inicializacia koren
+/// @param tree koren
 void bst_init(bst_node_t **tree) {
   *tree=NULL;
 }
@@ -67,9 +44,14 @@ bst_node_t* bst_search(bst_node_t *tree, char* key) {
   return NULL;
 }
 
-// RETRUNS 1 -> SUCCESSFUL INSERT
-// RETURNS 2 -> SUCCESFUL REPLACE
 
+
+/// @brief Vklada a replacuje uzly v tabulke symbolov
+/// @param tree koren
+/// @param key kluc uzlu
+/// @param type typ uzlu
+/// @param funData odkaz na informacie o funkcii
+/// @return RETRUNS 1 -> SUCCESSFUL INSERT RETURNS 2 -> SUCCESFUL REPLACE
 int bst_insert(bst_node_t **tree, char* key, int type, funData_t* funData) {
   int diff = 0;
   if (*tree!=NULL)
@@ -110,6 +92,9 @@ int bst_insert(bst_node_t **tree, char* key, int type, funData_t* funData) {
 
 }
 
+/// @brief prelozi typ tokenu na presnejsi typ
+/// @param tokenvalue string obsahujuci typ tokenu
+/// @return vrati typ returnu pre funkciu
 returnType_t translate(char* tokenvalue)
 {
 
@@ -129,6 +114,9 @@ returnType_t translate(char* tokenvalue)
       return symVoid;
 }
 
+/// @brief Pomocna funkcia pre delete funckiu
+/// @param target destinacia premiestnenia
+/// @param tree uzol stromu
 void bst_replace_by_rightmost(bst_node_t *target, bst_node_t **tree) {
   if ((*tree)->right->right!=NULL)
   {
@@ -149,6 +137,9 @@ void bst_replace_by_rightmost(bst_node_t *target, bst_node_t **tree) {
 }
 
 
+/// @brief Odstranenie uzlu zo stromu
+/// @param tree koren
+/// @param key kluc odstranovaneho uzlu
 void bst_delete(bst_node_t **tree, char* key) {
   int diff = 0;
   if ((*tree)!=NULL)
@@ -243,6 +234,8 @@ void bst_delete(bst_node_t **tree, char* key) {
   return;
 }
 
+/// @brief Navratenie stavu stromu do momentu po inicializacii
+/// @param tree koren stromu
 void bst_dispose(bst_node_t **tree) {
   
   if ((*tree)!=NULL)
