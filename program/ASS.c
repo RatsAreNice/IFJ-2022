@@ -3,10 +3,12 @@
 
 #include "ASS.h"
 #include "Parser.h"
-FILE* allahprint;
+//FILE* allahprint; debugovac print stromu
 
 void ASSinit(ASSnode_t** tree) { *tree = NULL; }
 
+/// @brief Debugovaci print stromu
+/// @param node node k printnutiu
 void assprint(ASSnode_t* node) {
   // if(node->OP)
   fprintf(allahprint, "[%d,", node->OP);
@@ -18,6 +20,11 @@ void assprint(ASSnode_t* node) {
     fprintf(allahprint, "-100]");
 }
 
+/// @brief Funkcia na tvorba uzlu
+/// @param OP Operacia uzlu
+/// @param left odkaz na laveho potomka
+/// @param right odkaz na laveho potomka
+/// @return vracia odkaz na uzol
 ASSnode_t* makeTree(operand_t OP, ASSnode_t* left, ASSnode_t* right) {
   ASSnode_t* temp = malloc(sizeof(struct ASSnode));
   if (temp == NULL) {
@@ -33,7 +40,9 @@ ASSnode_t* makeTree(operand_t OP, ASSnode_t* left, ASSnode_t* right) {
 
   return temp;
 }
-
+/// @brief tvorba listu
+/// @param Patrick_Bateman odkaz na token obsiahnuty listom
+/// @return vracia odkaz na list
 ASSnode_t* makeLeaf(token_t* Patrick_Bateman) {
   ASSnode_t* temp = malloc(sizeof(struct ASSnode));
   token_t* temp2 = malloc(sizeof(struct token));
@@ -52,9 +61,12 @@ ASSnode_t* makeLeaf(token_t* Patrick_Bateman) {
 
   return temp;
 }
-
+/// @brief free() uzlu
+/// @param node mazany uzol
 void delete_node(ASSnode_t* node) { free(node); }
 
+/// @brief spustenie rekurzivnej redukcie stromu na kod
+/// @param tree koren stromu
 void print_code(ASSnode_t** tree) {
   printf(".IFJcode22\n");
   printf("CREATEFRAME\nPUSHFRAME\nCREATEFRAME\n");
@@ -66,7 +78,8 @@ void print_code(ASSnode_t** tree) {
   printf("EXIT int@0\n");
   free(*tree);
 }
-
+/// @brief pomocna funkcia na generaciu kodu
+/// @param node uzol premienaný na kód
 void ADDInt_Int(ASSnode_t* node) {
   // code for elementary int + int
   LEAFCHECK  // macro
@@ -85,7 +98,8 @@ void ADDInt_Int(ASSnode_t* node) {
   node->leaf = true;
   FREESONS
 }
-
+/// @brief pomocna funkcia na generaciu kodu
+/// @param node uzol premienaný na kód
 void ADDFloat_Int(ASSnode_t* node) {
   // code for elementary int + float
   LEAFCHECK  // macro
@@ -121,7 +135,8 @@ void ADDFloat_Int(ASSnode_t* node) {
   node->leaf = true;
   FREESONS
 }
-
+/// @brief pomocna funkcia na generaciu kodu
+/// @param node uzol premienaný na kód
 void ADDFloat_Float(ASSnode_t* node) {
   // code for elementary float + float
   LEAFCHECK  // macro
@@ -140,7 +155,8 @@ void ADDFloat_Float(ASSnode_t* node) {
   node->leaf = true;
   FREESONS
 }
-
+/// @brief pomocna funkcia na generaciu kodu
+/// @param node uzol premienaný na kód
 void SUBInt_Int(ASSnode_t* node) {
   // code for elementary int - int
   LEAFCHECK  // macro
@@ -159,7 +175,8 @@ void SUBInt_Int(ASSnode_t* node) {
   node->leaf = true;
   FREESONS
 }
-
+/// @brief pomocna funkcia na generaciu kodu
+/// @param node uzol premienaný na kód
 void SUBFloat_Int(ASSnode_t* node) {
   // code for elementary int - float
   LEAFCHECK  // macro
@@ -195,7 +212,8 @@ void SUBFloat_Int(ASSnode_t* node) {
   node->leaf = true;
   FREESONS
 }
-
+/// @brief pomocna funkcia na generaciu kodu
+/// @param node uzol premienaný na kód
 void SUBFloat_Float(ASSnode_t* node) {
   // code for elementary float - float
   LEAFCHECK  // macro
@@ -214,7 +232,8 @@ void SUBFloat_Float(ASSnode_t* node) {
   node->leaf = true;
   FREESONS
 }
-
+/// @brief pomocna funkcia na generaciu kodu
+/// @param node uzol premienaný na kód
 void ASSIGNVAR(ASSnode_t* node) {
   TOK_PATH(node) = TOK_PATH(node->right);
   TOK_PATH(node)->type = TOK_PATH(node->left)->type;
@@ -223,7 +242,8 @@ void ASSIGNVAR(ASSnode_t* node) {
   node->isvar=true;
   
 }
-
+/// @brief pomocna funkcia na generaciu kodu
+/// @param node uzol premienaný na kód
 void LTCOMP(ASSnode_t* node) {
   char* tempvar = createVar();
   printf("DEFVAR LF@%s\n", tempvar);
@@ -236,6 +256,8 @@ void LTCOMP(ASSnode_t* node) {
   node->leaf = true;
   FREESONS
 }
+/// @brief pomocna funkcia na generaciu kodu
+/// @param node uzol premienaný na kód
 void GTCOMP(ASSnode_t* node) {  // !!! COPYPASTE
   char* tempvar = createVar();
   printf("DEFVAR LF@%s\n", tempvar);
@@ -249,6 +271,8 @@ void GTCOMP(ASSnode_t* node) {  // !!! COPYPASTE
   node->leaf = true;
   FREESONS
 }
+/// @brief pomocna funkcia na generaciu kodu
+/// @param node uzol premienaný na kód
 void EQCOMP(ASSnode_t* node) {
   char* tempvar = createVar();
   printf("DEFVAR LF@%s\n", tempvar);
@@ -262,6 +286,8 @@ void EQCOMP(ASSnode_t* node) {
   node->leaf = true;
   FREESONS
 }
+/// @brief pomocna funkcia na generaciu kodu
+/// @param node uzol premienaný na kód
 void CONCATSTR(ASSnode_t* node) {
   char* tempvar = createVar();
   printf("DEFVAR LF@%s\n", tempvar);
@@ -274,6 +300,8 @@ void CONCATSTR(ASSnode_t* node) {
   node->leaf=true;
   node->isvar = true;
 }
+/// @brief pomocna funkcia na generaciu kodu
+/// @param node uzol premienaný na kód
 void MULTIPLY(ASSnode_t* node) {
   char* tempvar = createVar();
   printf("DEFVAR LF@%s\n", tempvar);
@@ -286,7 +314,8 @@ void MULTIPLY(ASSnode_t* node) {
   node->leaf=true;
   node->isvar = true;
 }
-
+/// @brief pomocna funkcia na generaciu kodu
+/// @param node uzol premienaný na kód
 void generateif(ASSnode_t* node) {
 static unsigned int ifcount;
 
@@ -331,6 +360,8 @@ printf("LABEL %%ENDIF%d\n",ifcount);
 node->right->leaf=true;
 node->leaf=true;
 }
+/// @brief pomocna funkcia na generaciu kodu
+/// @param node uzol premienaný na kód
 void generatedec(ASSnode_t* node){
   static unsigned int deccount;
   static unsigned int pcount;
@@ -365,7 +396,8 @@ void generatedec(ASSnode_t* node){
 
 
 }
-
+/// @brief hlavna funkcia riadiaca generaciu kodu
+/// @param node rieseny uzol
 void helpsolve(ASSnode_t* node) {
   switch (node->OP) {
     case ADD:
@@ -667,10 +699,14 @@ void helpsolve(ASSnode_t* node) {
   }
 }
 
+/// @brief pomocna funkcia na prepisanie floatu na hex reprezentaciu
+/// @param Patrick_Bateman token obsahujuci float
 void floatify(token_t* Patrick_Bateman) {
   sprintf(Patrick_Bateman->value, "%a", strtof(Patrick_Bateman->value, NULL));
 }
-
+/// @brief pomocna funkcia na vypis premennych v IFJcode22
+/// @param node uzol obsahujuci premennu
+/// @return vracia formatovany string pre pracu s premennou
 char* CHECKTYPE(ASSnode_t* node) {
   static unsigned int typevarcount;  // LF@tempvar + uint + \0
   char* str = malloc(sizeof(char) * 21);
@@ -679,6 +715,8 @@ char* CHECKTYPE(ASSnode_t* node) {
   typevarcount++;
   return str;
 }
+/// @brief pomocna funkcia na generaciu unikatneho navestia
+/// @return vracia string s unikatnym navestim
 char* labelgen() {
   static unsigned int labelcount;
   char* str = malloc(sizeof(char) * 16);  // label + uint + \0
@@ -687,7 +725,9 @@ char* labelgen() {
   labelcount++;
   return str;
 }
-
+/// @brief pomocna funkcia pre pracu s terminalom v IFJcode22
+/// @param node uzol obsahujuci premennu/konstantu
+/// @return vracia formatovany string pre pracu s premennou alebo konstantou 
 char* checkvar(ASSnode_t* node) {
   char* strptr = malloc(sizeof(char) * 20);  // string@ + uint + \0 idk
   if (strptr == NULL) exit(99);
@@ -724,7 +764,8 @@ char* checkvar(ASSnode_t* node) {
     }
   }
 }
-
+/// @brief funkcia pre generovanie unikatnej pomocnej premennej
+/// @return formatovany string s unikatnou premennou
 char* createVar() {
   static unsigned int varcount;
   char* str = malloc(sizeof(char) * 14);  // var + maxuint length(10) + \0 asi
@@ -849,6 +890,8 @@ void phpintval() {
   printf("\nRETURN\n");
 }
 
+/// @brief Preorder priechod tabulkou symbolov pre deklaraciu premennych v maine
+/// @param tree odkaz na tabulku symbolov
 void PreOrder(bst_node_t* tree){
   if (tree==NULL)
   {
@@ -863,6 +906,7 @@ void PreOrder(bst_node_t* tree){
   PreOrder(tree->right);
 }
 
+/// @brief funkcia na tlacenie vstavanych funkcii a premennych
 void print_builtins() {
   PreOrder(symDLL_GetFirst(&symtablelist));
   printf("DEFVAR LF@%%retintval\n");
@@ -872,7 +916,7 @@ void print_builtins() {
   printf("DEFVAR LF@%%retreadi\n");
   printf("DEFVAR LF@%%retreadf\n");
   printf("DEFVAR LF@%%retstrlen\n");
-  //kod na generovanie navratovych premennych ostatnych funkcii TODO
+ 
   printf("JUMP main\n");
   reads();
   readi();
