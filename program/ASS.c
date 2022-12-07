@@ -1,5 +1,6 @@
+
 // Abstraktny Syntakticky Strom
-// autor: Matus Dobias
+/// @authors: Matus Dobias
 
 #include "ASS.h"
 #include "Parser.h"
