@@ -1,5 +1,6 @@
+// Nazov projektu: IFJ22
+// Autor: Richard Blažo (xblazo00)
 // Parser
-// Autor: Richard Blažo
 
 //#define DEBUG
 #ifdef DEBUG
@@ -17,7 +18,6 @@
 #include "symtable.h"
 #include "Parser.h"
 #include "symdll.h"
-#include "test.h"
 #include "semantic.h"
 #include <stdio.h>
 #include <string.h>
@@ -201,8 +201,7 @@ void parse()
         fprintf(stderr, "Unknown syntax error.\n");
         exit(2);
     }
-    PRINTTREEFAST(root);
-    //print_code(&root);
+    print_code(&root);
 }
 
 /// @brief Prvy krok rekurzivneho zostupu, skontroluje prolog

@@ -1,3 +1,5 @@
+// Nazov projektu: IFJ22
+// Autor: Richard Blažo (xblazo00)
 #ifndef SEMANTIC_H
 #define SEMANTIC_H
 

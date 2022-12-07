@@ -1,3 +1,5 @@
+// Nazov projektu: IFJ22
+// Autor: Richard Blažo (xblazo00)
 // Double linked list pre tabulky symbolov.
 // Implementácia z prvej IAL úlohy.
 // Autor: Richard Blažo (xblazo00)

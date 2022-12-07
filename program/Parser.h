@@ -1,3 +1,6 @@
+// Nazov projektu: IFJ22
+// Autor: Richard Blažo (xblazo00)
+// Parser
 #ifndef PARSER_H
 #define PARSER_H
 #include <stdbool.h>

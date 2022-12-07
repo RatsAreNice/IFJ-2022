@@ -1,3 +1,5 @@
+// Nazov projektu: IFJ22
+// Autor: Richard Blažo (xblazo00)
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
