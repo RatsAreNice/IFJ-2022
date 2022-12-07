@@ -1,28 +1,9 @@
 // Parser
 // Autor: Richard Blažo
 
-/*
-parser 'states'?
-<start> 
-<prolog>
-<body>
-<fparams>
-<nparam>
-<rettype>
-<type>
-<nodefbody>
-<ifstat>
-<whilestat>
-<assigned>
-<const>
-<fcall>
-<callargs>
-<ncallargs>
-<vals>
-*/
-#define DEBUG
+//#define DEBUG
 #ifdef DEBUG
-# define DPRINT(x) 
+# define DPRINT(x) fprintf x
 #else
 # define DPRINT(x) do {} while (0)
 #endif
@@ -43,9 +24,12 @@ parser 'states'?
 #include <stdlib.h>
 
 
-// Globálna premenná na uloženie dvojitého zviazaného zoznamu na ukladanie tabuliek
+// Globalna premenna na ulozenie obojstranne viazaneho zoznamu na ukladanie tabuliek.
 symDLList_t symtablelist;
 
+/// @brief Funkcia ktora vyriesi problem pri mallocu ak nastane.
+/// @param OP size Pocet bajtov pamate ktore treba alokovat.
+/// @return Vracia odkaz na alokovanu pamat.
 void* safeMalloc(size_t size)
 {
     void* new = malloc(size);
@@ -58,6 +42,8 @@ void* safeMalloc(size_t size)
         return new;
 }
 
+/// @brief Funkcia na vlozenie vstavanych funkcii jazyka IFJ22.
+/// @param symtable Tabulka symbolov do ktorej budu funkcie vlozene.
 void addDefaults(bst_node_t **symtable)
 {
     //reads
@@ -193,14 +179,15 @@ void addDefaults(bst_node_t **symtable)
 
 }
 
-bool parse()
+/// @brief Funkcia, kde sa pripravi obojstranne viazany zoznam
+///        a tabulky symbolov a zacne prechadzat program.
+void parse()
 {
-    // Init main symtable a pridat default funkcie.
     bst_node_t* mainsymtable;
 
     bst_init(&mainsymtable);
     addDefaults(&mainsymtable);
-    //symDLList_t symtablelist;
+
     symDLL_Init(&symtablelist);
     symDLL_InsertLast(&symtablelist, mainsymtable, NULL);
     symDLL_First(&symtablelist);
@@ -208,23 +195,31 @@ bool parse()
     token_t token = get_token(NOSKIP);
     ASSnode_t *root;
     ASSinit(&root);
-    //*root = makeTree(RYAN_GOSLING, NULL, NULL);
+
     if ( p_start(&token, &root) == false )
     {
         fprintf(stderr, "Unknown syntax error.\n");
         exit(2);
     }
     PRINTTREEFAST(root);
-    print_code(&root);
-    return true;
+    //print_code(&root);
 }
 
+/// @brief Prvy krok rekurzivneho zostupu, skontroluje prolog
+///        a pokracuje v hlavnom tele programu.
+/// @param token Ukazatel na spracovavany token.
+/// @param astree Ukazatel na koren syntaktickeho stromu.
+/// @return Celkové vyhodnotenie rekurzivneho zostup.
 bool p_start(token_t * token, ASSnode_t **astree)
 {
     (*astree) = makeTree(RYAN_GOSLING, NULL, NULL);
     return p_prolog(token) && p_body(token, true, *astree, true, symInt);
 }
 
+/// @brief Kontrola prologu.
+/// @param token Ukazatel na spracovavany token.
+/// @return True ak obidva tokeny tvoria zaciatocny prolog
+///         inak ukonci program s chybou.
 bool p_prolog(token_t * token)
 {
     if(p_prolog_sub1(token) && p_prolog_sub2(token))
@@ -237,11 +232,15 @@ bool p_prolog(token_t * token)
     return false;
 }
 
+/// @brief Kontrola prvej casti prologu.
+/// @param token Ukazatel na spracovavany token.
+/// @return True ak je token prva cast prologu,
+///         inak ukonci program s chybou.
 bool p_prolog_sub1(token_t * token)
 {
     if(token->type == prolog1)
     {
-        DPRINT(("Token %s matches prolog_sub_1!\n", token->value));
+        
         *token = get_token(SKIP);
         return true;
     }
@@ -253,11 +252,15 @@ bool p_prolog_sub1(token_t * token)
     return false;
 }
 
+/// @brief Kontrola druhej casti prologu.
+/// @param token Ukazatel na spracovavany token.
+/// @return True ak je token prva cast prologu,
+///         inak ukonci program s chybou.
 bool p_prolog_sub2(token_t * token)
 {
     if(token->type == prolog2)
     {
-        DPRINT(("Token %s matches prolog_sub_2!\n", token->value));
+        
         *token = get_token(SKIP);
         return true;
     }
@@ -269,16 +272,26 @@ bool p_prolog_sub2(token_t * token)
     return false;
 }
 
+/// @brief Funkcia na analyzu hlavneho tela, tela funkcie,
+///        a tela if, else a while.
+/// @param token Ukazatel na spracovavany token.
+/// @param defallowed Povolenie definicie funkcii, indikuje ze sa analyzator nachadza v if, while alebo funkcii.
+/// @param astree Ukazatel na abstraktny syntakticky strom.
+/// @param mainreturn Premenna, ktora oznacuje ci sa analyzator nachadza v hlavnom tele programu (nie vo funkcii).
+/// @param rettyp Ocakavany navratovy typ.
+/// @return True po vyhodnoteni vsetkych rekurzivnych zostupov,
+///         v pripade neznameho/neocakavaneho tokenu ukonci program.
 bool p_body(token_t * token, bool defallowed, ASSnode_t *astree, bool mainreturn, returnType_t rettyp)
 {
     token_t oldtoken;
-    DPRINT(("Got to body with token %s of type %d\n", token->value, token->type));
+    
     switch(token->type)
     {
+        // Najdeny token je 'return':
         case funreturn:
             *token = get_token(SKIP);
             astree->left = makeTree(RETURN, NULL, NULL);
-            if(token->type == semicolon) // RETURN NOTHING, ONLY USABLE FOR VOID -> "RETURN;" 
+            if(token->type == semicolon) // Return bez argumentu -> moze byt pouzity len vo void funkciach
             {
                 // Ak nie je v "main" tele programu, a return type nematchuje, chyba
                 if(!mainreturn && rettyp != symVoid)
@@ -290,7 +303,7 @@ bool p_body(token_t * token, bool defallowed, ASSnode_t *astree, bool mainreturn
                 astree->right = makeTree(RYAN_GOSLING, NULL, NULL);
                 return p_body(token, defallowed, astree->right, mainreturn, rettyp);
             }
-            else if(token->type == ID_function) // RETURN CALLS ANOTHER FUNCTION -> "RETURN readi();" 
+            else if(token->type == ID_function) // Return s funkciou ako argumentom.
             {
                 bst_node_t* symtableptr = checkDefined(token, symDLL_GetFirst(&symtablelist)); // Pozrie, ci funkcie je deklarovana v symtabli a vrati ukazatel na nu.
                 if(!mainreturn && rettyp != symtableptr->funData->returnType) // Ak sme mimo hlavneho tela programu a navratovy typ sa nezhoduje s ocakavanym -> error.
@@ -320,16 +333,15 @@ bool p_body(token_t * token, bool defallowed, ASSnode_t *astree, bool mainreturn
                     exit(2);
                 }
             }
-            else // RETURN <EXPRESSION>;
+            else // Return s inym tokenom ako argumentom -> expression.
             {
                 ASSnode_t *exprptr = NULL;
                 exprptr = expr(NULL, token, semicolon, semicolon, 0);
                 if(exprptr != NULL)
                 {   
                     astree->left->left = exprptr;
-                    DPRINT(("%s\n", token->value));
+                    
                     *token = get_token(SKIP);
-                    //DPRINT(("%s\n", token->value));
                     astree->right = makeTree(RYAN_GOSLING, NULL, NULL);
                     return p_body(token, defallowed,astree->right, mainreturn, rettyp);
                 }
@@ -340,9 +352,9 @@ bool p_body(token_t * token, bool defallowed, ASSnode_t *astree, bool mainreturn
                 }
             }
             return false;
-
+        // Najdeny token je ID funkcie.
         case ID_function:
-            DPRINT(("ID FUNCTION %s of type %d\n", token->value, token->type));
+            
             astree->left = makeTree(FUNCTIONCALL, NULL, makeLeaf(token));
             if(p_fcall(token, astree->left))
             {
@@ -363,6 +375,7 @@ bool p_body(token_t * token, bool defallowed, ASSnode_t *astree, bool mainreturn
                 fprintf(stderr, "Syntax error: Function call failed in body.");
                 exit(2);
             }
+        // Najdeny token je '(', literal float, string alebo integer
         case lbracket:
         case ffloat:
         case integer:
@@ -378,10 +391,12 @@ bool p_body(token_t * token, bool defallowed, ASSnode_t *astree, bool mainreturn
                 fprintf(stderr, "Syntax error: Didn't get what expected :(");
                 exit(2);
             }
+        // Najdeny token je ID premennej.
         case ID_variable:
+            // Moze byt assign alebo expression -> musime sa pozriet na dalsi token.
             oldtoken = *token;
             *token = get_token(SKIP);
-            if(token->type != assign)
+            if(token->type != assign) // Ak dalsi token nie je '=' -> spracovavame výraz
             {
                 if(checkDefined(&oldtoken, symtablelist.activeElement->symtable) == NULL)
                 {
@@ -402,9 +417,9 @@ bool p_body(token_t * token, bool defallowed, ASSnode_t *astree, bool mainreturn
                     exit(2);
                 }
             }
-            else
+            else // Dalsi token je '=', spracovavame priradenie.
             {
-                bst_insert(&(symtablelist.activeElement->symtable),oldtoken.value,token->type, NULL);
+                bst_insert(&(symtablelist.activeElement->symtable),oldtoken.value,oldtoken.type, NULL);
                 astree->left = makeTree(ASSIGN, NULL, makeLeaf(&oldtoken));
                 *token = get_token(SKIP);
                 if(p_assigned(token, astree->left))
@@ -419,8 +434,9 @@ bool p_body(token_t * token, bool defallowed, ASSnode_t *astree, bool mainreturn
                     exit(2);
                 }
             }
+        // Najdeny token je 'function'
         case function:
-            if(!defallowed)
+            if(!defallowed) // Ak sa nachadzame vo if/while/deklaracii funkcie, vypise chybu a ukonci program.
             {
                 fprintf(stderr, "Syntax error: Can't define function inside if/while/function.\n");
                 exit(2);
@@ -440,8 +456,9 @@ bool p_body(token_t * token, bool defallowed, ASSnode_t *astree, bool mainreturn
                     exit(2);
                 }
             }
+        // Najdeny token je '?>'
         case epilog:
-            if(!defallowed)
+            if(!defallowed) // Ak sa nachadzame v if/while/deklaracii funkcie, vypie chybu a ukonci program.
             {
                 fprintf(stderr, "Syntax error: Can't use epilog in the inside of if/while/function.\n");
                 exit(2);
@@ -457,6 +474,7 @@ bool p_body(token_t * token, bool defallowed, ASSnode_t *astree, bool mainreturn
                 else
                     return true;
             }
+        // Najdeny token je 'if'
         case funif:
             astree->left = makeTree(IF, NULL, NULL);
             if(p_ifstat(token, astree->left, mainreturn, rettyp))
@@ -469,7 +487,7 @@ bool p_body(token_t * token, bool defallowed, ASSnode_t *astree, bool mainreturn
                 fprintf(stderr, "Syntax error: Unknown error in if statement\n");
                 exit(2);
             }
-            
+        // Najdeny token je 'while'
         case funwhile:
             astree->left = makeTree(WHILE, NULL, NULL);
             if(p_whilestat(token, astree->left, mainreturn, rettyp))
@@ -482,14 +500,10 @@ bool p_body(token_t * token, bool defallowed, ASSnode_t *astree, bool mainreturn
                 fprintf(stderr, "Syntax error: Unknown error in while statement\n");
                 exit(2);
             }
+        // Najdeny token je '}'
         case rsetbracket:
-            if(!defallowed)
+            if(!defallowed) // Ak sme v if/while/definicii funkcie, ukonci spracovavanie tela a vrati true. 
             {
-                //if(!mainreturn)
-                //{
-                //    symDLL_Previous(&symtablelist);
-                //    symDLL_DeleteLast(&symtablelist);
-                //}
                 *token = get_token(SKIP);
                 return true;
             }
@@ -498,16 +512,23 @@ bool p_body(token_t * token, bool defallowed, ASSnode_t *astree, bool mainreturn
                 fprintf(stderr, "Syntax error: Unexpected token '}'.\n");
                 exit(2);
             }
+        // Najdeny token je <EOF>
         case eof:
-            if(defallowed)
+            if(defallowed) // Ak nie sme v if/while/definicii funkcie, ukonci spracovavanie hlavného tela a vrati true.
                 return true;
-        default:
+        // Ak je token <EOF> a sme v if/while/definicii funkcie alebo sme dostali neocakavany token.
+        default: 
             fprintf(stderr, "Syntax error: Didn't get what expected :(\n");
             exit(2);
     }
     exit(0);
 }
 
+/// @brief Funkcia spracuje konstantu/vyraz. 
+/// @param token Ukazatel na spracovavany token.
+/// @param expect1 Prvy typ tokenu ktory oznacuje koniec konstanty/vyrazu.
+/// @param expect2 Druhy typ tokenu ktory oznacuje koniec konstanty/vyrazu.
+/// @return True ak sa jedna o platnu konstantu/vyraz, inak ukonci program s chybou.
 bool p_const(token_t * token, token_type expect1, token_type expect2)
 {
     token_t oldtoken = *token;
@@ -517,9 +538,8 @@ bool p_const(token_t * token, token_type expect1, token_type expect2)
         ASSnode_t* exprptr = NULL;
         exprptr = expr(&oldtoken, token, expect1, expect2, 0);
         if(exprptr != NULL)
-        //if(expr(&oldtoken, token, expect1, expect2, 0) == 0)
         {
-            DPRINT(("%s was an expression.\n", oldtoken.value));
+            
             return true;
         }
         else
@@ -528,13 +548,18 @@ bool p_const(token_t * token, token_type expect1, token_type expect2)
             exit(2);
         }
     }
-    else
+    else // Ak je dalsi token ukoncujuci typ tokenu.
     {
-        DPRINT(("%s was a constant literal.\n", oldtoken.value));
+        
         return true;
     }
 }
 
+/// @brief Funkcia spracuje priradenie
+/// @param token Ukazatel na spracovavany token.
+/// @param astree Ukazatel na abstraktny syntakticky strom.
+/// @return True, v pripade ze je priradena funkcia, konstanta alebo výraz
+///         inak ukonci program s chybou.
 bool p_assigned(token_t *token, ASSnode_t *astree)
 {
     if(token->type == ID_function)
@@ -550,7 +575,7 @@ bool p_assigned(token_t *token, ASSnode_t *astree)
         exprptr = expr(&oldtoken, token, semicolon, semicolon, 0);
         if(exprptr != NULL)
         {
-            DPRINT(("%s was an expression.\n", oldtoken.value));
+            
             astree->left = exprptr;
             return true;
         }
@@ -562,30 +587,41 @@ bool p_assigned(token_t *token, ASSnode_t *astree)
     }
 }
 
+/// @brief Funkcia spracuje volanie funkcie.
+/// @param token Ukazatel na spracovavany token.
+/// @param astree Ukazatel na abstraktny syntakticky strom.
+/// @return Vracia true pri spravnej definicii funkcie, inak skonci program s chybou.
 bool p_fcall(token_t *token, ASSnode_t *astree)
 {
+    // Pomocne premenne na semanticku analyzu
     bst_node_t* symtableptr = NULL;
     int fundataindex = -1;
-    if(symtablelist.activeElement->fundata != NULL && !isDefined(token, symDLL_GetFirst(&symtablelist)))
+    // symtablelist.activeElement->fundata != NULL -> znamena ze analyzator sa nachadza v definicii funkcie.
+    // Ak nie sme v definicie funkcie alebo uz je definovana.
+    if(symtablelist.activeElement->fundata != NULL && !isDefined(token, symDLL_GetFirst(&symtablelist))) 
     {
+        // Nachadzame sa vo funkcii -> nemusime kontrolovat ci volana funkcia je definovana -> pridame
+        // do listu zavislosti, skontroluje sa pri volani funkcie.
         for(int i = 0; i < symtablelist.activeElement->fundata->depCount; i++)
         {
-            if(strcmp(symtablelist.activeElement->fundata->dependencies[i]->functionid, token->value) == 0)
+            // Ak sa funkcia nachadza v liste zavislosti, jej index sa ulozi.
+            if(strcmp(symtablelist.activeElement->fundata->dependencies[i]->functionid, token->value) == 0) 
             {
                 fundataindex = i;
                 break;
             }
         }
+        // Ak sa funkcie nenachadza v liste zavislosti, bude pridana.
         if(fundataindex == -1)
         {
             fdepcount += 1;
             fdeplist = realloc(symtablelist.activeElement->fundata->dependencies, fdepcount * sizeof(struct dependencyPair*));
-            fdeplist[fdepcount-1] = malloc(sizeof(struct dependencyPair));
+            fdeplist[fdepcount-1] = safeMalloc(sizeof(struct dependencyPair));
             fdeplist[fdepcount-1]->functionid = calloc(strlen(token->value)+1,1);
-            fdeplist[fdepcount-1]->paramCount = 0;
-            DPRINT(("%s added to dependency list at index %d \n", token->value, fdepcount-1));
+            fdeplist[fdepcount-1]->paramCount = -1;
+            
             strcpy(symtablelist.activeElement->fundata->dependencies[fdepcount-1]->functionid, token->value);
-            fundataindex = fdepcount - 1;
+            fundataindex = fdepcount - 1; // Index novej zavislosti je ulozeny.
         }
         
     }
@@ -610,7 +646,6 @@ bool p_fcall(token_t *token, ASSnode_t *astree)
             }
         }
     }
-    //bst_node_t* symtableptr = checkDefined(token, symDLL_GetFirst(&symtablelist));
     *token = get_token(SKIP);
     if(token->type == lbracket)
     {
@@ -620,9 +655,16 @@ bool p_fcall(token_t *token, ASSnode_t *astree)
         {
             if(symtablelist.activeElement->fundata != NULL && fundataindex != -1) // Keď sa parser nachádza v tele funkcie.
             {
+                // Ak je funkcia ulozena ale nezhoduje sa pocet parametrov, ukonci program s chybou.
+                if(fdeplist[fundataindex]->paramCount != -1 || fdeplist[fundataindex]->paramCount != paramcount)
+                {
+                    fprintf(stderr, "Semantic error: Dependent function called multiple times with different parameters.\n");
+                    exit(3);
+                }
+                // Inak je ulozeny pocet parametrov.
                 fdeplist[fundataindex]->paramCount = paramcount;
             }
-            DPRINT(("RETURNED WITH: %s\n",token->value));
+            
             return true;
         }
         else
@@ -637,7 +679,11 @@ bool p_fcall(token_t *token, ASSnode_t *astree)
         exit(2);
     }
 }
-
+/// @brief Funkcia na volanie argumentov funkcie.
+/// @param token Ukazatel na spracovavany token.
+/// @param astree Ukazatel na abstraktny syntakticky strom.
+/// @param symtableentry Ukazatel na funkciu v tabulke symbolov.
+/// @param paramcount Pocet parametrov.
 bool p_callargs(token_t *token, ASSnode_t *astree, bst_node_t *symtableentry, int* paramcount)
 {
     if(token->type == rbracket)
@@ -658,6 +704,11 @@ bool p_callargs(token_t *token, ASSnode_t *astree, bst_node_t *symtableentry, in
     }
 }
 
+/// @brief Funkcia na spracovanie pokracovania argumentov volania funkcie.
+/// @param token Ukazatel na spracovavany token.
+/// @param astree Ukazatel na abstraktny syntakticky strom.
+/// @param symtableentry Ukazatel na funkciu v tabulke symbolov.
+/// @param paramcount Pocet parametrov.
 bool p_ncallargs(token_t *token, ASSnode_t *astree, bst_node_t *symtableentry, int* paramcount)
 {
     if(token->type == rbracket)
@@ -683,10 +734,15 @@ bool p_ncallargs(token_t *token, ASSnode_t *astree, bst_node_t *symtableentry, i
         exit(2);
     }
 }
-
+/// @brief Funkcia na spracovanie vyrazu alebo konstanty.
+/// @param token Ukazatel na spracovavany token.
+/// @param astree Ukazatel na abstraktny syntakticky strom.
+/// @param symtableentry Ukazatel na funkciu v tabulke symbolov.
+/// @param paramcount Pocet parametrov.
+/// @return True ak je token validny vyraz alebo konstanta.
 bool p_vals(token_t *token, ASSnode_t* astree, bst_node_t *symtableentry, int* paramcount)
 {
-    DPRINT(("Called p_vals with %s\n", token->value));
+    
     if(token->type == ID_function)
     {
         bst_node_t* symtableptr = checkDefined(token, symDLL_GetFirst(&symtablelist));
@@ -701,9 +757,6 @@ bool p_vals(token_t *token, ASSnode_t* astree, bst_node_t *symtableentry, int* p
             {
 
             }
-            // checkParam(fundata, paramcount, typ)
-            //checkParam(symtableentry->funData, *paramcount, symtableptr->funData->returnType);
-            //else if (symtableentry->funData->paramTypes[(*paramcount)-1] != symtableptr->funData->returnType)
             else if(!checkParam(symtableentry->funData, *paramcount, symtableptr->funData->returnType))
             {
                 fprintf(stderr, "Semantic error: Argument type %d number %d doesn't match return type %d of function %s\n",
@@ -735,8 +788,7 @@ bool p_vals(token_t *token, ASSnode_t* astree, bst_node_t *symtableentry, int* p
                         {
 
                         }
-                        else if(oldtoken.type != ID_variable && !checkParam(symtableentry->funData, *paramcount, oldtoken.type)
-                        /*oldtoken.type != symtableentry->funData->paramTypes[(*paramcount)-1]*/)
+                        else if(oldtoken.type != ID_variable && !checkParam(symtableentry->funData, *paramcount, oldtoken.type))
                         {
                             fprintf(stderr, "Semantic error: Argument type %d number %d doesn't match type %d of literal %s\n",
                             symtableentry->funData->paramTypes[(*paramcount)-1], *paramcount, oldtoken.type, oldtoken.value);
@@ -758,9 +810,9 @@ bool p_vals(token_t *token, ASSnode_t* astree, bst_node_t *symtableentry, int* p
             exprptr = expr(&oldtoken, token, comma, rbracket, 0);
             if(exprptr != NULL)
             {
-                DPRINT(("SECOND: %s was an expression in if statement\n", oldtoken.value));
+                
                 astree->left = exprptr;
-                DPRINT(("%s\n", token->value));
+                
                 return true;
             }
             else
@@ -771,7 +823,11 @@ bool p_vals(token_t *token, ASSnode_t* astree, bst_node_t *symtableentry, int* p
         }
     }
 }
-
+/// @brief Spracuje podmienku if
+/// @param token Ukazatel na spracovavany token.
+/// @param astree Ukazatel na abstraktny syntakticky strom.
+/// @param mainreturn Premenna, ktora oznacuje ci sa analyzator nachadza v hlavnom tele programu (nie vo funkcii).
+/// @param rettyp Typ ktory vracia funkcia v ktorej sa if nachadza.
 bool p_ifstat(token_t * token, ASSnode_t *astree, bool mainreturn, returnType_t rettyp)
 {
     *token = get_token(SKIP);
@@ -780,13 +836,13 @@ bool p_ifstat(token_t * token, ASSnode_t *astree, bool mainreturn, returnType_t 
         *token = get_token(SKIP);
         if(token->type == ID_function)
         {
-            DPRINT(("Calling fcall on %s\n", token->value));
+            
             astree->left = makeTree(FUNCTIONCALL, NULL, makeLeaf(token));
             if(p_fcall(token, astree->left))
             {
                 *token = get_token(SKIP);
                 astree->right = makeTree(THEN, NULL, NULL);
-                DPRINT(("Calling ifbody with %s\n", token->value));
+                
                 return p_ifbody(token, astree->right, mainreturn, rettyp);
             }
             else
@@ -804,7 +860,7 @@ bool p_ifstat(token_t * token, ASSnode_t *astree, bool mainreturn, returnType_t 
                 astree->left = exprptr;
                 astree->right = makeTree(THEN, NULL, NULL);
                 *token = get_token(SKIP);
-                DPRINT(("Calling ifbody with %s\n", token->value));
+                
                 return p_ifbody(token, astree->right, mainreturn, rettyp);
             }
             else
@@ -820,7 +876,11 @@ bool p_ifstat(token_t * token, ASSnode_t *astree, bool mainreturn, returnType_t 
         exit(2);
     }
 }
-
+/// @brief Spracuje telo if.
+/// @param token Ukazatel na spracovavany token.
+/// @param astree Ukazatel na abstraktny syntakticky strom.
+/// @param mainreturn Premenna, ktora oznacuje ci sa analyzator nachadza v hlavnom tele programu (nie vo funkcii).
+/// @param rettyp Typ ktory vracia funkcia v ktorej sa if nachadza.
 bool p_ifbody(token_t *token, ASSnode_t *astree, bool mainreturn, returnType_t rettyp)
 {
     if(token->type == lsetbracket)
@@ -836,7 +896,11 @@ bool p_ifbody(token_t *token, ASSnode_t *astree, bool mainreturn, returnType_t r
         exit(2);
     }
 }
-
+/// @brief Spracuje telo else.
+/// @param token Ukazatel na spracovavany token.
+/// @param astree Ukazatel na abstraktny syntakticky strom.
+/// @param mainreturn Premenna, ktora oznacuje ci sa analyzator nachadza v hlavnom tele programu (nie vo funkcii).
+/// @param rettyp Typ ktory vracia funkcia v ktorej sa else nachadza.
 bool p_elsebody(token_t *token, ASSnode_t *astree, bool mainreturn, returnType_t rettyp)
 {
     if(token->type == funelse)
@@ -859,7 +923,11 @@ bool p_elsebody(token_t *token, ASSnode_t *astree, bool mainreturn, returnType_t
         exit(2);
     }
 }
-
+/// @brief Spracuje podmienku while.
+/// @param token Ukazatel na spracovavany token.
+/// @param astree Ukazatel na abstraktny syntakticky strom.
+/// @param mainreturn Premenna, ktora oznacuje ci sa analyzator nachadza v hlavnom tele programu (nie vo funkcii).
+/// @param rettyp Typ ktory vracia funkcia v ktorej sa while nachadza.
 bool p_whilestat(token_t * token, ASSnode_t *astree, bool mainreturn, returnType_t rettyp)
 {
     *token = get_token(SKIP);
@@ -868,13 +936,13 @@ bool p_whilestat(token_t * token, ASSnode_t *astree, bool mainreturn, returnType
         *token = get_token(SKIP);
         if(token->type == ID_function)
         {
-            DPRINT(("Calling fcall on %s\n", token->value));
+            
             astree->left = makeTree(FUNCTIONCALL, NULL, makeLeaf(token));
             if(p_fcall(token, astree->left))
             {
                 *token = get_token(SKIP);
                 astree->right = makeTree(RYAN_GOSLING, NULL, NULL);
-                DPRINT(("Calling whilebody with %s\n", token->value));
+                
                 return p_whilebody(token, astree->right, mainreturn, rettyp);
             }
             else
@@ -885,16 +953,16 @@ bool p_whilestat(token_t * token, ASSnode_t *astree, bool mainreturn, returnType
         }
         else
         {
-            DPRINT(("TOKEN: %s\n", token->value));
+            
             ASSnode_t *exprptr = NULL;
             exprptr = expr(NULL, token, rbracket, rbracket, 0);
             if(exprptr != NULL)
             {
                 astree->left = exprptr;
-                DPRINT(("%s was an expression in if statement\n", token->value));
+                
                 *token = get_token(SKIP);
                 astree->right = makeTree(RYAN_GOSLING, NULL, NULL);
-                DPRINT(("Calling whilebody with %s\n", token->value));
+                
                 return p_whilebody(token, astree->right,mainreturn, rettyp);
             }
             else
@@ -911,6 +979,11 @@ bool p_whilestat(token_t * token, ASSnode_t *astree, bool mainreturn, returnType
     }
 }
 
+/// @brief Spracuje telo while.
+/// @param token Ukazatel na spracovavany token.
+/// @param astree Ukazatel na abstraktny syntakticky strom.
+/// @param mainreturn Premenna, ktora oznacuje ci sa analyzator nachadza v hlavnom tele programu (nie vo funkcii).
+/// @param rettyp Typ ktory vracia funkcia v ktorej sa while nachadza.
 bool p_whilebody(token_t * token, ASSnode_t *astree, bool mainreturn, returnType_t rettyp)
 {
     if(token->type == lsetbracket)
@@ -925,10 +998,15 @@ bool p_whilebody(token_t * token, ASSnode_t *astree, bool mainreturn, returnType
     }
 }
 
+/// @brief Funkcie pre deklaraciu funkcii.
+/// @param token Ukazatel na spracovavany token.
+/// @param astree Ukazatel na abstraktny syntakticky strom.
+/// @return True ak je deklaracia funkcie syntakticky spravne, inak ukonci program s chybou.
 bool p_fundec(token_t * token, ASSnode_t *astree)
 {
     if(token->type == ID_function)
     {
+        // Ak existuje funkcia v tabulke symbolov, ukonci program s chybou.
         if(bst_search(symDLL_GetFirst(&symtablelist), token->value) != NULL)
         {
             fprintf(stderr, "Semantic error: Function %s redefinition.\n", token->value);
@@ -945,6 +1023,7 @@ bool p_fundec(token_t * token, ASSnode_t *astree)
 
         *token = get_token(SKIP);
 
+        // Vytvori novu tabulku symbolov pre funkciu
         bst_node_t *newscope;
         bst_init(&newscope);
         symDLL_InsertLast(&symtablelist, newscope, newfunc);
@@ -960,6 +1039,11 @@ bool p_fundec(token_t * token, ASSnode_t *astree)
     return true;
 }
 
+/// @brief Pripravi spracovanie argumentov
+/// @param token Ukazatel na spracovavany token.
+/// @param astree Ukazatel na abstraktny syntakticky strom.
+/// @param newfunc Ukazatel na strukturu dat novo deklarovanej funkcie.
+/// @return True ak je deklaracia argumentov syntakticky spravne, inak ukonci program s chybou.
 bool p_funargs(token_t * token, ASSnode_t *astree, funData_t* newfunc)
 {
     if(token->type == lbracket)
@@ -975,6 +1059,11 @@ bool p_funargs(token_t * token, ASSnode_t *astree, funData_t* newfunc)
     }
 }
 
+/// @brief Funkcia ktora spracuje typ a telo funkcie.
+/// @param token Ukazatel na spracovavany token.
+/// @param astree Ukazatel na abstraktny syntakticky strom.
+/// @param newfunc Ukazatel na strukturu dat novo deklarovanej funkcie.
+/// @return True ak typ a telo funkcie su syntakticky spravne, inak ukonci program s chybou.
 bool p_funbody(token_t * token, ASSnode_t *astree, funData_t* newfunc)
 {
     if(token->type == colon)
@@ -1004,6 +1093,7 @@ bool p_funbody(token_t * token, ASSnode_t *astree, funData_t* newfunc)
         *token = get_token(SKIP);
         if(p_body(token, false, astree->right, false, translate(astree->left->left->right->Patrick_Bateman->value)))
         {
+            // Po prejdeni funkcneho tela, nastavi predoslu tabulku symbolov ako aktivnu a poslednu zahodi.
             symDLL_Previous(&symtablelist);
             symDLL_DeleteLast(&symtablelist);
             return true;
@@ -1013,7 +1103,6 @@ bool p_funbody(token_t * token, ASSnode_t *astree, funData_t* newfunc)
             fprintf(stderr, "Unknown error in function declaration\n");
             exit(2);
         }
-        //return p_body(token, false, astree->right, false, translate(astree->left->left->right->Patrick_Bateman->value));
     }
     else
     {
@@ -1023,6 +1112,11 @@ bool p_funbody(token_t * token, ASSnode_t *astree, funData_t* newfunc)
     return true;
 }
 
+/// @brief Funkcia kontroluje parameter definicie funkcie.
+/// @param token Ukazatel na spracovavany token.
+/// @param astree Ukazatel na abstraktny syntakticky strom.
+/// @param newfunc Ukazatel na strukturu dat novo deklarovanej funkcie.
+/// @return True ak najde koniec zatvorky alebo pokracovanie argumentov, inak ukonci program s chybou.
 bool p_fparams(token_t * token, ASSnode_t *astree, funData_t* newfunc)
 {
     if(token->type == rbracket)
@@ -1036,10 +1130,11 @@ bool p_fparams(token_t * token, ASSnode_t *astree, funData_t* newfunc)
         newfunc->paramTypes = realloc(newfunc->paramTypes, (newfunc->ParamCount)*sizeof(int));
         newfunc->paramTypes[newfunc->ParamCount-1] = translate(token->value);
         astree->left = makeTree(FDEC_NPARAM, makeLeaf(token), NULL);
-        DPRINT(("%s TYPE IS TYPE \n", token->value));
+        
         *token = get_token(SKIP);
         if(token->type == ID_variable)
         {
+            // Ak uz predtym bolo toto meno premennej pouzite v parametroch, ukonci program s chybou.
             if(isDefined(token, symtablelist.activeElement->symtable))
             {
                 fprintf(stderr, "Semantic error: Function parameter %s redefinition.\n", token->value);
@@ -1047,10 +1142,11 @@ bool p_fparams(token_t * token, ASSnode_t *astree, funData_t* newfunc)
             }
             else
             {
+                // Vlozi parameter do tabulky symbolov.
                 bst_insert(&(symtablelist.activeElement->symtable), token->value, token->type, NULL);
             }
             astree->left->right = makeLeaf(token);
-            DPRINT(("%s TYPE IS VAR \n", token->value));
+            
             *token = get_token(SKIP);
             return p_nparam(token, astree, newfunc);
         }
@@ -1067,6 +1163,11 @@ bool p_fparams(token_t * token, ASSnode_t *astree, funData_t* newfunc)
     }
 }
 
+/// @brief Funkcia spracuje dalsi parameter deklaracie funkcie.
+/// @param token Ukazatel na token.
+/// @param astree Ukazatel na abstraktny syntakticky strom.
+/// @param newfunc Ukazatel na strukturu dat novo deklarovanej funkcie.
+/// @return True ak najde koniec zatvorky alebo pokracovanie argumentov, inak ukonci program s chybou.
 bool p_nparam(token_t *token, ASSnode_t *astree, funData_t* newfunc)
 {
     if(token->type == rbracket)

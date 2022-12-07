@@ -5,13 +5,15 @@
 #include "symdll.h"
 #include "bottom_up.h"
 
-bool parse();
+void parse();
 
+// Mody skeneru -> SKIP - preskakuje biele znaky a komentáre, NOSKIP - nepreskakuje nič.
 typedef enum
 {
     SKIP,
     NOSKIP
 } scannermode;
+extern symDLList_t symtablelist;
 
 bool p_start(token_t * token, ASSnode_t **astree);
 
@@ -20,7 +22,6 @@ bool p_prolog_sub1(token_t * token);
 bool p_prolog_sub2(token_t * token);
 
 bool p_body(token_t * token, bool defallowed, ASSnode_t *astree, bool mainreturn, returnType_t rettyp);
-extern symDLList_t symtablelist;
 
 bool p_fundec(token_t * token, ASSnode_t *astree);
 bool p_funargs(token_t * token, ASSnode_t *astree, funData_t* newfunc);
