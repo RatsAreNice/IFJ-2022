@@ -489,7 +489,12 @@ ASSnode_t* expr(token_t* first,token_t* second, token_type end, token_type end2,
         }
         else if(akcia == 'e'){
             fprintf(stderr, "pre kombinaciu zasobnik / vstup nieje v precedencnej tabulke symbol - chybna syntax");
-            exit(2);
+            if(q.ttyp == 1 || q.ttyp == 4 ||q.ttyp == 5 ||q.ttyp == 6 || q.ttyp == 7 || b.ttyp == 1 || b.ttyp == 4 ||b.ttyp == 5 ||b.ttyp == 6 || b.ttyp == 7){
+                exit(7);
+            }
+            else{
+                exit(2);
+            }
         }
 
         DLL_Last(&a);           //kontrola ci zasobnik obsahuje iba $S
