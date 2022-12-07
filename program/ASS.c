@@ -332,16 +332,47 @@ printf("JUMP %%IFBODY%d\n",ifcount);
 printf("LABEL %%IFBODY%d\n",ifcount);
 printf("JUMPIFNEQ %%IFTHEN%d TF@JMPCOND%d bool@true\n",ifcount,ifcount);
 //else
-
-
+helpsolve(node->right->right);
 printf("JUMP %%ENDIF%d\n",ifcount);
 printf("LABEL %%IFTHEN%d\n",ifcount);
 //then
-
-
+helpsolve(node->right->left);
 printf("LABEL %%ENDIF%d\n",ifcount);
-
+node->right->leaf=true;
 node->leaf=true;
+}
+void generatedec(ASSnode_t* node){
+  static unsigned int deccount;
+  static unsigned int pcount;
+  char* fid = TOK_PATH(node->left->left->left)->value;
+  ASSnode_t* nparam;
+  //printf("%%ret%s\n",); defvar na return value funkcie treba definovat na zaciatku
+  printf("JUMP %%skipdec%d\n",++deccount);
+  // BODY OF FUN
+  printf("LABEL %s\n",fid);
+  while (node->left->right!=NULL)
+  {
+    nparam = node->left->right->left;
+    printf("DEFVAR LF@%s",TOK_PATH(nparam->right)->value);
+    printf("MOVE LF@%s TF@param%d\n",TOK_PATH(nparam->right)->value,pcount);
+    printf("DEFVAR TF@%%param%dtype\n",pcount);
+    printf("TYPE TF@%%param%dtype TF@param%d\n",pcount,pcount);
+    printf("JUMPIFNEQ %%%sEXIT4 TF@%%param%dtype string@%s\n",fid,pcount,TOK_PATH(nparam->left)->value);
+    node->left->right=node->left->right->right;
+    pcount++;
+  }
+  pcount=0;
+
+  helpsolve(node->right);
+
+  printf("DEFVAR TF@%%rettype\n");
+  printf("TYPE TF@%%rettype LF@%%ret%s\n",fid);
+  printf("JUMPIFNEQ %%%sEXIT4 TF@%%rettype string@%s\n",fid,TOK_PATH(node->left->left->right)->value);
+  printf("RETURN\n");
+  printf("LABEL %%%sEXIT4\n",fid);
+  printf("EXIT int@4");
+  printf("LABEL %%skipdec%d",deccount);
+
 }
 
 void helpsolve(ASSnode_t* node) {
@@ -378,7 +409,7 @@ void helpsolve(ASSnode_t* node) {
         break;
       }
       else {
-        fprintf(stderr, "SOMETHING WEIRD HAPPENED\n");
+        fprintf(stderr, "SOMETHING WEIRD HAPPENED IN SUB\n");
         exit(7);
       }
       break;
@@ -408,7 +439,7 @@ void helpsolve(ASSnode_t* node) {
           break;
         }
       } else {
-        fprintf(stderr, "SOMETHING WEIRD HAPPENED\n");
+        fprintf(stderr, "SOMETHING WEIRD HAPPENED IN ASSIGN\n");
         exit(7);
       }
       break;
@@ -475,7 +506,7 @@ void helpsolve(ASSnode_t* node) {
           FREETHEM
         }
       } else {
-        fprintf(stderr, "SOMETHING WEIRD HAPPENED\n");
+        fprintf(stderr, "SOMETHING WEIRD HAPPENED IN GT/LT\n");
         exit(7);
       }
       break;
@@ -515,7 +546,7 @@ void helpsolve(ASSnode_t* node) {
           FREETHEM
         }
       } else {
-        fprintf(stderr, "SOMETHING WEIRD HAPPENED\n");
+        fprintf(stderr, "SOMETHING WEIRD HAPPENED IN EQ\n");
         exit(7);
       }
       break;
@@ -533,8 +564,26 @@ void helpsolve(ASSnode_t* node) {
       generateif(node);
       break;
     case FUNCTIONCALL:
+      if (strcmp(TOK_PATH(node->right)->value,"write")==0)
+      { 
+        while (node->left!=NULL)
+        {
+        char* tmp = checkvar(node->left->left);
+        printf("WRITE %s\n",tmp);
+        free(tmp);
+        node->left=node->left->right;
+        }
+      }else
+      {
       LEAFCHECK
+      }
       break;
+    case ARGS:
+      LEAFCHECK
+      break; 
+    case FDEC:
+      generatedec(node);
+      break;   
     case RYAN_GOSLING:
       LEAFCHECK
       break;

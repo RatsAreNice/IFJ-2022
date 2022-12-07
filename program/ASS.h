@@ -12,7 +12,7 @@ extern FILE *allahprint;
 #define bbool (token_type) - 2
 #define TOK_PATH(x) x->Patrick_Bateman
 #define LEAFCHECK                     \
-  if (node->left != NULL){             \
+  if (node->left != NULL){            \
     if (node->left->leaf == false) {  \
       helpsolve(node->left);          \
     }                                 \
@@ -21,7 +21,8 @@ extern FILE *allahprint;
     if (node->right->leaf == false) { \
       helpsolve(node->right);         \
     }                                 \
-    }
+  } 
+
 // ZISK RELEVANTNYCH POINTEROV
 #define GETTHEM                      \
   char *str1 = checkvar(node->left); \

@@ -66,7 +66,7 @@ bool p_callargs(token_t *token, ASSnode_t *astree, bst_node_t *symtableentry, in
 bool p_ncallargs(token_t *token, ASSnode_t *astree, bst_node_t *symtableentry, int* paramcount);
 bool p_vals(token_t *token, ASSnode_t* astree, bst_node_t *symtableentry, int* paramcount);
 
-//symDLList_t symtablelist;
+symDLList_t symtablelist;
 
 typedef enum
 {
