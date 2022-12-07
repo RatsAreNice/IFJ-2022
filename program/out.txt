@@ -3,13 +3,19 @@
 CREATEFRAME
 PUSHFRAME
 CREATEFRAME
-DEFVAR LF@%retintval
-DEFVAR LF@%retfloatval
-DEFVAR LF@%retsubstring
 DEFVAR LF@%retreads
 DEFVAR LF@%retreadi
 DEFVAR LF@%retreadf
+DEFVAR LF@%retfloatval
+DEFVAR LF@%retchr
+DEFVAR LF@%retf
+DEFVAR LF@%retintval
+DEFVAR LF@%retg
+DEFVAR LF@%retord
+DEFVAR LF@%retwrite
+DEFVAR LF@%retstrval
 DEFVAR LF@%retstrlen
+DEFVAR LF@%retsubstring
 JUMP main
 LABEL reads
 READ LF@%retreads string
@@ -125,14 +131,18 @@ TYPE TF@%rettype LF@%retf
 JUMPIFNEQ %fEXIT4 TF@%rettype string@void
 RETURN
 LABEL %fEXIT4
-EXIT int@4LABEL %skipdec1JUMP %skipdec2
+EXIT int@4
+LABEL %skipdec1
+JUMP %skipdec2
 LABEL g
 DEFVAR TF@%rettype
 TYPE TF@%rettype LF@%retg
 JUMPIFNEQ %gEXIT4 TF@%rettype string@int
 RETURN
 LABEL %gEXIT4
-EXIT int@4LABEL %skipdec2CREATEFRAME
+EXIT int@4
+LABEL %skipdec2
+CREATEFRAME
 CALL f
 CREATEFRAME
 CALL g

@@ -455,8 +455,8 @@ void generatedec(ASSnode_t* node){
   printf("JUMPIFNEQ %%%sEXIT4 TF@%%rettype string@%s\n",fid,TOK_PATH(node->left->left->right)->value);
   printf("RETURN\n");
   printf("LABEL %%%sEXIT4\n",fid);
-  printf("EXIT int@4");
-  printf("LABEL %%skipdec%d",deccount);
+  printf("EXIT int@4\n");
+  printf("LABEL %%skipdec%d\n",deccount);
 
 
 }
@@ -1038,6 +1038,9 @@ void PreOrder(bst_node_t* tree){
   if (tree->type==16)
   {
     printf("DEFVAR LF@%s\n",tree->key);
+  }else
+  {
+    printf("DEFVAR LF@%%ret%s\n",tree->key);
   }
   PreOrder(tree->left);
   PreOrder(tree->right);
@@ -1046,13 +1049,13 @@ void PreOrder(bst_node_t* tree){
 /// @brief funkcia na tlacenie vstavanych funkcii a premennych
 void print_builtins() {
   PreOrder(symDLL_GetFirst(&symtablelist));
-  printf("DEFVAR LF@%%retintval\n");
+  /*printf("DEFVAR LF@%%retintval\n");
   printf("DEFVAR LF@%%retfloatval\n");
   printf("DEFVAR LF@%%retsubstring\n");
   printf("DEFVAR LF@%%retreads\n");
   printf("DEFVAR LF@%%retreadi\n");
   printf("DEFVAR LF@%%retreadf\n");
-  printf("DEFVAR LF@%%retstrlen\n");
+  printf("DEFVAR LF@%%retstrlen\n");*/
  
   printf("JUMP main\n");
   reads();
