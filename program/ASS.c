@@ -245,31 +245,75 @@ void ASSIGNVAR(ASSnode_t* node) {
 }
 /// @brief pomocna funkcia na generaciu kodu
 /// @param node uzol premienaný na kód
-void LTCOMP(ASSnode_t* node) {
+void LTCOMP(ASSnode_t* node,bool lolec) {
+  char* var1type = createVar();
+  char* var2type = createVar();
+  char* tmplabel = labelgen();
+  char* tmplabel2 = labelgen();
+  printf("DEFVAR TF@%s\n",var1type);
+  printf("DEFVAR TF@%s\n",var2type);
+  GETTHEM
+  printf("TYPE TF@%s %s\n",var1type,str1);
+  printf("TYPE TF@%s %s\n",var2type,str1);
+  printf("JUMPIFEQ %s TF@%s TF@%s\n",tmplabel,var1type,var2type);
+  printf("EXIT int@7\n");
+  printf("LABEL %s\n",tmplabel);
   char* tempvar = createVar();
   printf("DEFVAR LF@%s\n", tempvar);
-  GETTHEM
+  if (lolec)
+  {
+    printf("EQ LF@%s %s %s",tempvar,str1,str2);
+    printf("JUMPIFEQ %s LF@%s bool@true\n",tmplabel2,tempvar);
+  }
+
   printf("LT LF@%s %s %s\n", tempvar, str1, str2);
+  printf("LABEL %s\n",tmplabel2);
   FREETHEM
   TOK_PATH(node) = TOK_PATH(node->left);
   TOK_PATH(node)->value = tempvar;
   TOK_PATH(node)->type = bbool;
+  node->isvar=true;
   node->leaf = true;
+  free(var1type);
+  free(var2type);
+  free(tmplabel);
+  free(tmplabel2);
   FREESONS
 }
 /// @brief pomocna funkcia na generaciu kodu
 /// @param node uzol premienaný na kód
-void GTCOMP(ASSnode_t* node) {  // !!! COPYPASTE
+void GTCOMP(ASSnode_t* node,bool lolec) {  // !!! COPYPASTE
+   char* var1type = createVar();
+  char* var2type = createVar();
+  char* tmplabel = labelgen();
+  char* tmplabel2 = labelgen();
+  printf("DEFVAR TF@%s\n",var1type);
+  printf("DEFVAR TF@%s\n",var2type);
+  GETTHEM
+  printf("TYPE TF@%s %s\n",var1type,str1);
+  printf("TYPE TF@%s %s\n",var2type,str1);
+  printf("JUMPIFEQ %s TF@%s TF@%s\n",tmplabel,var1type,var2type);
+  printf("EXIT int@7\n");
+  printf("LABEL %s\n",tmplabel);
   char* tempvar = createVar();
   printf("DEFVAR LF@%s\n", tempvar);
-  GETTHEM
-  printf("LT LF@%s %s %s\n", tempvar, str1, str2);
+  if (lolec)
+  {
+    printf("EQ LF@%s %s %s",tempvar,str1,str2);
+    printf("JUMPIFEQ %s LF@%s bool@true\n",tmplabel2,tempvar);
+  }
+
+  printf("GT LF@%s %s %s\n", tempvar, str1, str2);
   FREETHEM
   TOK_PATH(node) = TOK_PATH(node->left);
   TOK_PATH(node)->value = tempvar;
   TOK_PATH(node)->type = bbool;
   node->isvar = true;
   node->leaf = true;
+  free(var1type);
+  free(var2type);
+  free(tmplabel);
+  free(tmplabel2);
   FREESONS
 }
 /// @brief pomocna funkcia na generaciu kodu
@@ -543,8 +587,10 @@ void helpsolve(ASSnode_t* node) {
     // case EQ:
     case GT:
     case LT:
+    case LTE:
+    case GTE:
       LEAFCHECK  // macro
-          char* tstr1 = CHECKTYPE(node->left);
+      char* tstr1 = CHECKTYPE(node->left);
       char* tstr2 = CHECKTYPE(node->right);
       GETTHEM
       printf("DEFVAR %s\n", tstr1);
@@ -564,10 +610,22 @@ void helpsolve(ASSnode_t* node) {
 
       if (node->left->leaf == true && node->right->leaf == true) {
         if (TOK_PATH(node->left)->type == TOK_PATH(node->right)->type) {
-          if (node->OP == LT) {
-            LTCOMP(node);
-          } else {
-            GTCOMP(node);
+          switch (node->OP)
+          {
+          case LT:
+            LTCOMP(node,false);
+            break;
+          case GT:
+            GTCOMP(node,false);
+            break;
+          case LTE:
+            LTCOMP(node,true);
+            break;
+          case GTE:
+            GTCOMP(node,true);
+            break;
+            default:
+            break;
           }
 
         } else if (TOK_PATH(node->left)->type == string &&
@@ -595,12 +653,23 @@ void helpsolve(ASSnode_t* node) {
             node->right->isvar = true;
             // do cmp
           }
-          if (node->OP == LT) {
-            LTCOMP(node);
-          } else {
-            GTCOMP(node);
+          switch (node->OP)
+          {
+          case LT:
+            LTCOMP(node,false);
+            break;
+          case GT:
+            GTCOMP(node,false);
+            break;
+          case LTE:
+            LTCOMP(node,true);
+            break;
+          case GTE:
+            GTCOMP(node,true);
+            break;
+          default:
+          break;
           }
-          FREETHEM
         }
       } else {
         fprintf(stderr, "SOMETHING WEIRD HAPPENED IN GT/LT\n");

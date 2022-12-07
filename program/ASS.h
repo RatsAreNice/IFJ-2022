@@ -114,8 +114,8 @@ void ASSIGNVARFloat_Int(ASSnode_t *node);
 // LT,GT,EQ
 void NILCHECK(ASSnode_t *node);
 char *CHECKTYPE(ASSnode_t *node);
-void LTCOMP(ASSnode_t *node);
-void GTCOMP(ASSnode_t *node);
+void LTCOMP(ASSnode_t *node,bool lolec);
+void GTCOMP(ASSnode_t *node,bool lolec);
 
 // CONCAT
 void CONCATSTR(ASSnode_t *node);
