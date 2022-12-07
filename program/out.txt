@@ -114,3 +114,10 @@ MOVE LF@%ival int@0
 CREATEFRAME
 RETURN
 LABEL main
+DEFVAR LF@$s
+MOVE LF@$s readiJUMP %skipdec1
+LABEL f
+DEFVAR LF@$xMOVE LF@$x TF@param0
+DEFVAR TF@%param0type
+TYPE TF@%param0type TF@param0
+JUMPIFNEQ %fEXIT4 TF@%param0type string@int

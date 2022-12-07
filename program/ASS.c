@@ -2,6 +2,7 @@
 // autor: Matus Dobias
 
 #include "ASS.h"
+#include "Parser.h"
 FILE* allahprint;
 
 void ASSinit(ASSnode_t** tree) { *tree = NULL; }
@@ -215,23 +216,27 @@ void SUBFloat_Float(ASSnode_t* node) {
 }
 
 void ASSIGNVAR(ASSnode_t* node) {
-  char* var = malloc(sizeof(char) * strlen(TOK_PATH(node)->value));
+ /* char* var = malloc(sizeof(char) * strlen(TOK_PATH(node)->value));
 
   strcpy(var, TOK_PATH(node)->value);
   TOK_PATH(node)->value = var;  // CHCEM SA UISTIT ZE TAM BUDE MALLOC
-
-  printf("DEFVAR LF@%s\n", TOK_PATH(node)->value);
+*/
+  TOK_PATH(node) = TOK_PATH(node->right);
+  printf("DEFVAR LF@%s\n", TOK_PATH(node->right)->value);
   TOK_PATH(node)->type = TOK_PATH(node->left)->type;
-  node->leaf = true;
-  node->isvar = true;
+  char* str1 = TOK_PATH(node->left)->value;
+  printf("MOVE LF@%s %s",TOK_PATH(node->right)->value,str1);
+  free(str1);
+
+  /*node->leaf = true;
   char* str1 = checkvar(node);
   char* str2 = checkvar(node->left);
   printf("MOVE %s %s\n", str1, str2);
   FREETHEM
-  delete_node(node->left);
+  delete_node(node->left);*/
 }
 
-void ASSIGNVARInt_Float(ASSnode_t* node) {
+/*void ASSIGNVARInt_Float(ASSnode_t* node) {
   char* tempvar = createVar();
   printf("DEFVAR LF@%s\n", tempvar);
   char* str1 = checkvar(node->left);
@@ -252,7 +257,7 @@ void ASSIGNVARFloat_Int(ASSnode_t* node) {
   TOK_PATH(node->left)->value = tempvar;
   TOK_PATH(node->left)->type = integer;
   ASSIGNVAR(node);
-}
+}*/
 void LTCOMP(ASSnode_t* node) {
   char* tempvar = createVar();
   printf("DEFVAR LF@%s\n", tempvar);
@@ -415,18 +420,9 @@ void helpsolve(ASSnode_t* node) {
       break;
     case ASSIGN:
       if (node->left->leaf == false) helpsolve(node->left);
-      if (node->left->leaf == true) {
-        if (TOK_PATH(node->left)->type == ID_variable) {
-          ASSIGNVAR(node);
-          break;
-        }  // DUMMY EXPERIMENT AAAA /// remove later
-        if (TOK_PATH(node) == NULL) {
-          token_t* dummy = malloc(sizeof(token_t));
-          dummy->type = TOK_PATH(node->left)->type;
-          TOK_PATH(node) = dummy;
-        }
+      ASSIGNVAR(node);
 
-        if (TOK_PATH(node->left)->type == TOK_PATH(node)->type) {
+        /*if (TOK_PATH(node->left)->type == TOK_PATH(node)->type) {
           ASSIGNVAR(node);
           break;
         } else if (TOK_PATH(node)->type == ffloat &&
@@ -441,7 +437,7 @@ void helpsolve(ASSnode_t* node) {
       } else {
         fprintf(stderr, "SOMETHING WEIRD HAPPENED IN ASSIGN\n");
         exit(7);
-      }
+      }*/
       break;
     // case EQ:
     case GT:
@@ -575,6 +571,14 @@ void helpsolve(ASSnode_t* node) {
         }
       }else
       {
+        node->Patrick_Bateman=node->right->Patrick_Bateman;
+        TOK_PATH(node)->type=bst_search(symDLL_GetFirst(&symtablelist),TOK_PATH(node->right)->value)->funData->returnType;
+        /*
+        
+        BLOCK FOR FUNCTIONCALLING
+        
+        */
+      node->leaf=true;
       LEAFCHECK
       }
       break;
@@ -639,7 +643,7 @@ char* checkvar(ASSnode_t* node) {
         return strptr;
 
       default:
-        fprintf(stderr, "JIHAD JIHAD JIHAD\n");
+        fprintf(stderr, "JIHAD JIHAD JIHAD %d\n",TOK_PATH(node)->type);
         exit(17);
     }
   }
