@@ -3,21 +3,25 @@
 CREATEFRAME
 PUSHFRAME
 CREATEFRAME
+DEFVAR LF@%retintval
+DEFVAR LF@%retfloatval
+DEFVAR LF@%retsubstring
+DEFVAR LF@%retreads
+DEFVAR LF@%retreadi
+DEFVAR LF@%retreadf
+DEFVAR LF@%retstrlen
 JUMP main
 LABEL reads
-DEFVAR TF@%STRING
-READ TF@%STRING string
+READ LF@%retreads string
 RETURN
 LABEL readi
-DEFVAR TF@%INT
-READ TF@%INT int
+READ LF@%retreadi int
 RETURN
 LABEL readf
-DEFVAR TF@%FLOAT
-READ TF@%FLOAT float
+READ LF@%retreadf float
 RETURN
 LABEL substring
-MOVE LF@%STR1 nil@nil
+MOVE LF@%retsubstring nil@nil
 DEFVAR TF@lolec
 STRLEN TF@lolec TF@param1
 DEFVAR TF@zerocheck
@@ -39,12 +43,12 @@ JUMPIFEQ %substrfail bool@true TF@ltcheck
 JUMPIFEQ %substrfail bool@true TF@lencheck1
 JUMPIFEQ %substrfail bool@true TF@lencheck2
 JUMPIFEQ %substrdone TF@param2 TF@param3
-GETCHAR LF@%STR1 TF@param1 TF@param2
+GETCHAR LF@%retsubstring TF@param1 TF@param2
 ADD TF@param2 TF@param2 int@1
 JUMPIFEQ %substrdone TF@param2 TF@param3
 LABEL %substrL1
 GETCHAR TF@i TF@param1 TF@param2
-CONCAT LF@%STR1 LF@%STR1 TF@i
+CONCAT LF@%retsubstring LF@%retsubstring TF@i
 ADD TF@param2 TF@param2 int@1
 LT TF@loopcheck TF@param2 TF@param3
 JUMPIFNEQ %substrL1 TF@loopcheck bool@false
@@ -57,7 +61,7 @@ RETURN
 LABEL %strlen
 DEFVAR TF@retval
 STRLEN TF@retval TF@param1
-MOVE LF@%slen TF@retval
+MOVE LF@%retstrlen TF@retval
 CREATEFRAME
 RETURN
 
@@ -70,20 +74,20 @@ JUMPIFEQ %fvalnil TF@TYPESTR string@nil
 JUMPIFEQ %fvalfloat TF@TYPESTR string@float
 INT2FLOAT TF@param1 TF@param1
 LABEL %fvalfloat
-MOVE LF@%fval TF@param1
+MOVE LF@%retfloatval TF@param1
 CREATEFRAME
 RETURN
 LABEL %fvalfail
 EXIT int@7
 LABEL %fvalbool
-MOVE LF@%fval float@0x0p+0
+MOVE LF@%retfloatval float@0x0p+0
 JUMPIFEQ %fvalfalse TF@param1 bool@false
-MOVE LF@%fval float@0x1p+0
+MOVE LF@%retfloatval float@0x1p+0
 LABEL %fvalfalse
 CREATEFRAME
 RETURN
 LABEL %fvalnil
-MOVE LF@%fval float@0x0p+0
+MOVE LF@%retfloatval float@0x0p+0
 CREATEFRAME
 RETURN
 
@@ -96,28 +100,39 @@ JUMPIFEQ %ivalnil TF@TYPESTR string@nil
 JUMPIFEQ %ivalint TF@TYPESTR string@int
 FLOAT2INT TF@param1 TF@param1
 LABEL %ivalint
-MOVE LF@%ival TF@param1
+MOVE LF@%retintval TF@param1
 CREATEFRAME
 RETURN
 LABEL %ivalfail
 DPRINT string@LOLEC
 EXIT int@7
 LABEL %ivalbool
-MOVE LF@%ival int@0
+MOVE LF@%retintval int@0
 JUMPIFEQ %ivalfalse TF@param1 bool@false 
-MOVE LF@%ival int@1
+MOVE LF@%retintval int@1
 LABEL %ivalfalse
 CREATEFRAME
 RETURN
 LABEL %ivalnil
-MOVE LF@%ival int@0
+MOVE LF@%retintval int@0
 CREATEFRAME
 RETURN
 LABEL main
+CREATEFRAME
+CALL readi
 DEFVAR LF@$s
-MOVE LF@$s readiJUMP %skipdec1
+MOVE LF@$s LF@%retreadi
+JUMP %skipdec1
 LABEL f
 DEFVAR LF@$xMOVE LF@$x TF@param0
 DEFVAR TF@%param0type
 TYPE TF@%param0type TF@param0
 JUMPIFNEQ %fEXIT4 TF@%param0type string@int
+WRITE LF@$x
+WRITE string@LOL
+DEFVAR TF@%rettype
+TYPE TF@%rettype LF@%retf
+JUMPIFNEQ %fEXIT4 TF@%rettype string@void
+RETURN
+LABEL %fEXIT4
+EXIT int@4LABEL %skipdec1EXIT int@0

@@ -41,7 +41,6 @@ typedef enum operand {
   SUB,
   MUL,
   DIV,
-  IDIV,
   LT,
   GT,
   LTE,

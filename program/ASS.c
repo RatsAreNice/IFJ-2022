@@ -222,12 +222,13 @@ void ASSIGNVAR(ASSnode_t* node) {
   TOK_PATH(node)->value = var;  // CHCEM SA UISTIT ZE TAM BUDE MALLOC
 */
   TOK_PATH(node) = TOK_PATH(node->right);
+  
   printf("DEFVAR LF@%s\n", TOK_PATH(node->right)->value);
   TOK_PATH(node)->type = TOK_PATH(node->left)->type;
-  char* str1 = TOK_PATH(node->left)->value;
+  char* str1 = checkvar(node->left);// TOK_PATH(node->left)->value;
   printf("MOVE LF@%s %s",TOK_PATH(node->right)->value,str1);
-  free(str1);
-
+  node->isvar=true;
+  //fprintf(stderr,"ASSIGN DONE");
   /*node->leaf = true;
   char* str1 = checkvar(node);
   char* str2 = checkvar(node->left);
@@ -308,6 +309,18 @@ void CONCATSTR(ASSnode_t* node) {
   node->leaf=true;
   node->isvar = true;
 }
+void MULTIPLY(ASSnode_t* node) {
+  char* tempvar = createVar();
+  printf("DEFVAR LF@%s\n", tempvar);
+  GETTHEM
+  printf("MUL LF@%s %s %s\n", tempvar, str1, str2);
+  FREETHEM
+  if (node->left->isvar) free(TOK_PATH(node->left)->value);
+  TOK_PATH(node) = TOK_PATH(node->left);
+  TOK_PATH(node)->value = tempvar;
+  node->leaf=true;
+  node->isvar = true;
+}
 
 void generateif(ASSnode_t* node) {
 static unsigned int ifcount;
@@ -351,6 +364,7 @@ void generatedec(ASSnode_t* node){
   static unsigned int pcount;
   char* fid = TOK_PATH(node->left->left->left)->value;
   ASSnode_t* nparam;
+  //fprintf(stderr,"SOM V FDEC\n");
   //printf("%%ret%s\n",); defvar na return value funkcie treba definovat na zaciatku
   printf("JUMP %%skipdec%d\n",++deccount);
   // BODY OF FUN
@@ -367,9 +381,9 @@ void generatedec(ASSnode_t* node){
     pcount++;
   }
   pcount=0;
-
+  
   helpsolve(node->right);
-
+  
   printf("DEFVAR TF@%%rettype\n");
   printf("TYPE TF@%%rettype LF@%%ret%s\n",fid);
   printf("JUMPIFNEQ %%%sEXIT4 TF@%%rettype string@%s\n",fid,TOK_PATH(node->left->left->right)->value);
@@ -377,6 +391,7 @@ void generatedec(ASSnode_t* node){
   printf("LABEL %%%sEXIT4\n",fid);
   printf("EXIT int@4");
   printf("LABEL %%skipdec%d",deccount);
+
 
 }
 
@@ -418,6 +433,45 @@ void helpsolve(ASSnode_t* node) {
         exit(7);
       }
       break;
+    case MUL:
+      LEAFCHECK
+      if (node->left->leaf == true && node->right->leaf == true) {
+        if (node->TOK_PATH(left)->type == node->TOK_PATH(right)->type) {
+         
+          MULTIPLY(node);
+
+        } else if ((node->TOK_PATH(left)->type == integer &&
+                   node->TOK_PATH(right)->type == ffloat) ||
+                   (node->TOK_PATH(right)->type == integer &&
+                   node->TOK_PATH(left)->type == ffloat) 
+                   ) {
+          if (node->TOK_PATH(left)->type == integer)
+          {
+            char* str1=checkvar(node->left);
+            printf("INT2FLOAT %s %s\n",str1,str1);
+            node->TOK_PATH(left)->type = ffloat;
+            free(str1);
+            MULTIPLY(node);
+          } else
+          {
+            char* str1=checkvar(node->right);
+            printf("INT2FLOAT %s %s\n",str1,str1);
+            node->TOK_PATH(right)->type = ffloat;
+            free(str1);
+            MULTIPLY(node);
+          }
+          
+
+        }else{ exit(7);} 
+
+        break;
+      }
+      else {
+        fprintf(stderr, "SOMETHING WEIRD HAPPENED IN MUL\n");
+        exit(7);
+      }
+      break;
+    break;
     case ASSIGN:
       if (node->left->leaf == false) helpsolve(node->left);
       ASSIGNVAR(node);
@@ -543,15 +597,16 @@ void helpsolve(ASSnode_t* node) {
         }
       } else {
         fprintf(stderr, "SOMETHING WEIRD HAPPENED IN EQ\n");
-        exit(7);
+       // exit(7);
       }
       break;
+    
     case CONCAT:
       LEAFCHECK
       if (TOK_PATH(node->left)->type != string ||
           TOK_PATH(node->right)->type != string) {
         fprintf(stderr, "CONCATENATION OF NON-STRING OPERANDS\n");
-        exit(7);
+       // exit(7);
       }
       CONCATSTR(node);
       break;
@@ -564,7 +619,9 @@ void helpsolve(ASSnode_t* node) {
       { 
         while (node->left!=NULL)
         {
+       // fprintf(stderr,"ENTERING WRITE\n");
         char* tmp = checkvar(node->left->left);
+       // fprintf(stderr,"LEAVING WRITE\n");
         printf("WRITE %s\n",tmp);
         free(tmp);
         node->left=node->left->right;
@@ -573,13 +630,28 @@ void helpsolve(ASSnode_t* node) {
       {
         node->Patrick_Bateman=node->right->Patrick_Bateman;
         TOK_PATH(node)->type=bst_search(symDLL_GetFirst(&symtablelist),TOK_PATH(node->right)->value)->funData->returnType;
+        /*fprintf(stderr,"%s",TOK_PATH(node->right)->value);
+        fprintf(stderr,"%d",TOK_PATH(node)->type);*/
         /*
         
         BLOCK FOR FUNCTIONCALLING
         
         */
-      node->leaf=true;
-      LEAFCHECK
+        printf("CREATEFRAME\n");
+        for (int i = 0; i < bst_search(symDLL_GetFirst(&symtablelist),TOK_PATH(node->right)->value)->funData->ParamCount; i++)
+        {
+          printf("DEFVAR TF@param%d\n",i);
+          printf("MOVE TF@param%d %s",i,checkvar(node->left->left));
+          node->left=node->left->right;
+          if (node->left == NULL) break;
+        }
+        printf("CALL %s\n",TOK_PATH(node->right)->value);
+        node->isvar=true;
+        char* trollec= malloc(sizeof(char)*(6+strlen(TOK_PATH(node->right)->value)));
+        sprintf(trollec,"%%ret%s\n",TOK_PATH(node->right)->value);
+        TOK_PATH(node)->value = trollec;
+        node->leaf=true;
+        LEAFCHECK
       }
       break;
     case ARGS:
@@ -592,9 +664,11 @@ void helpsolve(ASSnode_t* node) {
       LEAFCHECK
       break;
     default:
-      fprintf(stderr, "UNEXPECTED OPERAND (%d) HOW DID THAT HAPPEN\n",
+      /*fprintf(stderr, "UNEXPECTED OPERAND (%d) HOW DID THAT HAPPEN\n",
               node->OP);
-      exit(7);
+      exit(7);*/
+      LEAFCHECK
+      break;
   }
 }
 
@@ -622,7 +696,11 @@ char* labelgen() {
 char* checkvar(ASSnode_t* node) {
   char* strptr = malloc(sizeof(char) * 20);  // string@ + uint + \0 idk
   if (strptr == NULL) exit(99);
-
+  if (TOK_PATH(node)->type==ID_variable)
+  {
+    sprintf(strptr, "LF@%s", TOK_PATH(node)->value);
+    return strptr;
+  }
   if (node->isvar) {
     sprintf(strptr, "LF@%s", TOK_PATH(node)->value);
     return strptr;
@@ -659,25 +737,22 @@ char* createVar() {
 }
 void reads() {
   printf("LABEL reads\n");
-  printf("DEFVAR TF@%%STRING\n");
-  printf("READ TF@%%STRING string\n");
+  printf("READ LF@%%retreads string\n");
   printf("RETURN\n");
 }
 void readi() {
   printf("LABEL readi\n");
-  printf("DEFVAR TF@%%INT\n");
-  printf("READ TF@%%INT int\n");
+  printf("READ LF@%%retreadi int\n");
   printf("RETURN\n");
 }
 void readf() {
   printf("LABEL readf\n");
-  printf("DEFVAR TF@%%FLOAT\n");
-  printf("READ TF@%%FLOAT float\n");
+  printf("READ LF@%%retreadf float\n");
   printf("RETURN\n");
 }
 void phpsubstring() {
   printf("LABEL substring");
-  printf("\nMOVE LF@%%STR1 nil@nil\nDEFVAR TF@lolec");
+  printf("\nMOVE LF@%%retsubstring nil@nil\nDEFVAR TF@lolec");
   printf("\nSTRLEN TF@lolec TF@param1");
   printf("\nDEFVAR TF@zerocheck");
   printf("\nDEFVAR TF@zerocheck2");
@@ -698,12 +773,12 @@ void phpsubstring() {
   printf("\nJUMPIFEQ %%substrfail bool@true TF@lencheck1");
   printf("\nJUMPIFEQ %%substrfail bool@true TF@lencheck2");
   printf("\nJUMPIFEQ %%substrdone TF@param2 TF@param3");
-  printf("\nGETCHAR LF@%%STR1 TF@param1 TF@param2");
+  printf("\nGETCHAR LF@%%retsubstring TF@param1 TF@param2");
   printf("\nADD TF@param2 TF@param2 int@1");
   printf("\nJUMPIFEQ %%substrdone TF@param2 TF@param3");
   printf("\nLABEL %%substrL1");
   printf("\nGETCHAR TF@i TF@param1 TF@param2");
-  printf("\nCONCAT LF@%%STR1 LF@%%STR1 TF@i");
+  printf("\nCONCAT LF@%%retsubstring LF@%%retsubstring TF@i");
   printf("\nADD TF@param2 TF@param2 int@1");
   printf("\nLT TF@loopcheck TF@param2 TF@param3");
   printf("\nJUMPIFNEQ %%substrL1 TF@loopcheck bool@false");
@@ -717,7 +792,7 @@ void phpstrlen() {
   printf("LABEL %%strlen\n");
   printf("DEFVAR TF@retval\n");
   printf("STRLEN TF@retval TF@param1\n");
-  printf("MOVE LF@%%slen TF@retval\n");
+  printf("MOVE LF@%%retstrlen TF@retval\n");
   printf("CREATEFRAME\nRETURN\n");
 }
 void phpfloatval() {
@@ -730,20 +805,20 @@ void phpfloatval() {
   printf("\nJUMPIFEQ %%fvalfloat TF@TYPESTR string@float");
   printf("\nINT2FLOAT TF@param1 TF@param1");
   printf("\nLABEL %%fvalfloat");
-  printf("\nMOVE LF@%%fval TF@param1");
+  printf("\nMOVE LF@%%retfloatval TF@param1");
   printf("\nCREATEFRAME");
   printf("\nRETURN");
   printf("\nLABEL %%fvalfail");
   printf("\nEXIT int@7");
   printf("\nLABEL %%fvalbool");
-  printf("\nMOVE LF@%%fval float@0x0p+0");
+  printf("\nMOVE LF@%%retfloatval float@0x0p+0");
   printf("\nJUMPIFEQ %%fvalfalse TF@param1 bool@false");
-  printf("\nMOVE LF@%%fval float@0x1p+0");
+  printf("\nMOVE LF@%%retfloatval float@0x1p+0");
   printf("\nLABEL %%fvalfalse");
   printf("\nCREATEFRAME");
   printf("\nRETURN");
   printf("\nLABEL %%fvalnil");
-  printf("\nMOVE LF@%%fval float@0x0p+0");
+  printf("\nMOVE LF@%%retfloatval float@0x0p+0");
   printf("\nCREATEFRAME");
   printf("\nRETURN\n");
 }
@@ -757,25 +832,33 @@ void phpintval() {
   printf("\nJUMPIFEQ %%ivalint TF@TYPESTR string@int");
   printf("\nFLOAT2INT TF@param1 TF@param1");
   printf("\nLABEL %%ivalint");
-  printf("\nMOVE LF@%%ival TF@param1");
+  printf("\nMOVE LF@%%retintval TF@param1");
   printf("\nCREATEFRAME");
   printf("\nRETURN");
   printf("\nLABEL %%ivalfail");
   printf("\nDPRINT string@LOLEC");
   printf("\nEXIT int@7");
   printf("\nLABEL %%ivalbool");
-  printf("\nMOVE LF@%%ival int@0");
+  printf("\nMOVE LF@%%retintval int@0");
   printf("\nJUMPIFEQ %%ivalfalse TF@param1 bool@false ");
-  printf("\nMOVE LF@%%ival int@1");
+  printf("\nMOVE LF@%%retintval int@1");
   printf("\nLABEL %%ivalfalse");
   printf("\nCREATEFRAME");
   printf("\nRETURN");
   printf("\nLABEL %%ivalnil");
-  printf("\nMOVE LF@%%ival int@0");
+  printf("\nMOVE LF@%%retintval int@0");
   printf("\nCREATEFRAME");
   printf("\nRETURN\n");
 }
 void print_builtins() {
+  printf("DEFVAR LF@%%retintval\n");
+  printf("DEFVAR LF@%%retfloatval\n");
+  printf("DEFVAR LF@%%retsubstring\n");
+  printf("DEFVAR LF@%%retreads\n");
+  printf("DEFVAR LF@%%retreadi\n");
+  printf("DEFVAR LF@%%retreadf\n");
+  printf("DEFVAR LF@%%retstrlen\n");
+  //kod na generovanie navratovych premennych ostatnych funkcii TODO
   printf("JUMP main\n");
   reads();
   readi();
