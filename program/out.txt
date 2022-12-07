@@ -3,6 +3,8 @@
 CREATEFRAME
 PUSHFRAME
 CREATEFRAME
+DEFVAR LF@$s
+DEFVAR LF@$k
 DEFVAR LF@%retintval
 DEFVAR LF@%retfloatval
 DEFVAR LF@%retsubstring
@@ -118,21 +120,102 @@ MOVE LF@%retintval int@0
 CREATEFRAME
 RETURN
 LABEL main
-CREATEFRAME
-CALL readi
-DEFVAR LF@$s
-MOVE LF@$s LF@%retreadi
-JUMP %skipdec1
-LABEL f
-DEFVAR LF@$xMOVE LF@$x TF@param0
-DEFVAR TF@%param0type
-TYPE TF@%param0type TF@param0
-JUMPIFNEQ %fEXIT4 TF@%param0type string@int
-WRITE LF@$x
+DEFVAR LF@var0
+INT2FLOAT LF@var0 int@20
+DEFVAR LF@var1
+MUL LF@var1 LF@var0 float@0x1.466666p+2
+MOVE LF@$s LF@var1
+WRITE LF@$s
+DEFVAR LF@var2
+CONCAT LF@var2 string@lolec string@trollec
+MOVE LF@$k LF@var2
+WRITE LF@$k
+DEFVAR LF@var3
+DEFVAR LF@var4
+INT2FLOAT LF@var4 int@14
+SUB LF@var3 float@0x0p+0 float@0x1.6p+2
+MOVE LF@$k LF@var3
+WRITE LF@$k
+DEFVAR LF@tempvar0
+DEFVAR LF@tempvar1
+TYPE LF@tempvar0 LF@$s
+TYPE LF@tempvar1 LF@$k
+JUMPIFEQ label0 LF@tempvar0 string@nil
+JUMPIFEQ label0 LF@tempvar1 string@nil
+JUMP label1
+LABEL label0
+EXIT int@7
+LABEL label1
+DEFVAR LF@var5
+LT LF@var5 LF@$s LF@$k
+
+DEFVAR TF@var1
+DEFVAR TF@JMPCOND1
+DEFVAR TF@VARTYPE1
+MOVE TF@var1 LF@var5
+TYPE TF@VARTYPE1 TF@var1
+JUMPIFNEQ %skipboolcheck1 TF@VARTYPE1 string@bool
+MOVE TF@JMPCOND1 TF@var1
+JUMP %IFBODY1
+LABEL %skipboolcheck1
+JUMPIFNEQ %skipstrcheck1 TF@VARTYPE1 string@string
+JUMPIFEQ %ELSE1 TF@var1 string@
+MOVE TF@JMPCOND1 bool@true
+JUMP %IFBODY1
+LABEL %skipstrcheck1
+JUMPIFNEQ %skipintcheck1 TF@VARTYPE1 string@int
+JUMPIFEQ %ELSE1 TF@var1 int@0
+MOVE TF@JMPCOND1 bool@true
+JUMP %IFBODY1
+LABEL %skipintcheck1
+JUMPIFNEQ %skipfloatcheck1 TF@VARTYPE1 string@float
+JUMPIFEQ %ELSE1 TF@var1 float@0x0p+0
+MOVE TF@JMPCOND1 bool@true
+JUMP %IFBODY1
+LABEL %skipfloatcheck1
+MOVE TF@JMPCOND1 bool@false
+JUMP %IFBODY1
+LABEL %IFBODY1
+JUMPIFEQ %IFTHEN1 TF@JMPCOND1 bool@true
+LABEL %ELSE1
+WRITE string@
+JUMP %ENDIF1
+LABEL %IFTHEN1
 WRITE string@LOL
-DEFVAR TF@%rettype
-TYPE TF@%rettype LF@%retf
-JUMPIFNEQ %fEXIT4 TF@%rettype string@void
-RETURN
-LABEL %fEXIT4
-EXIT int@4LABEL %skipdec1EXIT int@0
+LABEL %ENDIF1
+
+DEFVAR TF@var2
+DEFVAR TF@JMPCOND2
+DEFVAR TF@VARTYPE2
+MOVE TF@var2 string@
+TYPE TF@VARTYPE2 TF@var2
+JUMPIFNEQ %skipboolcheck2 TF@VARTYPE2 string@bool
+MOVE TF@JMPCOND2 TF@var2
+JUMP %IFBODY2
+LABEL %skipboolcheck2
+JUMPIFNEQ %skipstrcheck2 TF@VARTYPE2 string@string
+JUMPIFEQ %ELSE2 TF@var2 string@
+MOVE TF@JMPCOND2 bool@true
+JUMP %IFBODY2
+LABEL %skipstrcheck2
+JUMPIFNEQ %skipintcheck2 TF@VARTYPE2 string@int
+JUMPIFEQ %ELSE2 TF@var2 int@0
+MOVE TF@JMPCOND2 bool@true
+JUMP %IFBODY2
+LABEL %skipintcheck2
+JUMPIFNEQ %skipfloatcheck2 TF@VARTYPE2 string@float
+JUMPIFEQ %ELSE2 TF@var2 float@0x0p+0
+MOVE TF@JMPCOND2 bool@true
+JUMP %IFBODY2
+LABEL %skipfloatcheck2
+MOVE TF@JMPCOND2 bool@false
+JUMP %IFBODY2
+LABEL %IFBODY2
+JUMPIFEQ %IFTHEN2 TF@JMPCOND2 bool@true
+LABEL %ELSE2
+WRITE string@nedochcal
+JUMP %ENDIF2
+LABEL %IFTHEN2
+WRITE string@dochcal
+LABEL %ENDIF2
+EXIT int@0

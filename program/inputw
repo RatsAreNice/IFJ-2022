@@ -1,8 +1,23 @@
 <?php
 declare(strict_types=1);
 
-$s = readi();
-function f(int $x) : void {
-    write($x, "LOL");
+$s = 20*5.1;
+write($s);
+$k = "lolec"."trollec";
+write($k);
+$k = 14 - 5.5;
+write($k);
+if($s > $k){
+    write("LOL");
+}else{
+    write("");
 }
+
+if(""){
+    write("dochcal");
+
+}else{ 
+    write("nedochcal");
+}
+
 

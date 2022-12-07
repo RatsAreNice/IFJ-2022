@@ -216,49 +216,14 @@ void SUBFloat_Float(ASSnode_t* node) {
 }
 
 void ASSIGNVAR(ASSnode_t* node) {
- /* char* var = malloc(sizeof(char) * strlen(TOK_PATH(node)->value));
-
-  strcpy(var, TOK_PATH(node)->value);
-  TOK_PATH(node)->value = var;  // CHCEM SA UISTIT ZE TAM BUDE MALLOC
-*/
   TOK_PATH(node) = TOK_PATH(node->right);
-  
-  printf("DEFVAR LF@%s\n", TOK_PATH(node->right)->value);
   TOK_PATH(node)->type = TOK_PATH(node->left)->type;
   char* str1 = checkvar(node->left);// TOK_PATH(node->left)->value;
-  printf("MOVE LF@%s %s",TOK_PATH(node->right)->value,str1);
+  printf("MOVE LF@%s %s\n",TOK_PATH(node->right)->value,str1);
   node->isvar=true;
-  //fprintf(stderr,"ASSIGN DONE");
-  /*node->leaf = true;
-  char* str1 = checkvar(node);
-  char* str2 = checkvar(node->left);
-  printf("MOVE %s %s\n", str1, str2);
-  FREETHEM
-  delete_node(node->left);*/
+  
 }
 
-/*void ASSIGNVARInt_Float(ASSnode_t* node) {
-  char* tempvar = createVar();
-  printf("DEFVAR LF@%s\n", tempvar);
-  char* str1 = checkvar(node->left);
-  printf("FLOAT2INT LF@%s %s\n", tempvar, str1);
-  free(str1);
-  if (node->left->isvar) free(TOK_PATH(node->left)->value);
-  TOK_PATH(node->left)->value = tempvar;
-  TOK_PATH(node->left)->type = integer;
-  ASSIGNVAR(node);
-}
-void ASSIGNVARFloat_Int(ASSnode_t* node) {
-  char* tempvar = createVar();
-  printf("DEFVAR LF@%s\n", tempvar);
-  char* str1 = checkvar(node->left);
-  printf("INT2FLOAT LF@%s %s\n", tempvar, str1);
-  free(str1);
-  if (node->left->isvar) free(TOK_PATH(node->left)->value);
-  TOK_PATH(node->left)->value = tempvar;
-  TOK_PATH(node->left)->type = integer;
-  ASSIGNVAR(node);
-}*/
 void LTCOMP(ASSnode_t* node) {
   char* tempvar = createVar();
   printf("DEFVAR LF@%s\n", tempvar);
@@ -330,25 +295,32 @@ printf("DEFVAR TF@JMPCOND%d\n",ifcount);
 printf("DEFVAR TF@VARTYPE%d\n",ifcount);
 // generate expression
 printf("MOVE TF@var%d %s\n",ifcount,checkvar(node->left));
-
 printf("TYPE TF@VARTYPE%d TF@var%d\n",ifcount,ifcount);
+printf("JUMPIFNEQ %%skipboolcheck%d TF@VARTYPE%d string@bool\n",ifcount,ifcount);
+printf("MOVE TF@JMPCOND%d TF@var%d\n",ifcount,ifcount);
+printf("JUMP %%IFBODY%d\n",ifcount);
+printf("LABEL %%skipboolcheck%d\n",ifcount);
 printf("JUMPIFNEQ %%skipstrcheck%d TF@VARTYPE%d string@string\n",ifcount,ifcount);
-printf("EQ TF@JMPCOND%d TF@var%d string@\n",ifcount,ifcount);
+printf("JUMPIFEQ %%ELSE%d TF@var%d string@\n",ifcount,ifcount);
+printf("MOVE TF@JMPCOND%d bool@true\n",ifcount);
 printf("JUMP %%IFBODY%d\n",ifcount);
 printf("LABEL %%skipstrcheck%d\n",ifcount);
 printf("JUMPIFNEQ %%skipintcheck%d TF@VARTYPE%d string@int\n",ifcount,ifcount);
-printf("EQ TF@JMPCOND1 TF@var%d int@0\n",ifcount);
+printf("JUMPIFEQ %%ELSE%d TF@var%d int@0\n",ifcount,ifcount);
+printf("MOVE TF@JMPCOND%d bool@true\n",ifcount);
 printf("JUMP %%IFBODY%d\n",ifcount);
 printf("LABEL %%skipintcheck%d\n",ifcount);
 printf("JUMPIFNEQ %%skipfloatcheck%d TF@VARTYPE%d string@float\n",ifcount,ifcount);
-printf("EQ TF@JMPCOND%d TF@var%d float@0x0p+0\n",ifcount,ifcount);
+printf("JUMPIFEQ %%ELSE%d TF@var%d float@0x0p+0\n",ifcount,ifcount);
+printf("MOVE TF@JMPCOND%d bool@true\n",ifcount);
 printf("JUMP %%IFBODY%d\n",ifcount);
 printf("LABEL %%skipfloatcheck%d\n",ifcount);
-printf("MOVE TF@JMPCOND%d bool@true\n",ifcount);
+printf("MOVE TF@JMPCOND%d bool@false\n",ifcount);
 printf("JUMP %%IFBODY%d\n",ifcount);
 
 printf("LABEL %%IFBODY%d\n",ifcount);
-printf("JUMPIFNEQ %%IFTHEN%d TF@JMPCOND%d bool@true\n",ifcount,ifcount);
+printf("JUMPIFEQ %%IFTHEN%d TF@JMPCOND%d bool@true\n",ifcount,ifcount);
+printf("LABEL %%ELSE%d\n",ifcount);
 //else
 helpsolve(node->right->right);
 printf("JUMP %%ENDIF%d\n",ifcount);
@@ -364,8 +336,7 @@ void generatedec(ASSnode_t* node){
   static unsigned int pcount;
   char* fid = TOK_PATH(node->left->left->left)->value;
   ASSnode_t* nparam;
-  //fprintf(stderr,"SOM V FDEC\n");
-  //printf("%%ret%s\n",); defvar na return value funkcie treba definovat na zaciatku
+
   printf("JUMP %%skipdec%d\n",++deccount);
   // BODY OF FUN
   printf("LABEL %s\n",fid);
@@ -448,14 +419,38 @@ void helpsolve(ASSnode_t* node) {
           if (node->TOK_PATH(left)->type == integer)
           {
             char* str1=checkvar(node->left);
-            printf("INT2FLOAT %s %s\n",str1,str1);
+            if (node->left->isvar==true) 
+            {
+              printf("INT2FLOAT %s %s\n",str1,str1);
+              TOK_PATH(node->left)->type=ffloat;
+            }else
+            {
+              char* tmp = createVar();
+              printf("DEFVAR LF@%s\n",tmp);
+              printf("INT2FLOAT LF@%s %s\n",tmp,str1);
+              node->left->isvar=true;
+              TOK_PATH(node->left)->type=ffloat;
+              TOK_PATH(node->left)->value=tmp;
+            }
             node->TOK_PATH(left)->type = ffloat;
             free(str1);
             MULTIPLY(node);
           } else
           {
             char* str1=checkvar(node->right);
-            printf("INT2FLOAT %s %s\n",str1,str1);
+            if (node->left->isvar==true) 
+            {
+              printf("INT2FLOAT %s %s\n",str1,str1);
+              TOK_PATH(node->right)->type=ffloat;
+            }else
+            {
+              char* tmp = createVar();
+              printf("DEFVAR LF@%s\n",tmp);
+              printf("INT2FLOAT LF@%s %s\n",tmp,str1);
+              node->left->isvar=true;
+              TOK_PATH(node->right)->type=ffloat;
+              TOK_PATH(node->right)->value=tmp;
+            }
             node->TOK_PATH(right)->type = ffloat;
             free(str1);
             MULTIPLY(node);
@@ -510,7 +505,7 @@ void helpsolve(ASSnode_t* node) {
       printf("JUMPIFEQ %s %s string@nil\n", label, tstr2);
       printf("JUMP %s\n", label2);
       printf("LABEL %s\n", label);
-      printf("EXIT(7)\n");
+      printf("EXIT int@7\n");
       printf("LABEL %s\n", label2);
       free(label);
       free(label2);
@@ -535,14 +530,14 @@ void helpsolve(ASSnode_t* node) {
           char* tempvar = createVar();
           if (TOK_PATH(node->left)->type == integer) {
             printf("DEFVAR LF@%s\n", tempvar);
-            printf("INT2FLOAT LF@%s %s ", tempvar, str1);
+            printf("INT2FLOAT LF@%s %s\n", tempvar, str1);
             TOK_PATH(node->left)->type = ffloat;
             TOK_PATH(node->left)->value = tempvar;
             node->right->isvar = true;
 
           } else {
             printf("DEFVAR LF@%s\n", tempvar);
-            printf("INT2FLOAT LF@%s  %s", tempvar, str2);
+            printf("INT2FLOAT LF@%s  %s\n", tempvar, str2);
             TOK_PATH(node->right)->type = ffloat;
             TOK_PATH(node->right)->value = tempvar;
             node->right->isvar = true;
@@ -641,7 +636,7 @@ void helpsolve(ASSnode_t* node) {
         for (int i = 0; i < bst_search(symDLL_GetFirst(&symtablelist),TOK_PATH(node->right)->value)->funData->ParamCount; i++)
         {
           printf("DEFVAR TF@param%d\n",i);
-          printf("MOVE TF@param%d %s",i,checkvar(node->left->left));
+          printf("MOVE TF@param%d %s\n",i,checkvar(node->left->left));
           node->left=node->left->right;
           if (node->left == NULL) break;
         }
@@ -718,6 +713,9 @@ char* checkvar(ASSnode_t* node) {
         return strptr;
       case funnull:
         sprintf(strptr, "nil@nil");
+        return strptr;
+      case bbool:
+        sprintf(strptr, "LF@%s", TOK_PATH(node)->value);
         return strptr;
 
       default:
@@ -850,7 +848,23 @@ void phpintval() {
   printf("\nCREATEFRAME");
   printf("\nRETURN\n");
 }
+
+void PreOrder(bst_node_t* tree){
+  if (tree==NULL)
+  {
+    return;
+  }
+  
+  if (tree->type==16)
+  {
+    printf("DEFVAR LF@%s\n",tree->key);
+  }
+  PreOrder(tree->left);
+  PreOrder(tree->right);
+}
+
 void print_builtins() {
+  PreOrder(symDLL_GetFirst(&symtablelist));
   printf("DEFVAR LF@%%retintval\n");
   printf("DEFVAR LF@%%retfloatval\n");
   printf("DEFVAR LF@%%retsubstring\n");
