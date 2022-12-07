@@ -259,7 +259,11 @@ unit_t cmp_to_rule(unit_t rs[]){                  //funkcia dostane pravu stranu
     }
     else{
         fprintf(stderr,"redukcia retazca ktory nieje na pravej strane ziadneho pravidla - nespravna syntax retazec = %d : %d : %d",rs[0].ttyp,rs[1].ttyp,rs[2].ttyp);
-        exit(7);
+        if((rs[0].ttyp == -2 || rs[0].ttyp == -3 || rs[0].ttyp == -4) && (rs[1].ttyp == 4 || rs[1].ttyp == 5 || rs[1].ttyp == 6 || rs[1].ttyp == 7 ||rs[1].ttyp == 1 || rs[1].ttyp == 8 || rs[1].ttyp == 9) && (rs[2].ttyp == -2 || rs[2].ttyp == -3 || rs[2].ttyp == -4)){
+            exit(7);
+        }else{
+            exit(2);
+        }
     }
     return neterminal;
 }
