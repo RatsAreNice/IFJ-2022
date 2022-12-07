@@ -1,3 +1,6 @@
+//Autor: Oliver Nemcek <xnemce08>
+//Sablona prevzata z domacej ulohy predmetu IAL
+
 #include<stdio.h>
 #include<stdlib.h>
 #include"c206.h"
