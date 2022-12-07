@@ -8,9 +8,8 @@ DEFVAR LF@%retreadi
 DEFVAR LF@%retreadf
 DEFVAR LF@%retfloatval
 DEFVAR LF@%retchr
-DEFVAR LF@%retf
 DEFVAR LF@%retintval
-DEFVAR LF@%retg
+DEFVAR LF@%rethlavni_program
 DEFVAR LF@%retord
 DEFVAR LF@%retwrite
 DEFVAR LF@%retstrval
@@ -125,25 +124,28 @@ CREATEFRAME
 RETURN
 LABEL main
 JUMP %skipdec1
-LABEL f
+LABEL hlavni_program
+DEFVAR LF@$yearMOVE LF@$year TF@param0
+DEFVAR TF@%param0type
+TYPE TF@%param0type TF@param0
+JUMPIFNEQ %hlavni_programEXIT4 TF@%param0type string@int
+WRITE string@Hello from IFJ
+WRITE LF@$year
+WRITE string@
+
 DEFVAR TF@%rettype
-TYPE TF@%rettype LF@%retf
-JUMPIFNEQ %fEXIT4 TF@%rettype string@void
+TYPE TF@%rettype LF@%rethlavni_program
+JUMPIFNEQ %hlavni_programEXIT4 TF@%rettype string@void
 RETURN
-LABEL %fEXIT4
+LABEL %hlavni_programEXIT4
 EXIT int@4
 LABEL %skipdec1
-JUMP %skipdec2
-LABEL g
-DEFVAR TF@%rettype
-TYPE TF@%rettype LF@%retg
-JUMPIFNEQ %gEXIT4 TF@%rettype string@int
-RETURN
-LABEL %gEXIT4
-EXIT int@4
-LABEL %skipdec2
 CREATEFRAME
-CALL f
+DEFVAR TF@param0
+MOVE TF@param0 int@22
+CALL hlavni_program
 CREATEFRAME
-CALL g
+DEFVAR TF@param0
+MOVE TF@param0 int@23
+CALL hlavni_program
 EXIT int@0

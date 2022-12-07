@@ -378,7 +378,7 @@ printf("DEFVAR TF@JMPCOND%d\n",ifcount);
 printf("DEFVAR TF@VARTYPE%d\n",ifcount);
 // generate expression
 
-fprintf(stderr,"OP: %d \n",node->OP);
+
 printf("MOVE TF@var%d %s\n",ifcount,checkvar(node->left));
 
 
@@ -444,6 +444,7 @@ void generatedec(ASSnode_t* node){
     printf("TYPE TF@%%param%dtype TF@param%d\n",pcount,pcount);
     printf("JUMPIFNEQ %%%sEXIT4 TF@%%param%dtype string@%s\n",fid,pcount,TOK_PATH(nparam->left)->value);
     node->left->right=node->left->right->right;
+    if (node->left->right==NULL) break;
     pcount++;
   }
   pcount=0;
