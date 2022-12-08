@@ -1,3 +1,6 @@
+// Abstraktny Syntakticky Strom
+// projekt: IFJ22
+/// @authors: Matus Dobias
 #ifndef ASS_H
 #define ASS_H
 #include <stdbool.h>

@@ -1,6 +1,8 @@
 
 // Abstraktny Syntakticky Strom
+// projekt: IFJ22
 /// @authors: Matus Dobias
+
 
 #include "ASS.h"
 #include "Parser.h"
@@ -357,6 +359,18 @@ void MULTIPLY(ASSnode_t* node) {
   printf("DEFVAR LF@%s\n", tempvar);
   GETTHEM
   printf("MUL LF@%s %s %s\n", tempvar, str1, str2);
+  FREETHEM
+  if (node->left->isvar) free(TOK_PATH(node->left)->value);
+  TOK_PATH(node) = TOK_PATH(node->left);
+  TOK_PATH(node)->value = tempvar;
+  node->leaf=true;
+  node->isvar = true;
+}
+void DIVIS(ASSnode_t* node) {
+  char* tempvar = createVar();
+  printf("DEFVAR LF@%s\n", tempvar);
+  GETTHEM
+  printf("DIV LF@%s %s %s\n", tempvar, str1, str2);
   FREETHEM
   if (node->left->isvar) free(TOK_PATH(node->left)->value);
   TOK_PATH(node) = TOK_PATH(node->left);
@@ -810,6 +824,71 @@ void helpsolve(ASSnode_t* node) {
     case ARGS:
       LEAFCHECK
       break; 
+    case DIV:
+      LEAFCHECK
+      if (node->left->leaf == true && node->right->leaf == true) {
+        if (node->TOK_PATH(left)->type == node->TOK_PATH(right)->type) {
+          DIVIS(node);
+          TOK_PATH(node)->type = ffloat;
+        } else if ((node->TOK_PATH(left)->type == integer &&
+                   node->TOK_PATH(right)->type == ffloat) ||
+                   (node->TOK_PATH(right)->type == integer &&
+                   node->TOK_PATH(left)->type == ffloat) 
+                   ) {
+          if (node->TOK_PATH(left)->type == integer)
+          {
+            char* str1=checkvar(node->left);
+            if (node->left->isvar==true) 
+            {
+              printf("INT2FLOAT %s %s\n",str1,str1);
+              TOK_PATH(node->left)->type=ffloat;
+            }else
+            {
+              char* tmp = createVar();
+              printf("DEFVAR LF@%s\n",tmp);
+              printf("INT2FLOAT LF@%s %s\n",tmp,str1);
+              node->left->isvar=true;
+              TOK_PATH(node->left)->type=ffloat;
+              TOK_PATH(node->left)->value=tmp;
+            }
+            node->TOK_PATH(left)->type = ffloat;
+            free(str1);
+            DIVIS(node);
+            TOK_PATH(node)->type = ffloat;
+          } else
+          {
+            char* str1=checkvar(node->right);
+            if (node->left->isvar==true) 
+            {
+              printf("INT2FLOAT %s %s\n",str1,str1);
+              TOK_PATH(node->right)->type=ffloat;
+            }else
+            {
+              char* tmp = createVar();
+              printf("DEFVAR LF@%s\n",tmp);
+              printf("INT2FLOAT LF@%s %s\n",tmp,str1);
+              node->left->isvar=true;
+              TOK_PATH(node->right)->type=ffloat;
+              TOK_PATH(node->right)->value=tmp;
+            }
+            node->TOK_PATH(right)->type = ffloat;
+            free(str1);
+            DIVIS(node);
+            TOK_PATH(node)->type = ffloat;
+          }
+          
+
+        }else{ exit(7);} 
+
+        break;
+      }
+      else {
+        fprintf(stderr, "SOMETHING WEIRD HAPPENED IN DIV\n");
+        exit(7);
+      }
+      break;
+
+      break;
     case FDEC:
       generatedec(node);
       break;   
